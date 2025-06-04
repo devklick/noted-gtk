@@ -1,0 +1,106 @@
+import Adw from "@girs/adw-1";
+import GObject from "@girs/gobject-2.0";
+import Gio from "@girs/gio-2.0";
+import Gtk from "@girs/gtk-4.0";
+import Gdk from "@girs/gdk-4.0";
+import Gst from "@girs/gst-1.0";
+import { exit } from "@girs/gjs/system";
+
+import Window from "../Window";
+import SettingsWindow from "../SettingsWindow";
+
+import styles from "../../styles.css?inline";
+import AppDir from "../../core/fs/AppDir";
+
+const APPLICATION_ID = "io.github.devklick.noted";
+
+export default class Application extends Adw.Application {
+  public readonly name = "Noted";
+
+  static {
+    Adw.init();
+    Gst.init(null);
+    GObject.registerClass({ GTypeName: "Application" }, this);
+  }
+
+  private _window: Window | null = null;
+  private get window(): Window {
+    if (!this._window) {
+      this._window = new Window({ notesDir: this.appDir.notesDir });
+      this._window.set_application(this);
+    }
+    return this._window;
+  }
+
+  // Settings window not currently used
+  private _settingsWindow: SettingsWindow | null = null;
+  private get settingsWindow(): SettingsWindow {
+    this._settingsWindow ??= new SettingsWindow({
+      application: this,
+      settings: this.appSettings,
+    });
+    return this._settingsWindow;
+  }
+
+  private _appSettings: Gio.Settings | null = null;
+  private get appSettings() {
+    this._appSettings ??= new Gio.Settings({
+      schemaId: `${this.id}.settings`,
+    });
+    return this._appSettings;
+  }
+
+  private _appDir: AppDir | null = null;
+  public get appDir(): AppDir {
+    this._appDir ??= this._appDir = new AppDir({ appName: this.name });
+    return this._appDir;
+  }
+
+  public get id() {
+    return APPLICATION_ID;
+  }
+
+  constructor() {
+    super({
+      applicationId: APPLICATION_ID,
+      flags: Gio.ApplicationFlags.FLAGS_NONE,
+    });
+
+    this.initActions();
+  }
+
+  static run(...args: Array<string>): number {
+    return new Application().run(args);
+  }
+
+  override vfunc_activate(): void {
+    super.vfunc_activate();
+    this.initStyles();
+    this.window.present();
+    this.window.connect("close-request", () => this.quit());
+  }
+
+  private initStyles(): void {
+    const cssProvider = new Gtk.CssProvider();
+    cssProvider.load_from_string(styles);
+
+    const display = Gdk.Display.get_default();
+
+    if (!display) {
+      return exit(1);
+    }
+
+    Gtk.StyleContext.add_provider_for_display(
+      display,
+      cssProvider,
+      Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
+  }
+
+  private initActions() {
+    const openSettings = new Gio.SimpleAction({ name: "settings" });
+    openSettings.connect("activate", () => this.settingsWindow.present());
+
+    this.add_action(openSettings);
+  }
+}

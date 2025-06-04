@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+    <schema id="io.github.devklick.noted.settings" path="/io/github/devklick/noted/">
+        <key name="audio-enabled" type="b">
+            <default>true</default>
+            <summary>Enable Audio</summary>
+        </key>
+        <key name="game-speed" type="i">
+            <default>500</default>
+            <summary>Game Speed</summary>
+        </key>
+    </schema>
+</schemalist>

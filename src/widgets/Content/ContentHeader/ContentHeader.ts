@@ -1,0 +1,173 @@
+import Adw from "@girs/adw-1";
+import Gio from "@girs/gio-2.0";
+import GObject from "@girs/gobject-2.0";
+import Gtk from "@girs/gtk-4.0";
+import { ICollapsable } from "../../SideBar/SideBar";
+import NotesDir from "../../../core/fs/NotesDir";
+import action from "../../../core/utils/action";
+import NoteListItem from "../../SideBar/NoteList/NoteListItem";
+import GLib from "@girs/glib-2.0";
+
+import NoteEditor from "../NoteEditor";
+import ContentHeaderTitle from "./ContentHeaderTitle";
+
+interface ContentHeaderParams {
+  sideBar: ICollapsable;
+  actionMap: Gio.ActionMap;
+  notesDir: Readonly<NotesDir>;
+}
+
+export default class ContentHeader extends Adw.Bin {
+  static {
+    GObject.registerClass({ GTypeName: "ContentHeader" }, this);
+  }
+
+  public static Actions = {
+    NewNote: "note-add",
+  } as const;
+
+  private readonly _adwHeader: Adw.HeaderBar;
+  private readonly _actionMap: Gio.ActionMap;
+  private readonly _notesDir: Readonly<NotesDir>;
+  private readonly _titleWidget: ContentHeaderTitle;
+  private readonly _saveButton: Gtk.Button;
+  private readonly _deleteButton: Gtk.Button;
+
+  private _openNoteId: string | null = null;
+
+  constructor({ actionMap, sideBar, notesDir }: ContentHeaderParams) {
+    super({ name: "header-wrapper" });
+    this._titleWidget = new ContentHeaderTitle();
+    this._adwHeader = new Adw.HeaderBar({
+      name: "header",
+      titleWidget: this._titleWidget,
+    });
+    this._actionMap = actionMap;
+    this._notesDir = notesDir;
+
+    const toggleOptions = new Gtk.Button({
+      iconName: "open-menu-symbolic",
+    });
+    this._adwHeader.pack_end(toggleOptions);
+
+    this.set_child(this._adwHeader);
+
+    this.registerActionHandlers();
+
+    ({ saveNotButton: this._saveButton, deleteNoteButton: this._deleteButton } =
+      this.createLeftIcons(sideBar));
+  }
+
+  public static defineActions(actionMap: Gio.ActionMap) {
+    action.create(actionMap, ContentHeader.Actions.NewNote);
+  }
+
+  private registerActionHandlers() {
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.Open,
+      action.VariantParser.String,
+      (id) => this.handleNoteOpened(id)
+    );
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.DoRename,
+      (param) => param?.deepUnpack() as [string, string],
+      ([_, name]) => this._titleWidget.setTitle(name)
+    );
+
+    // TODO: Cant use the DoDelete event to trigger disabling the save & delete buttons and title.
+    // It's possible to delete a note that's not currently open.
+    // Probably need to consider a new event, e.g. editor-closed, so we only perform
+    // these actions when we know the editor has no note open
+    action.handle(
+      this._actionMap,
+      NoteEditor.Actions.EditorClosed,
+      action.VariantParser.None,
+      () => this.handleNoteDeleted()
+    );
+
+    action.handle(
+      this._actionMap,
+      NoteEditor.Actions.EditorDirty,
+      action.VariantParser.Bool,
+      (dirty) => this._titleWidget.setDirty(dirty)
+    );
+  }
+
+  private handleNoteOpened(noteId: string) {
+    this._openNoteId = noteId;
+    const note = this._notesDir.metaFile.getNoteMetadata(noteId);
+    this._titleWidget.setTitle(note.name);
+    this._saveButton.set_sensitive(true);
+    this._deleteButton.set_sensitive(true);
+  }
+
+  private handleNoteDeleted() {
+    this._openNoteId = null;
+    this._titleWidget.clearTitle();
+    this._saveButton.set_sensitive(false);
+    this._deleteButton.set_sensitive(false);
+  }
+
+  private createLeftIcons(sideBar: ICollapsable) {
+    const toggleSidebar = new Gtk.Button({ iconName: "pan-start-symbolic" });
+
+    toggleSidebar.connect("clicked", () => {
+      const nowOpen = !sideBar.isOpen;
+      const icon = nowOpen ? "pan-start-symbolic" : "pan-end-symbolic";
+      sideBar.setIsOpen(nowOpen);
+      toggleSidebar.set_icon_name(icon);
+    });
+
+    const buttonContainer = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      spacing: 6,
+    });
+
+    const noteButtonGroup = new Gtk.Box({
+      orientation: Gtk.Orientation.HORIZONTAL,
+      cssClasses: ["linked"],
+    });
+    const addNoteButton = new Gtk.Button({
+      iconName: "list-add-symbolic",
+      tooltip_text: "New Note",
+    });
+    addNoteButton.connect("clicked", () => {
+      action.invoke(this._actionMap, ContentHeader.Actions.NewNote);
+    });
+    const saveNotButton = new Gtk.Button({
+      iconName: "document-save-symbolic",
+      tooltip_text: "Save Note",
+      sensitive: false,
+    });
+    saveNotButton.connect("clicked", () => {
+      action.invoke(this._actionMap, NoteListItem.Actions.DoSave);
+    });
+    const deleteNoteButton = new Gtk.Button({
+      iconName: "edit-delete-symbolic",
+      tooltip_text: "Delete Note",
+      sensitive: false,
+    });
+    deleteNoteButton.connect("clicked", () => {
+      action.invoke(
+        this._actionMap,
+        NoteListItem.ContexMenuActions.Delete,
+        this._openNoteId
+      );
+    });
+
+    noteButtonGroup.append(addNoteButton);
+    noteButtonGroup.append(new Gtk.Separator());
+    noteButtonGroup.append(saveNotButton);
+    noteButtonGroup.append(new Gtk.Separator());
+    noteButtonGroup.append(deleteNoteButton);
+
+    buttonContainer.append(toggleSidebar);
+    buttonContainer.append(noteButtonGroup);
+
+    this._adwHeader.pack_start(buttonContainer);
+
+    return { addNoteButton, deleteNoteButton, saveNotButton, toggleSidebar };
+  }
+}
