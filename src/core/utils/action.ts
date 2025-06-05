@@ -30,6 +30,10 @@ export function createAction(
   paramType?: VType | GLib.VariantType | null,
   handler?: null | (() => void)
 ) {
+  if (actionMap.lookup_action(name)) {
+    return;
+  }
+
   const actionParams: ConstructorParameters<typeof Gio.SimpleAction>[0] = {
     name,
   };
