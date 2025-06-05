@@ -6,8 +6,6 @@ import SideBarHeader from "./SideBarHeader";
 import NoteList from "./NoteList";
 import NotesDir from "../../core/fs/NotesDir";
 
-import action from "../../core/utils/action";
-import NoteListItem from "./NoteList/NoteListItem";
 import widget from "../../core/utils/widget";
 
 interface SideBarProps {

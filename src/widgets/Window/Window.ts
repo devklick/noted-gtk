@@ -1,11 +1,15 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
+import Gtk from "@girs/gtk-4.0";
+import Gdk from "@girs/gdk-4.0";
 
 import SideBar from "../SideBar";
 import Content from "../Content";
 import action from "../../core/utils/action";
 import NoteListItem from "../SideBar/NoteList/NoteListItem";
 import NotesDir from "../../core/fs/NotesDir";
+
+import ContentHeader from "../Content/ContentHeader";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -20,11 +24,15 @@ export default class Window extends Adw.ApplicationWindow {
   private _notesDir: Readonly<NotesDir>;
   private _sideBar: SideBar;
   private _content: Content;
+  private _keyController: Gtk.EventControllerKey;
 
   constructor({ notesDir, appName }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
     this._notesDir = notesDir;
     this.defineActions();
+
+    this._keyController = new Gtk.EventControllerKey();
+    this.add_controller(this._keyController);
 
     const splitView = new Adw.OverlaySplitView();
 
@@ -61,6 +69,15 @@ export default class Window extends Adw.ApplicationWindow {
       action.VariantParser.String,
       (id) => this.buildDeleteDialog(id)
     );
+
+    this._keyController.connect("key-pressed", (_, keyval, keycode, state) => {
+      const ctrl = state & Gdk.ModifierType.CONTROL_MASK;
+
+      if (ctrl && (keyval === Gdk.KEY_N || keyval === Gdk.KEY_n)) {
+        action.invoke(this, ContentHeader.Actions.NewNote);
+        return Gdk.EVENT_STOP;
+      }
+    });
   }
   private buildDeleteDialog(noteId: string) {
     const name = this._notesDir.metaFile.getNoteMetadata(noteId).name;

@@ -89,8 +89,8 @@ export default class ContentHeader extends Adw.Bin {
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorClosed,
-      action.VariantParser.None,
-      () => this.handleNoteDeleted()
+      action.VariantParser.String,
+      (id) => this.handleNoteDeleted(id)
     );
 
     action.handle(
@@ -109,11 +109,13 @@ export default class ContentHeader extends Adw.Bin {
     this._deleteButton.set_sensitive(true);
   }
 
-  private handleNoteDeleted() {
-    this._openNoteId = null;
-    this._titleWidget.clearTitle();
-    this._saveButton.set_sensitive(false);
-    this._deleteButton.set_sensitive(false);
+  private handleNoteDeleted(id: string) {
+    if (this._openNoteId === id) {
+      this._openNoteId = null;
+      this._titleWidget.clearTitle();
+      this._saveButton.set_sensitive(false);
+      this._deleteButton.set_sensitive(false);
+    }
   }
 
   private createLeftIcons(sideBar: ICollapsable) {

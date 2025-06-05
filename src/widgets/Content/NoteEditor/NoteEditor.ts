@@ -6,6 +6,7 @@ import NotesDir from "../../../core/fs/NotesDir";
 import NoteListItem from "../../SideBar/NoteList/NoteListItem";
 
 import action from "../../../core/utils/action";
+import Gdk from "@girs/gdk-4.0";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
@@ -23,6 +24,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
   public static Actions = {
     EditorClosed: "editor-closed",
+    EditorOpened: "editor-opened",
     EditorDirty: "editor-is-dirty",
     EditorSaved: "editor-saved",
   } as const;
@@ -34,6 +36,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   private _textView: Gtk.TextView;
   private _actionMap: Gio.ActionMap;
   private _buffer: Gtk.TextBuffer;
+  private _textViewKeyController: Gtk.EventControllerKey;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -64,6 +67,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._notesDir = notesDir;
     this._actionMap = actionMap;
 
+    this._textViewKeyController = new Gtk.EventControllerKey();
     this._textView = new Gtk.TextView({
       left_margin: 12,
       right_margin: 12,
@@ -71,6 +75,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       bottomMargin: 12,
       visible: false,
     });
+    this._textView.add_controller(this._textViewKeyController);
 
     this._buffer = this._textView.get_buffer();
     this._buffer.connect("changed", () => this.handleTextChanged());
@@ -80,6 +85,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   }
 
   public load(id: string) {
+    if (this._noteId === id) return;
     this.save();
     this.unload();
     this._noteId = id;
@@ -87,6 +93,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this.bufferText = this._savedText;
     this._textView.visible = true;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
+    action.invoke(this._actionMap, NoteEditor.Actions.EditorOpened, id);
   }
 
   public save() {
@@ -102,17 +109,19 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
   public unload(): void {
     if (!this._noteId) return;
+    const oldNoteId = this._noteId;
     this._noteId = null;
     this.bufferText = null;
     this._textView.visible = false;
-    action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed);
+    action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed, oldNoteId);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
   }
 
   public static defineActions(actionMap: Gio.ActionMap) {
-    action.create(actionMap, NoteEditor.Actions.EditorClosed);
+    action.create(actionMap, NoteEditor.Actions.EditorClosed, "string");
     action.create(actionMap, NoteEditor.Actions.EditorDirty, "bool");
     action.create(actionMap, NoteEditor.Actions.EditorSaved, "string");
+    action.create(actionMap, NoteEditor.Actions.EditorOpened, "string");
     NoteEditor._actionsCreated = true;
   }
 
@@ -136,6 +145,27 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       NoteListItem.Actions.DoSave,
       action.VariantParser.None,
       () => this.save()
+    );
+
+    this._textViewKeyController.connect(
+      "key-pressed",
+      (_, keyval, _keycode, state) => {
+        const ctrl = state & Gdk.ModifierType.CONTROL_MASK;
+        const shift = state & Gdk.ModifierType.SHIFT_MASK;
+
+        if (ctrl && (keyval === Gdk.KEY_S || keyval === Gdk.KEY_s)) {
+          this.save();
+          return Gdk.EVENT_STOP;
+        }
+        if (ctrl && shift && (keyval === Gdk.KEY_D || keyval === Gdk.KEY_d)) {
+          action.invoke(
+            this._actionMap,
+            NoteListItem.Actions.PromptDelete,
+            this._noteId
+          );
+          return Gdk.EVENT_STOP;
+        }
+      }
     );
   }
 

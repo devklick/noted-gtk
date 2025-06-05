@@ -3,9 +3,10 @@ import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
+import Gdk from "@girs/gdk-4.0";
+
 import icon from "../../../core/utils/icon";
 import action from "../../../core/utils/action";
-import Gdk from "@girs/gdk-4.0";
 import widget from "../../../core/utils/widget";
 
 interface SideBarHeaderParams {
@@ -34,6 +35,7 @@ export default class SideBarHeader extends Adw.Bin {
 
   constructor({ actionMap, appName }: SideBarHeaderParams) {
     super();
+    this.ensureActions();
     this._actionMap = actionMap;
     this._label = new Gtk.Label({ label: appName });
     this._label.get_style_context().add_class("title");
@@ -85,6 +87,11 @@ export default class SideBarHeader extends Adw.Bin {
       this._searchEntry.set_text("");
       this._header.set_title_widget(this._label);
       this._searchButton.show();
+      // If we remove the header when it's in focus, focus drops to the next child,
+      // which is the first node in the list. so that node becomes selected.
+      // This means it seem like that note is open, when it's not.
+      // We can work around this by reverting focus to the search button
+      this._searchButton.grab_focus();
     }
   }
 

@@ -1,7 +1,12 @@
 import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
-import meta from "./NotesMetaFile";
+import NotesMetaFile from "./NotesMetaFile";
 
+/**
+ * Object representing data relating to a note.
+ *
+ * This is an amalgamation of data from the meta file & data from the file system.
+ */
 interface NotesDirEntry {
   id: string;
   name: string;
@@ -14,16 +19,29 @@ interface NotesDirParams {
   appDirPath: string;
 }
 
+/**
+ * An object representing the directory where notes are stored.
+ *
+ * @example ~/.config/Noted/notes
+ *
+ * Also where the notes metadata file is stored.
+ *
+ * @example ~/.config/Noted/notes/notes.meta.json
+ */
 export default class NotesDir {
-  public metaFile: meta;
-  private _path: string;
+  /**
+   * An object representing the file where note metadata is stored.
+   */
+  public readonly metaFile: Readonly<NotesMetaFile>;
+
+  private readonly _path: string;
   private readonly _decoder: TextDecoder;
   private readonly _encoder: TextEncoder;
 
   constructor({ appDirPath }: NotesDirParams) {
     this._path = GLib.build_filenamev([appDirPath, "notes"]);
     GLib.mkdir_with_parents(this._path, 0o755);
-    this.metaFile = new meta({ dirPath: this._path });
+    this.metaFile = new NotesMetaFile({ dirPath: this._path });
     this._decoder = new TextDecoder("utf8");
     this._encoder = new TextEncoder();
   }
@@ -37,6 +55,8 @@ export default class NotesDir {
           Gio.FileQueryInfoFlags.NONE,
           null
         );
+        // TODO: created time seems pretty flaky.
+        // Consider storing this in meta file when a file note is added
         const createdOn = new Date(
           info.get_attribute_uint64("time::created") * 1000
         );
@@ -103,6 +123,7 @@ export default class NotesDir {
     let encoded = this._encoder.encode(contents);
 
     // Hacky workaround: Gio treats an empty Uint8Array (e.g. empty string) as null
+    // and throws an error at runtime
     if (!encoded.length) {
       encoded = new Uint8Array([0]);
     }

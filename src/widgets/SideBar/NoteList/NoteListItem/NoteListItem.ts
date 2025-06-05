@@ -19,6 +19,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   static {
     GObject.registerClass({ GTypeName: "NoteListItem" }, this);
   }
+  private static _actionsCreated = true;
 
   public static Actions = {
     PromptRename: `note-prompt-rename`,
@@ -40,8 +41,9 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     super({
       name: "NoteListItem",
       hexpand: true,
-      cssClasses: ["activatable"],
+      cssClasses: [],
     });
+    this.ensureActions();
 
     this._id = id;
     this._actionMap = actionMap;
@@ -125,5 +127,27 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     input.connect("activate", () => submit());
 
     return [popover, input] as const;
+  }
+
+  public static defineActions(actionMap: Gio.ActionMap) {
+    action.create(actionMap, NoteListItem.Actions.PromptDelete, "string");
+    action.create(actionMap, NoteListItem.Actions.PromptRename, "string");
+
+    action.create(actionMap, NoteListItem.Actions.DoOpen, "string");
+    action.create(actionMap, NoteListItem.Actions.DoSave);
+    action.create(actionMap, NoteListItem.Actions.DoDelete, "string");
+    action.create(
+      actionMap,
+      NoteListItem.Actions.DoRename,
+      GLib.VariantType.new("(ss)")
+    );
+    NoteListItem._actionsCreated = true;
+  }
+  private ensureActions() {
+    if (!NoteListItem._actionsCreated) {
+      throw new Error(
+        "NoteListItem.defineActions must be called before instantiation"
+      );
+    }
   }
 }

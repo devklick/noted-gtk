@@ -1,14 +1,15 @@
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
-import NoteListItem from "./NoteListItem";
-// import ContextMenu from "../ContextMenu";
-import NotesDir from "../../../core/fs/NotesDir";
 import Gio from "@girs/gio-2.0";
-import action from "../../../core/utils/action";
 import GLib from "@girs/glib-2.0";
+
+import NoteListItem from "./NoteListItem";
+import NotesDir from "../../../core/fs/NotesDir";
 import ContentHeader from "../../Content/ContentHeader";
 import NoteEditor from "../../Content/NoteEditor";
 import SideBarHeader from "../SideBarHeader";
+
+import action from "../../../core/utils/action";
 
 interface NoteListParams {
   notesDir: Readonly<NotesDir>;
@@ -19,15 +20,16 @@ export default class NoteList extends Gtk.ScrolledWindow {
   static {
     GObject.registerClass({ GTypeName: "NoteList" }, this);
   }
-  private _notesDir: Readonly<NotesDir>;
-  private _listBox: Gtk.ListBox;
+
+  private readonly _notesDir: Readonly<NotesDir>;
+  private readonly _listBox: Gtk.ListBox;
   private _listItems: Record<string, NoteListItem>;
-  private _actionMap: Gio.ActionMap;
-  private static _actionsCreated = false;
+  private readonly _actionMap: Gio.ActionMap;
+  private _openNoteId: string | null = null;
+  private _search: string | null = null;
 
   constructor({ notesDir, actionMap }: NoteListParams) {
     super();
-    this.ensureActions();
     this._notesDir = notesDir;
     this._actionMap = actionMap;
     this._listItems = {};
@@ -44,11 +46,16 @@ export default class NoteList extends Gtk.ScrolledWindow {
     this.sync();
   }
 
-  public sync(search: string | null = null) {
-    this._listBox.remove_all();
-    this._listItems = {};
+  public search(searchTerm: string | null) {
+    this._search = searchTerm;
+    this.sync();
+  }
 
-    const lowerSearch = search?.toLowerCase();
+  public sync() {
+    this._listBox.remove_all();
+
+    let selected: string | null = null;
+    const lowerSearch = this._search?.toLowerCase();
     Object.entries(this._notesDir.list())
       .filter(
         ([_, { name }]) =>
@@ -61,24 +68,22 @@ export default class NoteList extends Gtk.ScrolledWindow {
           name: data.name,
           actionMap: this._actionMap,
         });
+        if (id === this._openNoteId) {
+          selected = id;
+        }
         this._listBox.append(this._listItems[id]);
       });
+
+    if (selected) {
+      this._listBox.select_row(this._listItems[selected]);
+      this._listItems[selected].grab_focus();
+    } else {
+      this._listBox.unselect_all();
+    }
   }
 
   public static defineActions(actionMap: Gio.ActionMap) {
-    action.create(actionMap, NoteListItem.Actions.PromptDelete, "string");
-    action.create(actionMap, NoteListItem.Actions.PromptRename, "string");
-
-    action.create(actionMap, NoteListItem.Actions.DoOpen, "string");
-    action.create(actionMap, NoteListItem.Actions.DoSave);
-    action.create(actionMap, NoteListItem.Actions.DoDelete, "string");
-    action.create(
-      actionMap,
-      NoteListItem.Actions.DoRename,
-      GLib.VariantType.new("(ss)")
-    );
-
-    NoteList._actionsCreated = true;
+    NoteListItem.defineActions(actionMap);
   }
 
   private registerActionHandlers() {
@@ -121,7 +126,20 @@ export default class NoteList extends Gtk.ScrolledWindow {
       this._actionMap,
       SideBarHeader.Actions.SearchUpdated,
       action.VariantParser.String,
-      (search) => this.sync(search)
+      (search) => this.search(search)
+    );
+
+    action.handle(
+      this._actionMap,
+      NoteEditor.Actions.EditorClosed,
+      action.VariantParser.String,
+      (id) => this.handleNoteClosed(id)
+    );
+    action.handle(
+      this._actionMap,
+      NoteEditor.Actions.EditorOpened,
+      action.VariantParser.String,
+      (id) => this.handleNoteOpened(id)
     );
   }
 
@@ -140,16 +158,22 @@ export default class NoteList extends Gtk.ScrolledWindow {
   }
 
   private newNote() {
-    const noteId = this._notesDir.newNote();
+    this._openNoteId = this._notesDir.newNote();
     this.sync();
-    action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, noteId);
+    action.invoke(
+      this._actionMap,
+      NoteListItem.Actions.DoOpen,
+      this._openNoteId
+    );
   }
 
-  private ensureActions() {
-    if (!NoteList._actionsCreated) {
-      throw new Error(
-        "NoteList.defineActions must be called before instantiation"
-      );
+  private handleNoteClosed(id: string) {
+    if (this._openNoteId === id) {
+      this._openNoteId = null;
     }
+  }
+
+  private handleNoteOpened(id: string) {
+    this._openNoteId = id;
   }
 }

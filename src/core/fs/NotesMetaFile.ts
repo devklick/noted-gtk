@@ -4,17 +4,28 @@ import GLib from "@girs/glib-2.0";
 // TODO: Add favourite/starred to notes. Notes whch are starred are pinned at the top of the list
 // TODO: Add ability to "lock" a note. Notes which are locked cannot be edited and require double-confirmation to delete
 
+/**
+ * An object representing an entry in the note metdata file
+ */
 export interface NoteMetadata {
   name: string;
   path: string;
 }
 
+/**
+ * An object representing all of the entries stored in the note metdata file,
+ * keyed by the note ID.
+ */
 export type NotesMetadata = Record<string, NoteMetadata>;
 
 interface NotesMetaFileParams {
   dirPath: string;
 }
 
+/**
+ * An object representing the notes metdata file,
+ * encapsulation actions that can be performed against it.
+ */
 export default class NotesMetaFile {
   private readonly _fileName = "notes.meta.json";
   private readonly _path: string;
