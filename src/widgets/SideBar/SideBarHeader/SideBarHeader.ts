@@ -3,6 +3,7 @@ import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
+import icon from "../../../core/utils/icon";
 
 interface SideBarHeaderParams {
   actionMap: Gio.ActionMap;
@@ -26,7 +27,7 @@ export default class SideBarHeader extends Adw.Bin {
     searchBox.add_controller(focusController);
 
     const searchButton = new Gtk.Button({
-      iconName: "system-search-symbolic",
+      iconName: icon.name("system-search", "symbolic"),
     });
 
     const header = new Adw.HeaderBar();
@@ -41,7 +42,6 @@ export default class SideBarHeader extends Adw.Bin {
     searchButton.connect("clicked", () => {
       header.set_title_widget(searchBox);
       searchButton.hide();
-      // addNoteButton.hide();
       searchBox.grab_focus();
     });
 

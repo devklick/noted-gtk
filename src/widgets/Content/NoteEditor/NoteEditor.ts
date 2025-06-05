@@ -121,7 +121,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
     action.handle(
       actionMap,
-      NoteListItem.Actions.Open,
+      NoteListItem.Actions.DoOpen,
       action.VariantParser.String,
       (id) => this.load(id)
     );

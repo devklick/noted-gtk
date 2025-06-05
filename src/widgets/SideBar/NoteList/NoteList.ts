@@ -58,10 +58,8 @@ export default class NoteList extends Gtk.ScrolledWindow {
   }
 
   private defineActions() {
-    // All of the NoteListItemActions expect a string param (the note Id)
-    Object.values(NoteListItem.ContexMenuActions).map((name) =>
-      action.create(this._actionMap, name, "string")
-    );
+    action.create(this._actionMap, NoteListItem.Actions.PromptDelete, "string");
+    action.create(this._actionMap, NoteListItem.Actions.PromptRename, "string");
 
     action.create(
       this._actionMap,
@@ -70,7 +68,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
     );
     action.create(this._actionMap, NoteListItem.Actions.DoDelete, "string");
     action.create(this._actionMap, NoteListItem.Actions.DoSave);
-    action.create(this._actionMap, NoteListItem.Actions.Open, "string");
+    action.create(this._actionMap, NoteListItem.Actions.DoOpen, "string");
   }
 
   private registerActionHandlers() {
@@ -83,7 +81,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
 
     action.handle(
       this._actionMap,
-      NoteListItem.ContexMenuActions.Rename,
+      NoteListItem.Actions.PromptRename,
       action.VariantParser.String,
       (id) => this.promptRename(id)
     );
@@ -127,6 +125,6 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private newNote() {
     const noteId = this._notesDir.newNote();
     this.sync();
-    action.invoke(this._actionMap, NoteListItem.Actions.Open, noteId);
+    action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, noteId);
   }
 }

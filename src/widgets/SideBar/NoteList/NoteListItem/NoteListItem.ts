@@ -1,13 +1,13 @@
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Gio from "@girs/gio-2.0";
-import Pango from "@girs/pango-1.0";
-
-import ContextMenu, { ContextMenuActions } from "../../../ContextMenu";
-
-import { Click } from "../../../../core/utils/gesture";
-import action from "../../../../core/utils/action";
 import GLib from "@girs/glib-2.0";
+
+import ContextMenu from "../../../ContextMenu";
+
+import click from "../../../../core/utils/click";
+import action from "../../../../core/utils/action";
+import widget from "../../../../core/utils/widget";
 
 interface NoteListItemParams {
   id: string;
@@ -20,19 +20,13 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     GObject.registerClass({ GTypeName: "NoteListItem" }, this);
   }
 
-  /**
-   * Actions that appear in the righ-click context menu
-   */
-  static ContexMenuActions = {
-    Rename: `note-prompt-rename`,
-    Delete: "note-prompt-delete",
-  } as const;
-
-  static Actions = {
+  public static Actions = {
+    PromptRename: `note-prompt-rename`,
+    PromptDelete: "note-prompt-delete",
     DoRename: "note-do-rename",
     DoDelete: "note-do-delete",
     DoSave: "note-do-save",
-    Open: "note-open",
+    DoOpen: "note-do-open",
   } as const;
 
   private _id: string;
@@ -52,28 +46,16 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     this._id = id;
     this._actionMap = actionMap;
     this._name = name;
+    this.add_controller;
 
-    const content = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      marginTop: 8,
-      marginBottom: 8,
-      marginStart: 8,
-      marginEnd: 8,
-      cssClasses: ["sidebar-row"],
-    });
-
+    const content = widget.box.h({ margin: 8, cssClasses: ["sidebar-row"] });
     this.set_child(content);
+
     content.append(
-      new Gtk.Label({
-        label: name,
-        xalign: 0,
-        ellipsize: Pango.EllipsizeMode.END,
-        halign: Gtk.Align.START,
-      })
+      widget.label.new(name, { xalign: 0, ellipse: "END", hAlign: "START" })
     );
 
-    this.registerLeftClickHandler();
-    this.registerRightClickHandler();
+    this.registerClickHandlers();
     [this._renamePopover, this._renameInput] = this.buildRenamePopover();
     this._contextMenu = this.buildContextMenu();
   }
@@ -83,62 +65,51 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     this._renamePopover.show();
   }
 
+  private registerClickHandlers() {
+    this.registerLeftClickHandler();
+    this.registerRightClickHandler();
+  }
+
   private registerRightClickHandler() {
-    Click.register(this, "right", ({ x, y }) =>
-      this._contextMenu.popupAt(x, y)
-    );
+    click.handle("right", this, ({ x, y }) => this._contextMenu.popupAt(x, y));
   }
 
   private registerLeftClickHandler() {
-    Click.register(this, "left", () =>
-      action.invoke(this._actionMap, NoteListItem.Actions.Open, this._id)
+    click.handle("left", this, () =>
+      action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, this._id)
     );
   }
 
   private buildContextMenu() {
-    const menu = ContextMenu.fromObject(
+    return ContextMenu.fromObject(
       {
-        Rename: `${NoteListItem.ContexMenuActions.Rename}::${this._id}`,
-        Delete: `${NoteListItem.ContexMenuActions.Delete}::${this._id}`,
-        Open: `${NoteListItem.Actions.Open}::${this._id}`,
-      },
+        Rename: `${NoteListItem.Actions.PromptRename}::${this._id}`,
+        Delete: `${NoteListItem.Actions.PromptDelete}::${this._id}`,
+        Open: `${NoteListItem.Actions.DoOpen}::${this._id}`,
+      } as const,
       { scope: "win", parent: this }
     );
-    return menu;
   }
 
   private buildRenamePopover(): [Gtk.Popover, Gtk.Entry] {
-    const popover = new Gtk.Popover({});
-    const content = new Gtk.Box({
-      orientation: Gtk.Orientation.VERTICAL,
-      marginTop: 20,
-      marginBottom: 20,
-      marginStart: 20,
-      marginEnd: 20,
-      spacing: 10,
-    });
-
-    const header = new Gtk.Label({ label: "Rename Note" });
-    header.get_style_context().add_class("title-2");
-
-    const input = new Gtk.Entry({});
-
-    const buttonBox = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      halign: Gtk.Align.END,
-    });
-
-    const confirm = new Gtk.Button({ label: "Rename" });
-    const confirmStyle = confirm.get_style_context();
-    confirmStyle.add_class("suggested-action");
-    buttonBox.append(confirm);
-
-    content.append(header);
-    content.append(input);
-    content.append(buttonBox);
+    const popover = new Gtk.Popover();
+    const content = widget.box.v({ margin: 20, spacing: 10 });
 
     popover.set_child(content);
     popover.set_parent(this);
+
+    const header = widget.label.new("Rename Note", { cssClasses: ["title-2"] });
+    const input = new Gtk.Entry();
+    const buttonBox = widget.box.h({ hAlign: "END" });
+    const confirm = new Gtk.Button({
+      label: "Rename",
+      cssClasses: ["suggested-action"],
+    });
+
+    buttonBox.append(confirm);
+    content.append(header);
+    content.append(input);
+    content.append(buttonBox);
 
     const submit = () =>
       action.invoke(

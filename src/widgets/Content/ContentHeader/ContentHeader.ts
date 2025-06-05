@@ -10,6 +10,8 @@ import GLib from "@girs/glib-2.0";
 
 import NoteEditor from "../NoteEditor";
 import ContentHeaderTitle from "./ContentHeaderTitle";
+import widget from "../../../core/utils/widget";
+import icon from "../../../core/utils/icon";
 
 interface ContentHeaderParams {
   sideBar: ICollapsable;
@@ -46,7 +48,7 @@ export default class ContentHeader extends Adw.Bin {
     this._notesDir = notesDir;
 
     const toggleOptions = new Gtk.Button({
-      iconName: "open-menu-symbolic",
+      iconName: icon.name("open-menu", "symbolic"),
     });
     this._adwHeader.pack_end(toggleOptions);
 
@@ -65,7 +67,7 @@ export default class ContentHeader extends Adw.Bin {
   private registerActionHandlers() {
     action.handle(
       this._actionMap,
-      NoteListItem.Actions.Open,
+      NoteListItem.Actions.DoOpen,
       action.VariantParser.String,
       (id) => this.handleNoteOpened(id)
     );
@@ -115,29 +117,23 @@ export default class ContentHeader extends Adw.Bin {
 
     toggleSidebar.connect("clicked", () => {
       const nowOpen = !sideBar.isOpen;
-      const icon = nowOpen ? "pan-start-symbolic" : "pan-end-symbolic";
       sideBar.setIsOpen(nowOpen);
-      toggleSidebar.set_icon_name(icon);
+      const iconName = icon.name(nowOpen ? "pan-start" : "pan-end", "symbolic");
+      toggleSidebar.set_icon_name(iconName);
     });
 
-    const buttonContainer = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      spacing: 6,
-    });
+    const buttonContainer = widget.box.h({ spacing: 6 });
 
-    const noteButtonGroup = new Gtk.Box({
-      orientation: Gtk.Orientation.HORIZONTAL,
-      cssClasses: ["linked"],
-    });
+    const noteButtonGroup = widget.box.h({ cssClasses: ["linked"] });
     const addNoteButton = new Gtk.Button({
-      iconName: "list-add-symbolic",
+      iconName: icon.name("list-add", "symbolic"),
       tooltip_text: "New Note",
     });
     addNoteButton.connect("clicked", () => {
       action.invoke(this._actionMap, ContentHeader.Actions.NewNote);
     });
     const saveNotButton = new Gtk.Button({
-      iconName: "document-save-symbolic",
+      iconName: icon.name("document-save", "symbolic"),
       tooltip_text: "Save Note",
       sensitive: false,
     });
@@ -145,14 +141,14 @@ export default class ContentHeader extends Adw.Bin {
       action.invoke(this._actionMap, NoteListItem.Actions.DoSave);
     });
     const deleteNoteButton = new Gtk.Button({
-      iconName: "edit-delete-symbolic",
+      iconName: icon.name("edit-delete", "symbolic"),
       tooltip_text: "Delete Note",
       sensitive: false,
     });
     deleteNoteButton.connect("clicked", () => {
       action.invoke(
         this._actionMap,
-        NoteListItem.ContexMenuActions.Delete,
+        NoteListItem.Actions.PromptDelete,
         this._openNoteId
       );
     });

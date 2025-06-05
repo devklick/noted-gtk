@@ -1,6 +1,7 @@
 import Gtk from "@girs/gtk-4.0";
 import GObject from "@girs/gobject-2.0";
 import Pango from "@girs/pango-1.0";
+import widget from "../../../core/utils/widget";
 
 interface ContentHeaderTitleParams {
   title?: string;
@@ -39,24 +40,11 @@ export default class ContentHeaderTitle extends Gtk.Box {
   }
 
   private update() {
-    this.removeAllChildren();
-    if (this._dirty) {
-      this.append(new Gtk.Label({ label: "•" }));
-    }
-    this.append(
-      new Gtk.Label({
-        label: this._title ?? "",
-        ellipsize: Pango.EllipsizeMode.END,
-      })
-    );
-  }
+    widget.box.removeAllChildren(this);
 
-  private removeAllChildren() {
-    let child = this.get_first_child();
-    while (child) {
-      const next = child.get_next_sibling();
-      this.remove(child);
-      child = next;
+    if (this._dirty) {
+      this.append(widget.label.new("•"));
     }
+    this.append(widget.label.new(this._title, { ellipse: "END" }));
   }
 }

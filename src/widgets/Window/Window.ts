@@ -56,7 +56,7 @@ export default class Window extends Adw.ApplicationWindow {
   private registerActionHandlers() {
     action.handle(
       this,
-      NoteListItem.ContexMenuActions.Delete,
+      NoteListItem.Actions.PromptDelete,
       action.VariantParser.String,
       (id) => this.buildDeleteDialog(id)
     );

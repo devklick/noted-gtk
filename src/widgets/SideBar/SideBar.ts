@@ -8,6 +8,7 @@ import NotesDir from "../../core/fs/NotesDir";
 
 import action from "../../core/utils/action";
 import NoteListItem from "./NoteList/NoteListItem";
+import widget from "../../core/utils/widget";
 
 interface SideBarProps {
   onToggleOpen(open: boolean): void;
@@ -41,10 +42,10 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
 
     this._noteList = new NoteList({ notesDir, actionMap });
     const header = new SideBarHeader({ actionMap });
-    const view = new Adw.ToolbarView();
-
-    view.add_top_bar(header);
-    view.set_content(this._noteList);
+    const view = widget.toolbarView.new({
+      topBar: header,
+      content: this._noteList,
+    });
     this.set_child(view);
   }
 

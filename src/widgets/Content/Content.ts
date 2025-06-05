@@ -1,12 +1,12 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
-import Gtk from "@girs/gtk-4.0";
 import Gio from "@girs/gio-2.0";
 
 import { ICollapsable } from "../SideBar/SideBar";
 import ContentHeader from "./ContentHeader";
 import NotesDir from "../../core/fs/NotesDir";
 import NoteEditor from "./NoteEditor";
+import widget from "../../core/utils/widget";
 
 interface ContentParams {
   sideBar: ICollapsable;
@@ -27,9 +27,10 @@ export default class Content extends Adw.Bin {
     this._noteEditor = new NoteEditor({ notesDir, actionMap });
     this._header = new ContentHeader({ actionMap, sideBar, notesDir });
 
-    const view = new Adw.ToolbarView();
-    view.add_top_bar(this._header);
-    view.set_content(this._noteEditor);
+    const view = widget.toolbarView.new({
+      topBar: this._header,
+      content: this._noteEditor,
+    });
 
     this.set_child(view);
   }
