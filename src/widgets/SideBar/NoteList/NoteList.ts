@@ -22,13 +22,14 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private _listBox: Gtk.ListBox;
   private _listItems: Record<string, NoteListItem>;
   private _actionMap: Gio.ActionMap;
+  private static _actionsCreated: boolean = false;
 
   constructor({ notesDir, actionMap }: NoteListParams) {
     super();
+    this.ensureActions();
     this._notesDir = notesDir;
     this._actionMap = actionMap;
     this._listItems = {};
-    this.defineActions();
     this.registerActionHandlers();
 
     this._listBox = new Gtk.ListBox({
@@ -57,18 +58,21 @@ export default class NoteList extends Gtk.ScrolledWindow {
       });
   }
 
-  private defineActions() {
-    action.create(this._actionMap, NoteListItem.Actions.PromptDelete, "string");
-    action.create(this._actionMap, NoteListItem.Actions.PromptRename, "string");
+  public static defineActions(actionMap: Gio.ActionMap) {
+    action.create(actionMap, NoteListItem.Actions.PromptDelete, "string");
+    action.create(actionMap, NoteListItem.Actions.PromptRename, "string");
 
+    action.create(actionMap, NoteListItem.Actions.DoOpen, "string");
+    action.create(actionMap, NoteListItem.Actions.DoSave);
+    action.create(actionMap, NoteListItem.Actions.DoDelete, "string");
     action.create(
-      this._actionMap,
+      actionMap,
       NoteListItem.Actions.DoRename,
       GLib.VariantType.new("(ss)")
     );
-    action.create(this._actionMap, NoteListItem.Actions.DoDelete, "string");
-    action.create(this._actionMap, NoteListItem.Actions.DoSave);
-    action.create(this._actionMap, NoteListItem.Actions.DoOpen, "string");
+
+    NoteList._actionsCreated = true;
+    console.log("notelist actions created");
   }
 
   private registerActionHandlers() {
@@ -126,5 +130,13 @@ export default class NoteList extends Gtk.ScrolledWindow {
     const noteId = this._notesDir.newNote();
     this.sync();
     action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, noteId);
+  }
+
+  private ensureActions() {
+    if (!NoteList._actionsCreated) {
+      throw new Error(
+        "NoteList.defineActions must be called before instantiation"
+      );
+    }
   }
 }

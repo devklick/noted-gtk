@@ -22,16 +22,10 @@ export default class Window extends Adw.ApplicationWindow {
 
   constructor({ notesDir }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
-
     this._notesDir = notesDir;
+    this.defineActions();
 
     const splitView = new Adw.OverlaySplitView();
-
-    // TODO: Move all action defitions to this approach.
-    // All actions will be declared up front, before widget instantiation.
-    // This way, it's easier to avoid race conditions between widgets declaring
-    // actions and widgets trying to handle them
-    Content.defineActions(this);
 
     this._sideBar = new SideBar({
       onToggleOpen: (open) => splitView.set_show_sidebar(open),
@@ -51,6 +45,11 @@ export default class Window extends Adw.ApplicationWindow {
     this.set_content(splitView);
 
     this.registerActionHandlers();
+  }
+
+  private defineActions() {
+    Content.defineActions(this);
+    SideBar.defineActions(this);
   }
 
   private registerActionHandlers() {

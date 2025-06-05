@@ -58,4 +58,8 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
     this.isOpen = isOpen;
     this._onToggleOpen(this.isOpen);
   }
+
+  public static defineActions(actionMap: Gio.ActionMap) {
+    NoteList.defineActions(actionMap);
+  }
 }
