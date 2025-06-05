@@ -8,6 +8,7 @@ import action from "../../../core/utils/action";
 import GLib from "@girs/glib-2.0";
 import ContentHeader from "../../Content/ContentHeader";
 import NoteEditor from "../../Content/NoteEditor";
+import SideBarHeader from "../SideBarHeader";
 
 interface NoteListParams {
   notesDir: Readonly<NotesDir>;
@@ -22,7 +23,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private _listBox: Gtk.ListBox;
   private _listItems: Record<string, NoteListItem>;
   private _actionMap: Gio.ActionMap;
-  private static _actionsCreated: boolean = false;
+  private static _actionsCreated = false;
 
   constructor({ notesDir, actionMap }: NoteListParams) {
     super();
@@ -43,10 +44,16 @@ export default class NoteList extends Gtk.ScrolledWindow {
     this.sync();
   }
 
-  public sync() {
+  public sync(search: string | null = null) {
     this._listBox.remove_all();
+    this._listItems = {};
 
+    const lowerSearch = search?.toLowerCase();
     Object.entries(this._notesDir.list())
+      .filter(
+        ([_, { name }]) =>
+          !lowerSearch || name.toLowerCase().includes(lowerSearch)
+      )
       .sort(([_a, a], [_b, b]) => b.updatedOn.getTime() - a.updatedOn.getTime())
       .forEach(([id, data]) => {
         this._listItems[id] = new NoteListItem({
@@ -72,7 +79,6 @@ export default class NoteList extends Gtk.ScrolledWindow {
     );
 
     NoteList._actionsCreated = true;
-    console.log("notelist actions created");
   }
 
   private registerActionHandlers() {
@@ -109,6 +115,13 @@ export default class NoteList extends Gtk.ScrolledWindow {
       NoteEditor.Actions.EditorSaved,
       action.VariantParser.None,
       () => this.sync()
+    );
+
+    action.handle(
+      this._actionMap,
+      SideBarHeader.Actions.SearchUpdated,
+      action.VariantParser.String,
+      (search) => this.sync(search)
     );
   }
 

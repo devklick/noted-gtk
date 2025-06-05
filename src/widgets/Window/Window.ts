@@ -9,6 +9,7 @@ import NotesDir from "../../core/fs/NotesDir";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
+  appName: string;
 }
 
 export default class Window extends Adw.ApplicationWindow {
@@ -20,7 +21,7 @@ export default class Window extends Adw.ApplicationWindow {
   private _sideBar: SideBar;
   private _content: Content;
 
-  constructor({ notesDir }: WindowParams) {
+  constructor({ notesDir, appName }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
     this._notesDir = notesDir;
     this.defineActions();
@@ -31,6 +32,7 @@ export default class Window extends Adw.ApplicationWindow {
       onToggleOpen: (open) => splitView.set_show_sidebar(open),
       notesDir,
       actionMap: this,
+      appName,
     });
 
     this._content = new Content({

@@ -14,6 +14,7 @@ interface SideBarProps {
   onToggleOpen(open: boolean): void;
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
+  appName: string;
 }
 
 export interface ICollapsable {
@@ -26,6 +27,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
   static {
     GObject.registerClass({ GTypeName: "SideBar" }, this);
   }
+  private static _actionsCreated = false;
 
   public isOpen: boolean = true;
   private _onToggleOpen: (open: boolean) => void;
@@ -33,7 +35,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
   private _noteList: NoteList;
   private _actionMap: Gio.ActionMap;
 
-  constructor({ onToggleOpen, notesDir, actionMap }: SideBarProps) {
+  constructor({ onToggleOpen, notesDir, actionMap, appName }: SideBarProps) {
     super();
 
     this._onToggleOpen = onToggleOpen;
@@ -41,7 +43,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
     this._actionMap = actionMap;
 
     this._noteList = new NoteList({ notesDir, actionMap });
-    const header = new SideBarHeader({ actionMap });
+    const header = new SideBarHeader({ actionMap, appName });
     const view = widget.toolbarView.new({
       topBar: header,
       content: this._noteList,
@@ -60,6 +62,15 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
   }
 
   public static defineActions(actionMap: Gio.ActionMap) {
+    SideBarHeader.defineActions(actionMap);
     NoteList.defineActions(actionMap);
+    SideBar._actionsCreated = true;
+  }
+  private ensureActions() {
+    if (!SideBar._actionsCreated) {
+      throw new Error(
+        "SideBar.defineActions must be called before instantiation"
+      );
+    }
   }
 }

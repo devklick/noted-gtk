@@ -26,7 +26,10 @@ export default class Application extends Adw.Application {
   private _window: Window | null = null;
   private get window(): Window {
     if (!this._window) {
-      this._window = new Window({ notesDir: this.appDir.notesDir });
+      this._window = new Window({
+        notesDir: this.appDir.notesDir,
+        appName: this.name,
+      });
       this._window.set_application(this);
     }
     return this._window;

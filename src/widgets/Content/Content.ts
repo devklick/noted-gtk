@@ -18,11 +18,13 @@ export default class Content extends Adw.Bin {
   static {
     GObject.registerClass({ GTypeName: "ContentWindow" }, this);
   }
+  private static _actionsCreated = false;
   private _noteEditor: NoteEditor;
   private _header: ContentHeader;
 
   constructor({ sideBar, actionMap, notesDir }: ContentParams) {
     super();
+    this.ensureActions();
 
     this._noteEditor = new NoteEditor({ notesDir, actionMap });
     this._header = new ContentHeader({ actionMap, sideBar, notesDir });
@@ -38,5 +40,14 @@ export default class Content extends Adw.Bin {
   public static defineActions(actionMap: Gio.ActionMap) {
     ContentHeader.defineActions(actionMap);
     NoteEditor.defineActions(actionMap);
+    Content._actionsCreated = true;
+  }
+
+  private ensureActions() {
+    if (!Content._actionsCreated) {
+      throw new Error(
+        "Content.defineActions must be called before instantiation"
+      );
+    }
   }
 }

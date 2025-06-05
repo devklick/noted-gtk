@@ -155,8 +155,57 @@ function createToolbarView(params: ToolbarViewParams = {}): Adw.ToolbarView {
 export const toolbarView = { new: createToolbarView };
 //#endregion
 
+//#region ======================= HeaderBar =======================
+type AdwHeaderBarParams = Partial<Adw.HeaderBar.ConstructorProps>;
+type CustomHeaderBarParams = Partial<{
+  start: Gtk.Widget;
+  end: Gtk.Widget;
+  title: Gtk.Widget;
+}>;
+const _customHeaderBarKeys: Record<keyof CustomHeaderBarParams, 1> = {
+  start: 1,
+  end: 1,
+  title: 1,
+} as const;
+
+const CustomHeaderBarParams = Object.keys(_customHeaderBarKeys) as Array<
+  keyof typeof _customHeaderBarKeys
+>;
+
+type HeaderBarParams = WidgetParams &
+  AdwHeaderBarParams &
+  CustomHeaderBarParams;
+
+function applyCustomHeaderBarParams(
+  params: HeaderBarParams
+): AdwHeaderBarParams {
+  applyCustomBaseParams(params);
+  return omitKeys(params, [...CustomWidgetParamKeys, ...CustomHeaderBarParams]);
+}
+
+function createHeaderBar(params: HeaderBarParams = {}): Adw.HeaderBar {
+  const header = new Adw.HeaderBar({
+    ...applyCustomHeaderBarParams(params),
+  });
+
+  if (params.start) {
+    header.pack_start(params.start);
+  }
+  if (params.end) {
+    header.pack_end(params.end);
+  }
+  if (params.title) {
+    header.set_title_widget(params.title);
+  }
+  return header;
+}
+
+export const header = { new: createHeaderBar };
+//#endregion
+
 export default {
   box,
   label,
   toolbarView,
+  header,
 };

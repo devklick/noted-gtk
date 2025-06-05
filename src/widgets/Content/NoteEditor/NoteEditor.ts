@@ -19,6 +19,8 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     GObject.registerClass({ GTypeName: "NoteEditor" }, this);
   }
 
+  private static _actionsCreated = false;
+
   public static Actions = {
     EditorClosed: "editor-closed",
     EditorDirty: "editor-is-dirty",
@@ -57,6 +59,8 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
   constructor({ notesDir, actionMap }: NoteEditorParams) {
     super({ hexpand: true, vexpand: true });
+    this.ensureActions();
+
     this._notesDir = notesDir;
     this._actionMap = actionMap;
 
@@ -109,6 +113,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     action.create(actionMap, NoteEditor.Actions.EditorClosed);
     action.create(actionMap, NoteEditor.Actions.EditorDirty, "bool");
     action.create(actionMap, NoteEditor.Actions.EditorSaved, "string");
+    NoteEditor._actionsCreated = true;
   }
 
   private registerActionHandlers(actionMap: Gio.ActionMap) {
@@ -146,5 +151,13 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       NoteEditor.Actions.EditorDirty,
       this._isDirty
     );
+  }
+
+  private ensureActions() {
+    if (!NoteEditor._actionsCreated) {
+      throw new Error(
+        "NoteEditor.defineActions must be called before instantiation"
+      );
+    }
   }
 }

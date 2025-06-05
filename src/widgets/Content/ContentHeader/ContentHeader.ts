@@ -24,6 +24,8 @@ export default class ContentHeader extends Adw.Bin {
     GObject.registerClass({ GTypeName: "ContentHeader" }, this);
   }
 
+  private static _actionsCreated = false;
+
   public static Actions = {
     NewNote: "note-add",
   } as const;
@@ -39,6 +41,7 @@ export default class ContentHeader extends Adw.Bin {
 
   constructor({ actionMap, sideBar, notesDir }: ContentHeaderParams) {
     super({ name: "header-wrapper" });
+    this.ensureActions();
     this._titleWidget = new ContentHeaderTitle();
     this._adwHeader = new Adw.HeaderBar({
       name: "header",
@@ -62,6 +65,7 @@ export default class ContentHeader extends Adw.Bin {
 
   public static defineActions(actionMap: Gio.ActionMap) {
     action.create(actionMap, ContentHeader.Actions.NewNote);
+    ContentHeader._actionsCreated = true;
   }
 
   private registerActionHandlers() {
@@ -165,5 +169,13 @@ export default class ContentHeader extends Adw.Bin {
     this._adwHeader.pack_start(buttonContainer);
 
     return { addNoteButton, deleteNoteButton, saveNotButton, toggleSidebar };
+  }
+
+  private ensureActions() {
+    if (!ContentHeader._actionsCreated) {
+      throw new Error(
+        "ContentHeader.defineActions must be called before instantiation"
+      );
+    }
   }
 }
