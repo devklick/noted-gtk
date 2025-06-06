@@ -10,6 +10,7 @@ import NoteListItem from "../SideBar/NoteList/NoteListItem";
 import NotesDir from "../../core/fs/NotesDir";
 
 import ContentHeader from "../Content/ContentHeader";
+import AppAboutDialog from "./dialogs/AppAboutDialog";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -60,17 +61,7 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   public presentAboutDialog() {
-    // TODO: Load from package.json
-    const about = new Adw.AboutDialog({
-      applicationName: this._appName,
-      version: "1.0.0",
-      developerName: "devklick",
-      copyright: "© 2022-2025 devklick",
-      issueUrl: "https://github.com/devklick/noted-gtk/issues",
-      licenseType: Gtk.License.MIT_X11,
-      applicationIcon: "emblem-documents", // TODO: Replace with custom icon
-    });
-    about.present(this);
+    new AppAboutDialog({ appName: this._appName, parent: this });
   }
 
   private defineActions() {
