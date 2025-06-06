@@ -12,6 +12,7 @@ import NoteEditor from "../NoteEditor";
 import ContentHeaderTitle from "./ContentHeaderTitle";
 import widget from "../../../core/utils/widget";
 import icon from "../../../core/utils/icon";
+import BurgerMenu from "./BurgerMenu";
 
 interface ContentHeaderParams {
   sideBar: ICollapsable;
@@ -50,10 +51,8 @@ export default class ContentHeader extends Adw.Bin {
     this._actionMap = actionMap;
     this._notesDir = notesDir;
 
-    const toggleOptions = new Gtk.Button({
-      iconName: icon.name("open-menu", "symbolic"),
-    });
-    this._adwHeader.pack_end(toggleOptions);
+    const burgerMenu = new BurgerMenu({});
+    this._adwHeader.pack_end(burgerMenu);
 
     this.set_child(this._adwHeader);
 
@@ -82,10 +81,6 @@ export default class ContentHeader extends Adw.Bin {
       ([_, name]) => this._titleWidget.setTitle(name)
     );
 
-    // TODO: Cant use the DoDelete event to trigger disabling the save & delete buttons and title.
-    // It's possible to delete a note that's not currently open.
-    // Probably need to consider a new event, e.g. editor-closed, so we only perform
-    // these actions when we know the editor has no note open
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorClosed,

@@ -592,7 +592,15 @@ export function name(name: IconName, type: "normal" | "symbolic" = "normal") {
   if (type === "normal") return name;
   return `${name}-symbolic`;
 }
+export function symbolic(iconName: IconName) {
+  return name(iconName, "symbolic");
+}
+export function normal(iconName: IconName) {
+  return name(iconName, "normal");
+}
 
 export default {
   name: name,
+  symbolic,
+  normal,
 };

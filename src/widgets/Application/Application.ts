@@ -11,6 +11,7 @@ import SettingsWindow from "../SettingsWindow";
 
 import styles from "../../styles.css?inline";
 import AppDir from "../../core/fs/AppDir";
+import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 
 const APPLICATION_ID = "io.github.devklick.noted";
 
@@ -69,7 +70,7 @@ export default class Application extends Adw.Application {
       flags: Gio.ApplicationFlags.FLAGS_NONE,
     });
 
-    this.initActions();
+    this.defineActions();
   }
 
   static run(...args: Array<string>): number {
@@ -100,10 +101,26 @@ export default class Application extends Adw.Application {
     );
   }
 
-  private initActions() {
+  private defineActions() {
     const openSettings = new Gio.SimpleAction({ name: "settings" });
     openSettings.connect("activate", () => this.settingsWindow.present());
 
+    const preferencesActions = new Gio.SimpleAction({
+      name: BurgerMenu.Actions.Preferences,
+    });
+    preferencesActions.connect("activate", () => {
+      console.log("Preferences");
+    });
+
+    const aboutActions = new Gio.SimpleAction({
+      name: BurgerMenu.Actions.About,
+    });
+    aboutActions.connect("activate", () => {
+      this.window.presentAboutDialog();
+    });
+
     this.add_action(openSettings);
+    this.add_action(preferencesActions);
+    this.add_action(aboutActions);
   }
 }

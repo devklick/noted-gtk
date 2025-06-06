@@ -25,10 +25,12 @@ export default class Window extends Adw.ApplicationWindow {
   private _sideBar: SideBar;
   private _content: Content;
   private _keyController: Gtk.EventControllerKey;
+  private _appName: string;
 
   constructor({ notesDir, appName }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
     this._notesDir = notesDir;
+    this._appName = appName;
     this.defineActions();
 
     this._keyController = new Gtk.EventControllerKey();
@@ -57,9 +59,25 @@ export default class Window extends Adw.ApplicationWindow {
     this.registerActionHandlers();
   }
 
+  public presentAboutDialog() {
+    // TODO: Load from package.json
+    const about = new Adw.AboutDialog({
+      applicationName: this._appName,
+      version: "1.0.0",
+      developerName: "devklick",
+      copyright: "© 2022-2025 devklick",
+      issueUrl: "https://github.com/devklick/noted-gtk/issues",
+      licenseType: Gtk.License.MIT_X11,
+      applicationIcon: "emblem-documents", // TODO: Replace with custom icon
+    });
+    about.present(this);
+  }
+
   private defineActions() {
     Content.defineActions(this);
     SideBar.defineActions(this);
+
+    Gtk.ShortcutsWindow;
   }
 
   private registerActionHandlers() {

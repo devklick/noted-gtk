@@ -1,9 +1,14 @@
 {
     "name": "noted",
     "version": "1.0.0",
+    "description": "A simple notes application built with GTK4 and Adwaita",
     "main": "index.js",
+    "author": "devklick",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/github/noted-gtk/issues"
+    },
     "devDependencies": {
-        "@types/better-sqlite3": "^7.6.13",
         "typescript": "^5.8.3",
         "vite": "^6.3.3"
     },
@@ -22,9 +27,6 @@
         "compile-schemas": "mkdir -p .compiled-schemas/glib-2.0/schemas && glib-compile-schemas resources/schemas --targetdir .compiled-schemas/glib-2.0/schemas"
     },
     "keywords": [],
-    "author": "",
-    "license": "ISC",
-    "description": "",
     "dependencies": {
         "@girs/adw-1": "^1.8.0-4.0.0-beta.23",
         "@girs/gio-2.0": "^2.84.0-4.0.0-beta.23",
@@ -32,7 +34,6 @@
         "@girs/glib-2.0": "^2.84.0-4.0.0-beta.23",
         "@girs/gst-1.0": "^1.24.12-4.0.0-beta.23",
         "@girs/gtk-4.0": "^4.18.3-4.0.0-beta.23",
-        "@girs/pango-1.0": "^1.56.4-4.0.0-beta.23",
-        "better-sqlite3": "^11.10.0"
+        "@girs/pango-1.0": "^1.56.4-4.0.0-beta.23"
     }
 }

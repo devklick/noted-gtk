@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
     <schema id="io.github.devklick.noted.settings" path="/io/github/devklick/noted/">
-        <key name="audio-enabled" type="b">
-            <default>true</default>
-            <summary>Enable Audio</summary>
+        <key name="save-note" type="s">
+            <default>&apos;&lt;Ctrl&gt; S&apos;</default>
+            <summary>Save Note</summary>
         </key>
-        <key name="game-speed" type="i">
-            <default>500</default>
-            <summary>Game Speed</summary>
+        <key name="delete-note" type="s">
+            <default>&apos;&lt;Ctrl+Shift&gt; D&apos;</default>
+            <summary>Delete Note</summary>
+        </key>
+        <key name="new-note" type="s">
+            <default>&apos;&lt;Ctrl&gt; N&apos;</default>
+            <summary>New Note</summary>
         </key>
     </schema>
 </schemalist>
