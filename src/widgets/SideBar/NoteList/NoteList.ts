@@ -87,24 +87,21 @@ export default class NoteList extends Gtk.ScrolledWindow {
   }
 
   private registerActionHandlers() {
-    action.handle(
-      this._actionMap,
-      ContentHeader.Actions.NewNote,
-      action.VariantParser.None,
-      () => this.newNote()
+    action.handle(this._actionMap, ContentHeader.Actions.NewNote, null, () =>
+      this.newNote()
     );
 
     action.handle(
       this._actionMap,
       NoteListItem.Actions.PromptRename,
-      action.VariantParser.String,
+      "string",
       (id) => this.promptRename(id)
     );
 
     action.handle(
       this._actionMap,
       NoteListItem.Actions.DoDelete,
-      action.VariantParser.String,
+      "string",
       (id) => this.deleteNote(id)
     );
 
@@ -115,35 +112,35 @@ export default class NoteList extends Gtk.ScrolledWindow {
       ([id, name]) => this.doRename(id, name)
     );
 
-    action.handle(
-      this._actionMap,
-      NoteEditor.Actions.EditorSaved,
-      action.VariantParser.None,
-      () => this.sync()
+    action.handle(this._actionMap, NoteEditor.Actions.EditorSaved, null, () =>
+      this.sync()
     );
 
     action.handle(
       this._actionMap,
       SideBarHeader.Actions.SearchUpdated,
-      action.VariantParser.String,
+      "string",
       (search) => this.search(search)
     );
 
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorClosed,
-      action.VariantParser.String,
+      "string",
       (id) => this.handleNoteClosed(id)
     );
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorOpened,
-      action.VariantParser.String,
+      "string",
       (id) => this.handleNoteOpened(id)
     );
   }
 
   private deleteNote(id: string) {
+    if (id === this._openNoteId) {
+      this.grab_focus();
+    }
     this._notesDir.deleteNote(id);
     this.sync();
   }

@@ -56,40 +56,63 @@ export function createAction(
             ? paramType
             : VariantTypes[paramType]
         )
-      : VariantParser.None;
+      : VariantParser.none;
 
     handleAction(actionMap, name, parser, handler);
   }
 }
 
 export const VariantParser = {
-  String(param: GLib.Variant | null): string {
+  string(param: GLib.Variant | null): string {
     const s = param?.get_string();
     const v = s?.[0];
     if (v === undefined) throw new Error("Parameter not found");
     return v;
   },
-  Bool(param: GLib.Variant | null): boolean {
+  bool(param: GLib.Variant | null): boolean {
     const v = param?.get_boolean();
     if (v === undefined) throw new Error("Parameter not found");
     return v;
   },
-  None: () => null,
+  none: () => null,
   fromVariantType(type: GLib.VariantType) {
     switch (type.dup_string()) {
       case "s":
-        return this.String;
+        return this.string;
       default:
         throw new Error("Cannot determine VariantParser from VariantType");
     }
   },
 } as const;
 
+type VariantParserType = Exclude<keyof typeof VariantParser, "fromVariantType">;
+
+export function handleAction<K extends VariantParserType | null>(
+  actionMap: Gio.ActionMap,
+  actionName: string,
+  paramParser: K | null,
+  callback: (
+    parsed: K extends VariantParserType
+      ? ReturnType<(typeof VariantParser)[K]>
+      : null
+  ) => void
+): void;
+
 export function handleAction<T>(
   actionMap: Gio.ActionMap,
   actionName: string,
   paramParser: (param: GLib.Variant | null) => T,
   callback: (parsed: T) => void
+): void;
+
+export function handleAction(
+  actionMap: Gio.ActionMap,
+  actionName: string,
+  paramParser:
+    | VariantParserType
+    | null
+    | ((param: GLib.Variant | null) => unknown),
+  callback: (parsed: unknown) => void
 ): void {
   const action = actionMap.lookup_action(actionName);
 
@@ -101,9 +124,13 @@ export function handleAction<T>(
     throw new Error(`Action '${actionName}' is not a SimpleAction`);
   }
 
+  // Normalize paramParser to a function
+  const parserFn =
+    typeof paramParser === "string" ? VariantParser[paramParser] : paramParser;
+
   action.connect("activate", (_action, param) => {
     try {
-      const parsed = paramParser(param);
+      const parsed = parserFn?.(param);
       callback(parsed);
     } catch (err) {
       logError(Object(err), `Failed to handle action '${actionName}'`);
@@ -138,5 +165,5 @@ export default {
   create: createAction,
   handle: handleAction,
   invoke: invokeAction,
-  VariantParser,
+  p: VariantParser,
 };

@@ -63,11 +63,8 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   private registerActionHandlers() {
-    action.handle(
-      this,
-      NoteListItem.Actions.PromptDelete,
-      action.VariantParser.String,
-      (id) => this.buildDeleteDialog(id)
+    action.handle(this, NoteListItem.Actions.PromptDelete, "string", (id) =>
+      this.buildDeleteDialog(id)
     );
 
     this._keyController.connect("key-pressed", (_, keyval, keycode, state) => {

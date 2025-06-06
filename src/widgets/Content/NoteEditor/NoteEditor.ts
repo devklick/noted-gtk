@@ -126,25 +126,16 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   }
 
   private registerActionHandlers(actionMap: Gio.ActionMap) {
-    action.handle(
-      actionMap,
-      NoteListItem.Actions.DoDelete,
-      action.VariantParser.String,
-      (id) => this.handleNotDeleted(id)
+    action.handle(actionMap, NoteListItem.Actions.DoDelete, "string", (id) =>
+      this.handleNotDeleted(id)
     );
 
-    action.handle(
-      actionMap,
-      NoteListItem.Actions.DoOpen,
-      action.VariantParser.String,
-      (id) => this.load(id)
+    action.handle(actionMap, NoteListItem.Actions.DoOpen, "string", (id) =>
+      this.load(id)
     );
 
-    action.handle(
-      actionMap,
-      NoteListItem.Actions.DoSave,
-      action.VariantParser.None,
-      () => this.save()
+    action.handle(actionMap, NoteListItem.Actions.DoSave, action.p.none, () =>
+      this.save()
     );
 
     this._textViewKeyController.connect(

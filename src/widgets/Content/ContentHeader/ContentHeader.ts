@@ -72,7 +72,7 @@ export default class ContentHeader extends Adw.Bin {
     action.handle(
       this._actionMap,
       NoteListItem.Actions.DoOpen,
-      action.VariantParser.String,
+      "string",
       (id) => this.handleNoteOpened(id)
     );
     action.handle(
@@ -89,14 +89,14 @@ export default class ContentHeader extends Adw.Bin {
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorClosed,
-      action.VariantParser.String,
+      "string",
       (id) => this.handleNoteDeleted(id)
     );
 
     action.handle(
       this._actionMap,
       NoteEditor.Actions.EditorDirty,
-      action.VariantParser.Bool,
+      "bool",
       (dirty) => this._titleWidget.setDirty(dirty)
     );
   }
