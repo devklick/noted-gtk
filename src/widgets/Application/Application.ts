@@ -109,7 +109,7 @@ export default class Application extends Adw.Application {
       name: BurgerMenu.Actions.Preferences,
     });
     preferencesActions.connect("activate", () => {
-      console.log("Preferences");
+      this.window.presentPreferencesDialog();
     });
 
     const aboutActions = new Gio.SimpleAction({

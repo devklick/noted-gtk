@@ -11,6 +11,7 @@ import NotesDir from "../../core/fs/NotesDir";
 
 import ContentHeader from "../Content/ContentHeader";
 import AppAboutDialog from "./dialogs/AppAboutDialog";
+import AppPreferencesDialog from "./dialogs/AppPreferencesDialog";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -62,6 +63,10 @@ export default class Window extends Adw.ApplicationWindow {
 
   public presentAboutDialog() {
     new AppAboutDialog({ appName: this._appName, parent: this });
+  }
+
+  public presentPreferencesDialog() {
+    new AppPreferencesDialog({ parent: this });
   }
 
   private defineActions() {
