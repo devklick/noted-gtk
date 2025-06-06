@@ -1,5 +1,6 @@
 import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
+import fs from "../utils/fs";
 
 // TODO: Add favourite/starred to notes. Notes whch are starred are pinned at the top of the list
 // TODO: Add ability to "lock" a note. Notes which are locked cannot be edited and require double-confirmation to delete
@@ -34,7 +35,7 @@ export default class NotesMetaFile {
   private readonly _encoder: TextEncoder;
 
   constructor({ dirPath }: NotesMetaFileParams) {
-    this._path = GLib.build_filenamev([dirPath, this._fileName]);
+    this._path = fs.path.build(dirPath, this._fileName);
     this._file = Gio.File.new_for_path(this._path);
     this._decoder = new TextDecoder("utf-8");
     this._encoder = new TextEncoder();

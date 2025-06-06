@@ -1,6 +1,8 @@
 import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
+
 import NotesMetaFile from "./NotesMetaFile";
+import fs from "../utils/fs";
 
 /**
  * Object representing data relating to a note.
@@ -39,7 +41,7 @@ export default class NotesDir {
   private readonly _encoder: TextEncoder;
 
   constructor({ appDirPath }: NotesDirParams) {
-    this._path = GLib.build_filenamev([appDirPath, "notes"]);
+    this._path = fs.path.build(appDirPath, "notes");
     GLib.mkdir_with_parents(this._path, 0o755);
     this.metaFile = new NotesMetaFile({ dirPath: this._path });
     this._decoder = new TextDecoder("utf8");
@@ -50,19 +52,12 @@ export default class NotesDir {
     return Object.entries(this.metaFile.getNotesMetadata()).reduce(
       (acc, [id, { path, name }]) => {
         const file = Gio.File.new_for_path(path);
-        const info = file.query_info(
-          "time::modified,time::created",
-          Gio.FileQueryInfoFlags.NONE,
-          null
-        );
+        const info = fs.file.queryInfo(file, "created", "modified");
+
         // TODO: created time seems pretty flaky.
         // Consider storing this in meta file when a file note is added
-        const createdOn = new Date(
-          info.get_attribute_uint64("time::created") * 1000
-        );
-        const updatedOn = new Date(
-          info.get_attribute_uint64("time::modified") * 1000
-        );
+        const createdOn = fs.file.getDateAttr(info, "created");
+        const updatedOn = fs.file.getDateAttr(info, "modified");
         acc[id] = {
           createdOn,
           id,
@@ -77,20 +72,20 @@ export default class NotesDir {
   }
 
   public getNoteContents(id: string): string {
-    const path = GLib.build_filenamev([this._path, id]);
-    const file = Gio.file_new_for_path(path);
+    const file = this.getNoteFile(id);
     const [success, contents] = file.load_contents(null);
     if (!success) throw new Error("Unable to read note");
     return this._decoder.decode(contents);
   }
 
   public renameNote(id: string, name: string) {
+    // The file name is the ID which doesnt change,
+    // so we just rename the note in the meta file
     this.metaFile.renameNote(id, name);
   }
 
   public deleteNote(id: string) {
-    const path = GLib.build_filenamev([this._path, id]);
-    const file = Gio.file_new_for_path(path);
+    const file = this.getNoteFile(id);
     file.delete(null);
     this.metaFile.deleteNote(id);
   }
@@ -101,7 +96,7 @@ export default class NotesDir {
       dateStyle: "long",
       timeStyle: "short",
     });
-    const path = GLib.build_filenamev([this._path, id]);
+    const path = fs.path.build(this._path, id);
     this.metaFile.addNote(id, name, path);
 
     const file = Gio.file_new_for_path(path);
@@ -110,7 +105,7 @@ export default class NotesDir {
   }
 
   public loadNote(id: string): string {
-    const meta = this.metaFile.getNotesMetadata()[id];
+    const meta = this.metaFile.getNoteMetadata(id);
     const file = Gio.File.new_for_path(meta.path);
     const [success, contents] = file.load_contents(null);
     if (!success) throw new Error("Failed to load file");
@@ -118,7 +113,7 @@ export default class NotesDir {
   }
 
   public updateNote(id: string, contents: string) {
-    const meta = this.metaFile.getNotesMetadata()[id];
+    const meta = this.metaFile.getNoteMetadata(id);
     const file = Gio.File.new_for_path(meta.path);
     let encoded = this._encoder.encode(contents);
 
@@ -136,5 +131,13 @@ export default class NotesDir {
       null
     );
     if (!success) throw new Error(`Failed to update file: ${message}`);
+  }
+
+  private getNoteFile(noteId: string): Gio.File {
+    return Gio.File.new_for_path(this.getNotePath(noteId));
+  }
+
+  private getNotePath(noteId: string) {
+    return fs.path.build(this._path, noteId);
   }
 }
