@@ -8,6 +8,7 @@ import ContextMenu from "../../../ContextMenu";
 import click from "../../../../core/utils/click";
 import action from "../../../../core/utils/action";
 import widget from "../../../../core/utils/widget";
+import { debounce } from "../../../../core/utils/timing";
 
 interface NoteListItemParams {
   id: string;
@@ -34,9 +35,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   private _id: string;
   private _actionMap: Gio.ActionMap;
   private _name: string;
-  private _renamePopover: Gtk.Popover;
-  private _renameInput: Gtk.Entry;
-  private _contextMenu: ContextMenu;
+  private _showContextMenu: (x: number, y: number) => void;
 
   constructor({ name, actionMap, id }: NoteListItemParams) {
     super({
@@ -58,14 +57,19 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       widget.label.new(name, { xalign: 0, ellipse: "END", hAlign: "START" })
     );
 
+    // TODO: Look into fixing an issue that comes up when spamming right + left click on NoteLIstItems.
+    // Lots of "Broken accounting of active state" warnings that span nearly all widgets.
+    // Might need to consider going back to a single shared instance of ContextMenu,
+    // which should be easier to manage state on.
+    this._showContextMenu = debounce(100, (x: number, y: number) => {
+      this.buildContextMenu().popupAt(x, y);
+    });
+
     this.registerClickHandlers();
-    [this._renamePopover, this._renameInput] = this.buildRenamePopover();
-    this._contextMenu = this.buildContextMenu();
   }
 
   public promptRename() {
-    this._renameInput.set_text(this._name);
-    this._renamePopover.show();
+    this.buildRenamePopover(this._name).show();
   }
 
   private registerClickHandlers() {
@@ -74,7 +78,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   }
 
   private registerRightClickHandler() {
-    click.handle("right", this, ({ x, y }) => this._contextMenu.popupAt(x, y));
+    click.handle("right", this, ({ x, y }) => this._showContextMenu(x, y));
   }
 
   private registerLeftClickHandler() {
@@ -94,15 +98,23 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     );
   }
 
-  private buildRenamePopover(): [Gtk.Popover, Gtk.Entry] {
-    const popover = new Gtk.Popover();
+  private buildRenamePopover(currentname: string): Gtk.Popover {
+    const popover = new Gtk.Popover({ name: "RenamePopover" });
     const content = widget.box.v({ margin: 20, spacing: 10 });
 
     popover.set_child(content);
     popover.set_parent(this);
+    popover.connect("closed", () => {
+      GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+        if (popover.get_parent()) {
+          popover.unparent();
+        }
+        return GLib.SOURCE_REMOVE;
+      });
+    });
 
     const header = widget.label.new("Rename Note", { cssClasses: ["title-2"] });
-    const input = new Gtk.Entry();
+    const input = new Gtk.Entry({ text: currentname });
     const buttonBox = widget.box.h({ hAlign: "END" });
     const confirm = new Gtk.Button({
       label: "Rename",
@@ -127,7 +139,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     confirm.connect("clicked", () => submit());
     input.connect("activate", () => submit());
 
-    return [popover, input] as const;
+    return popover;
   }
 
   public static defineActions(actionMap: Gio.ActionMap) {

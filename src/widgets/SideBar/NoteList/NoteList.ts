@@ -12,6 +12,9 @@ import SideBarHeader from "../SideBarHeader";
 import action from "../../../core/utils/action";
 import Layout from "../../Layout";
 
+// TODO: Consider allowing multiple rows to be selected.
+// It's a bit of a pain trying to delete multiple notes at the moment.
+
 interface NoteListParams {
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
@@ -54,6 +57,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
 
   public sync() {
     this._listBox.remove_all();
+    this._listItems = {};
 
     let selected: string | null = null;
     const lowerSearch = this._search?.toLowerCase();
