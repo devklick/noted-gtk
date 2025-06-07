@@ -13,6 +13,7 @@ import ContentHeaderTitle from "./ContentHeaderTitle";
 import widget from "../../../core/utils/widget";
 import icon from "../../../core/utils/icon";
 import BurgerMenu from "./BurgerMenu";
+import Layout from "../../Layout";
 
 interface ContentHeaderParams {
   sideBar: ICollapsable;
@@ -37,6 +38,7 @@ export default class ContentHeader extends Adw.Bin {
   private readonly _titleWidget: ContentHeaderTitle;
   private readonly _saveButton: Gtk.Button;
   private readonly _deleteButton: Gtk.Button;
+  private readonly _toggleSidebar: Gtk.Button;
 
   private _openNoteId: string | null = null;
 
@@ -58,8 +60,11 @@ export default class ContentHeader extends Adw.Bin {
 
     this.registerActionHandlers();
 
-    ({ saveNotButton: this._saveButton, deleteNoteButton: this._deleteButton } =
-      this.createLeftIcons(sideBar));
+    ({
+      saveNotButton: this._saveButton,
+      deleteNoteButton: this._deleteButton,
+      toggleSidebar: this._toggleSidebar,
+    } = this.createLeftIcons(sideBar));
   }
 
   public static defineActions(actionMap: Gio.ActionMap) {
@@ -94,6 +99,18 @@ export default class ContentHeader extends Adw.Bin {
       "bool",
       (dirty) => this._titleWidget.setDirty(dirty)
     );
+
+    action.handle(
+      this._actionMap,
+      Layout.Actions.ShowSidebarChanged,
+      "bool",
+      (show) => this.handleShowSideBar(show)
+    );
+  }
+
+  private handleShowSideBar(show: boolean) {
+    const iconName = icon.name(show ? "pan-start" : "pan-end", "symbolic");
+    this._toggleSidebar.set_icon_name(iconName);
   }
 
   private handleNoteOpened(noteId: string) {
@@ -119,8 +136,7 @@ export default class ContentHeader extends Adw.Bin {
     toggleSidebar.connect("clicked", () => {
       const nowOpen = !sideBar.isOpen;
       sideBar.setIsOpen(nowOpen);
-      const iconName = icon.name(nowOpen ? "pan-start" : "pan-end", "symbolic");
-      toggleSidebar.set_icon_name(iconName);
+      this.handleShowSideBar(nowOpen);
     });
 
     const buttonContainer = widget.box.h({ spacing: 6 });

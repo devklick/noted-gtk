@@ -12,6 +12,7 @@ import NotesDir from "../../core/fs/NotesDir";
 import ContentHeader from "../Content/ContentHeader";
 import AppAboutDialog from "./dialogs/AppAboutDialog";
 import AppPreferencesDialog from "./dialogs/AppPreferencesDialog";
+import Layout from "../Layout/Layout";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -24,10 +25,9 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   private _notesDir: Readonly<NotesDir>;
-  private _sideBar: SideBar;
-  private _content: Content;
   private _keyController: Gtk.EventControllerKey;
   private _appName: string;
+  private _layout: Layout;
 
   constructor({ notesDir, appName }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
@@ -38,26 +38,9 @@ export default class Window extends Adw.ApplicationWindow {
 
     this._keyController = new Gtk.EventControllerKey();
     this.add_controller(this._keyController);
+    this._layout = new Layout({ actionMap: this, appName, notesDir });
 
-    const splitView = new Adw.OverlaySplitView();
-
-    this._sideBar = new SideBar({
-      onToggleOpen: (open) => splitView.set_show_sidebar(open),
-      notesDir,
-      actionMap: this,
-      appName,
-    });
-
-    this._content = new Content({
-      sideBar: this._sideBar,
-      actionMap: this,
-      notesDir: notesDir,
-    });
-
-    splitView.set_sidebar(this._sideBar);
-    splitView.set_content(this._content);
-
-    this.set_content(splitView);
+    this.set_content(this._layout);
 
     this.registerActionHandlers();
   }
@@ -73,6 +56,7 @@ export default class Window extends Adw.ApplicationWindow {
   private defineActions() {
     Content.defineActions(this);
     SideBar.defineActions(this);
+    Layout.defineActions(this);
   }
 
   private registerActionHandlers() {
@@ -89,9 +73,12 @@ export default class Window extends Adw.ApplicationWindow {
       }
 
       if (!ctrl && keyval === Gdk.KEY_F2) {
-        this._sideBar.setIsOpen(true);
         action.invoke(this, NoteListItem.Actions.PromptRenameCurrent);
         return Gdk.EVENT_STOP;
+      }
+
+      if (ctrl && (keyval === Gdk.KEY_H || keyval === Gdk.KEY_h)) {
+        this._layout.toggleSideBar();
       }
     });
   }

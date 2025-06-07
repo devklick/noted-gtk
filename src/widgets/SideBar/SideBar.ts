@@ -7,6 +7,7 @@ import NoteList from "./NoteList";
 import NotesDir from "../../core/fs/NotesDir";
 
 import widget from "../../core/utils/widget";
+import action from "../../core/utils/action";
 
 interface SideBarProps {
   onToggleOpen(open: boolean): void;
@@ -35,6 +36,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
 
   constructor({ onToggleOpen, notesDir, actionMap, appName }: SideBarProps) {
     super();
+    this.ensureActions();
 
     this._onToggleOpen = onToggleOpen;
     this._notesDir = notesDir;
@@ -47,15 +49,11 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
       content: this._noteList,
     });
     this.set_child(view);
-
-    view.connect("show", () => {
-      console.log("show");
-    });
   }
 
   public toggleOpen() {
     this.isOpen = !this.isOpen;
-    this._onToggleOpen(this.isOpen);
+    this.setIsOpen(this.isOpen);
   }
 
   public setIsOpen(isOpen: boolean) {
@@ -68,6 +66,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
     NoteList.defineActions(actionMap);
     SideBar._actionsCreated = true;
   }
+
   private ensureActions() {
     if (!SideBar._actionsCreated) {
       throw new Error(

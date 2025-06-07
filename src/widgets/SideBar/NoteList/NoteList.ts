@@ -10,6 +10,7 @@ import NoteEditor from "../../Content/NoteEditor";
 import SideBarHeader from "../SideBarHeader";
 
 import action from "../../../core/utils/action";
+import Layout from "../../Layout";
 
 interface NoteListParams {
   notesDir: Readonly<NotesDir>;
@@ -116,7 +117,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
       this._actionMap,
       NoteListItem.Actions.PromptRenameCurrent,
       null,
-      () => this._openNoteId && this.promptRename(this._openNoteId)
+      () => this.handlePromptRenameCurrent()
     );
 
     action.handle(this._actionMap, NoteEditor.Actions.EditorSaved, null, () =>
@@ -179,5 +180,11 @@ export default class NoteList extends Gtk.ScrolledWindow {
 
   private handleNoteOpened(id: string) {
     this._openNoteId = id;
+  }
+
+  private handlePromptRenameCurrent() {
+    if (!this._openNoteId) return;
+    action.invoke(this._actionMap, Layout.Actions.ShowSidebarChanged);
+    this.promptRename(this._openNoteId);
   }
 }
