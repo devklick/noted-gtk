@@ -47,6 +47,10 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
       content: this._noteList,
     });
     this.set_child(view);
+
+    view.connect("show", () => {
+      console.log("show");
+    });
   }
 
   public toggleOpen() {

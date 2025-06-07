@@ -23,6 +23,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
 
   public static Actions = {
     PromptRename: `note-prompt-rename`,
+    PromptRenameCurrent: `note-prompt-rename-current`,
     PromptDelete: "note-prompt-delete",
     DoRename: "note-do-rename",
     DoDelete: "note-do-delete",
@@ -132,6 +133,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   public static defineActions(actionMap: Gio.ActionMap) {
     action.create(actionMap, NoteListItem.Actions.PromptDelete, "string");
     action.create(actionMap, NoteListItem.Actions.PromptRename, "string");
+    action.create(actionMap, NoteListItem.Actions.PromptRenameCurrent);
 
     action.create(actionMap, NoteListItem.Actions.DoOpen, "string");
     action.create(actionMap, NoteListItem.Actions.DoSave);

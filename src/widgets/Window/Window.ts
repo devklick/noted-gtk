@@ -87,6 +87,12 @@ export default class Window extends Adw.ApplicationWindow {
         action.invoke(this, ContentHeader.Actions.NewNote);
         return Gdk.EVENT_STOP;
       }
+
+      if (!ctrl && keyval === Gdk.KEY_F2) {
+        this._sideBar.setIsOpen(true);
+        action.invoke(this, NoteListItem.Actions.PromptRenameCurrent);
+        return Gdk.EVENT_STOP;
+      }
     });
   }
   private buildDeleteDialog(noteId: string) {

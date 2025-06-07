@@ -13,10 +13,8 @@ export default class AppPreferencesDialog extends Adw.PreferencesWindow {
     GObject.registerClass({ GTypeName: "AppPreferencesDialog" }, this);
   }
   constructor({ parent, autoPresent = true }: AppPreferencesDialogParams) {
-    super({ resizable: false });
+    super({ resizable: false, transientFor: parent });
     this.addKeyBindingsPage();
-
-    this.set_transient_for(parent);
 
     if (autoPresent) {
       this.present();

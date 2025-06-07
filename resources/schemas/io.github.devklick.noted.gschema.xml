@@ -13,5 +13,9 @@
             <default>&apos;&lt;Ctrl&gt; N&apos;</default>
             <summary>New Note</summary>
         </key>
+        <key name="new-note" type="s">
+            <default>&apos;F2&apos;</default>
+            <summary>Rename Note</summary>
+        </key>
     </schema>
 </schemalist>

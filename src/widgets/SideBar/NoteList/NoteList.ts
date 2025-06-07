@@ -112,6 +112,13 @@ export default class NoteList extends Gtk.ScrolledWindow {
       ([id, name]) => this.doRename(id, name)
     );
 
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.PromptRenameCurrent,
+      null,
+      () => this._openNoteId && this.promptRename(this._openNoteId)
+    );
+
     action.handle(this._actionMap, NoteEditor.Actions.EditorSaved, null, () =>
       this.sync()
     );
