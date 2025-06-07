@@ -4,19 +4,19 @@ import GObject from "@girs/gobject-2.0";
 
 interface AppAboutDialogParams {
   appName: string;
-  parent: Gtk.Widget;
-  present?: boolean;
+  parent: Gtk.Window;
+  autoPresent?: boolean;
 }
 export default class AppAboutDialog extends Adw.Bin {
   static {
     GObject.registerClass({ GTypeName: "AppAboutDialog" }, this);
   }
 
-  constructor({ appName, parent, present = true }: AppAboutDialogParams) {
+  constructor({ appName, parent, autoPresent = true }: AppAboutDialogParams) {
     super();
 
     // TODO: Load from package.json
-    const dialog = new Adw.AboutDialog({
+    const dialog = new Adw.AboutWindow({
       applicationName: appName,
       version: "1.0.0",
       developerName: "devklick",
@@ -24,10 +24,12 @@ export default class AppAboutDialog extends Adw.Bin {
       issueUrl: "https://github.com/devklick/noted-gtk/issues",
       licenseType: Gtk.License.MIT_X11,
       applicationIcon: "emblem-documents", // TODO: Replace with custom icon
+      transient_for: parent,
+      resizable: false,
     });
 
-    if (present) {
-      dialog.present(parent);
+    if (autoPresent) {
+      dialog.present();
     }
   }
 }

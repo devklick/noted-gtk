@@ -31,6 +31,7 @@ export default class Window extends Adw.ApplicationWindow {
 
   constructor({ notesDir, appName }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
+    this.set_size_request(500, 300);
     this._notesDir = notesDir;
     this._appName = appName;
     this.defineActions();
@@ -72,8 +73,6 @@ export default class Window extends Adw.ApplicationWindow {
   private defineActions() {
     Content.defineActions(this);
     SideBar.defineActions(this);
-
-    Gtk.ShortcutsWindow;
   }
 
   private registerActionHandlers() {

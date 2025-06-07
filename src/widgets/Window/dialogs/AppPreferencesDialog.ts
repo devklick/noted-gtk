@@ -4,20 +4,22 @@ import icon from "../../../core/utils/icon";
 import Gtk from "@girs/gtk-4.0";
 
 interface AppPreferencesDialogParams {
-  parent: Gtk.Widget;
-  present?: boolean;
+  parent: Gtk.Window;
+  autoPresent?: boolean;
 }
 
-export default class AppPreferencesDialog extends Adw.PreferencesDialog {
+export default class AppPreferencesDialog extends Adw.PreferencesWindow {
   static {
     GObject.registerClass({ GTypeName: "AppPreferencesDialog" }, this);
   }
-  constructor({ parent, present = true }: AppPreferencesDialogParams) {
-    super();
+  constructor({ parent, autoPresent = true }: AppPreferencesDialogParams) {
+    super({ resizable: false });
     this.addKeyBindingsPage();
 
-    if (present) {
-      this.present(parent);
+    this.set_transient_for(parent);
+
+    if (autoPresent) {
+      this.present();
     }
   }
 
