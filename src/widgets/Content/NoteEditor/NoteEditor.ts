@@ -7,6 +7,7 @@ import NoteListItem from "../../SideBar/NoteList/NoteListItem";
 
 import action from "../../../core/utils/action";
 import Gdk from "@girs/gdk-4.0";
+import GLib from "@girs/glib-2.0";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
@@ -94,6 +95,10 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._textView.visible = true;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorOpened, id);
+    GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+      this._textView.grab_focus();
+      return GLib.SOURCE_REMOVE;
+    });
   }
 
   public save() {
@@ -148,7 +153,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
           this.save();
           return Gdk.EVENT_STOP;
         }
-        if (ctrl && shift && (keyval === Gdk.KEY_D || keyval === Gdk.KEY_d)) {
+        if (ctrl && shift && (keyval === Gdk.KEY_X || keyval === Gdk.KEY_x)) {
           action.invoke(
             this._actionMap,
             NoteListItem.Actions.PromptDelete,

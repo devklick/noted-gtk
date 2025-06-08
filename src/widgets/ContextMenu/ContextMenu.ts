@@ -3,7 +3,7 @@ import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
-import { debounce } from "../../core/utils/timing";
+import { DeepReadonly } from "../../core/utils/mutability";
 
 export type ContextMenuActions = ReadonlyArray<
   Readonly<{ label: string; key: string }>
@@ -21,14 +21,16 @@ export default class ContextMenu<
     GObject.registerClass({ GTypeName: "ContextMenu" }, this);
   }
 
+  public actions: DeepReadonly<Actions>;
+
   private _menu: Gio.Menu;
-  private _showContextMenu: (x: number, y: number) => void;
 
   constructor({ actions, parent }: ContextMenuParams<Actions>) {
     super();
     this._menu = new Gio.Menu();
+    this.actions = actions;
 
-    actions.forEach(({ key, label }) => this._menu.append(label, key));
+    this.actions.forEach(({ key, label }) => this._menu.append(label, key));
     this.set_menu_model(this._menu);
     this.set_has_arrow(false);
 
@@ -59,11 +61,22 @@ export default class ContextMenu<
     return new ContextMenu({ actions, parent });
   }
 
-  public popupAt(x: number, y: number) {
+  public popupAt(x: number, y: number, noteId: string, parent: Gtk.Widget) {
+    this.prepareActions(noteId);
     const width = 115; // dont ask
     const rect = new Gdk.Rectangle({ x, y, height: 1, width });
+    this.unparent();
+    this.set_parent(parent);
     this.set_pointing_to(rect);
     this.popup();
+    return GLib.SOURCE_REMOVE;
+  }
+
+  private prepareActions(noteId: string) {
+    this._menu.remove_all();
+    this.actions.forEach(({ key, label }) =>
+      this._menu.append(label, `${key}::${noteId}`)
+    );
   }
 
   private ensureCleanup() {

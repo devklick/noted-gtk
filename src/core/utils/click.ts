@@ -25,7 +25,7 @@ export function handleClick<G extends WidgetBase>(
   handler: ClickHandler
 ): Gtk.GestureClick {
   const gesture = new Gtk.GestureClick({ button: ClickType[type] });
-  gesture.connect("pressed", (source, nPress, x, y) =>
+  gesture.connect("released", (source, nPress, x, y) =>
     handler({ source, nPress, x, y })
   );
   widget.add_controller(gesture);

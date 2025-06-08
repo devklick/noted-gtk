@@ -6,7 +6,7 @@
             <summary>Save Note</summary>
         </key>
         <key name="delete-note" type="s">
-            <default>&apos;&lt;Ctrl+Shift&gt; D&apos;</default>
+            <default>&apos;&lt;Ctrl+Shift&gt; X&apos;</default>
             <summary>Delete Note</summary>
         </key>
         <key name="new-note" type="s">

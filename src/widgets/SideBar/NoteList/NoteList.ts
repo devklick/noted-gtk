@@ -11,6 +11,8 @@ import SideBarHeader from "../SideBarHeader";
 
 import action from "../../../core/utils/action";
 import Layout from "../../Layout";
+import { debounce } from "../../../core/utils/timing";
+import ContextMenu from "../../ContextMenu";
 
 // TODO: Consider allowing multiple rows to be selected.
 // It's a bit of a pain trying to delete multiple notes at the moment.
@@ -31,6 +33,8 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private readonly _actionMap: Gio.ActionMap;
   private _openNoteId: string | null = null;
   private _search: string | null = null;
+  private _contextMenu: ContextMenu;
+  private showListContextMenu: (x: number, y: number, noteId: string) => void;
 
   constructor({ notesDir, actionMap }: NoteListParams) {
     super();
@@ -45,6 +49,23 @@ export default class NoteList extends Gtk.ScrolledWindow {
       vexpand: true,
       cssClasses: ["navigation-sidebar"],
     });
+
+    this._contextMenu = ContextMenu.fromObject(
+      {
+        Open: NoteListItem.Actions.DoOpen,
+        Rename: NoteListItem.Actions.PromptRename,
+        Delete: NoteListItem.Actions.PromptDelete,
+      },
+      { parent: this, scope: "win" }
+    );
+
+    // Probably wont need this debounce now that I'm hooking into the button release event
+    this.showListContextMenu = debounce(
+      0,
+      (x: number, y: number, noteId: string) => {
+        this._contextMenu.popupAt(x, y, noteId, this._listItems[noteId]);
+      }
+    );
 
     this.set_child(this._listBox);
     this.sync();
@@ -68,15 +89,20 @@ export default class NoteList extends Gtk.ScrolledWindow {
       )
       .sort(([_a, a], [_b, b]) => b.updatedOn.getTime() - a.updatedOn.getTime())
       .forEach(([id, data]) => {
-        this._listItems[id] = new NoteListItem({
+        const note = new NoteListItem({
           id,
           name: data.name,
           actionMap: this._actionMap,
         });
+        note.connect("note-context-menu-requested", (_, noteId, x, y) =>
+          this.showListContextMenu(x, y, noteId)
+        );
+
         if (id === this._openNoteId) {
           selected = id;
         }
-        this._listBox.append(this._listItems[id]);
+        this._listItems[id] = note;
+        this._listBox.append(note);
       });
 
     if (selected) {

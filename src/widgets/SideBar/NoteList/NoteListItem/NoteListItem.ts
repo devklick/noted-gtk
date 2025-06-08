@@ -18,7 +18,21 @@ interface NoteListItemParams {
 
 export default class NoteListItem extends Gtk.ListBoxRow {
   static {
-    GObject.registerClass({ GTypeName: "NoteListItem" }, this);
+    GObject.registerClass(
+      {
+        GTypeName: "NoteListItem",
+        Signals: {
+          "note-context-menu-requested": {
+            param_types: [
+              GObject.TYPE_STRING,
+              GObject.TYPE_INT,
+              GObject.TYPE_INT,
+            ],
+          },
+        },
+      },
+      this
+    );
   }
   private static _actionsCreated = true;
 
@@ -35,13 +49,13 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   private _id: string;
   private _actionMap: Gio.ActionMap;
   private _name: string;
-  private _showContextMenu: (x: number, y: number) => void;
 
   constructor({ name, actionMap, id }: NoteListItemParams) {
     super({
       name: "NoteListItem",
       hexpand: true,
       cssClasses: [],
+      tooltipText: name,
     });
     this.ensureActions();
 
@@ -57,14 +71,6 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       widget.label.new(name, { xalign: 0, ellipse: "END", hAlign: "START" })
     );
 
-    // TODO: Look into fixing an issue that comes up when spamming right + left click on NoteLIstItems.
-    // Lots of "Broken accounting of active state" warnings that span nearly all widgets.
-    // Might need to consider going back to a single shared instance of ContextMenu,
-    // which should be easier to manage state on.
-    this._showContextMenu = debounce(100, (x: number, y: number) => {
-      this.buildContextMenu().popupAt(x, y);
-    });
-
     this.registerClickHandlers();
   }
 
@@ -78,24 +84,18 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   }
 
   private registerRightClickHandler() {
-    click.handle("right", this, ({ x, y }) => this._showContextMenu(x, y));
+    click.handle("right", this, ({ x, y }) =>
+      this.emit("note-context-menu-requested", this._id, x, y)
+    );
   }
 
   private registerLeftClickHandler() {
     click.handle("left", this, () =>
       action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, this._id)
     );
-  }
-
-  private buildContextMenu() {
-    return ContextMenu.fromObject(
-      {
-        Rename: `${NoteListItem.Actions.PromptRename}::${this._id}`,
-        Delete: `${NoteListItem.Actions.PromptDelete}::${this._id}`,
-        Open: `${NoteListItem.Actions.DoOpen}::${this._id}`,
-      } as const,
-      { scope: "win", parent: this }
-    );
+    this.connect("activate", () => {
+      action.invoke(this._actionMap, NoteListItem.Actions.DoOpen, this._id);
+    });
   }
 
   private buildRenamePopover(currentname: string): Gtk.Popover {
