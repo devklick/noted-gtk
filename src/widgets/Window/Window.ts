@@ -13,10 +13,12 @@ import ContentHeader from "../Content/ContentHeader";
 import AppAboutDialog from "./dialogs/AppAboutDialog";
 import AppPreferencesDialog from "./dialogs/AppPreferencesDialog";
 import Layout from "../Layout/Layout";
+import { AppShortcuts } from "../../core/ShortcutManager";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
   appName: string;
+  shortcuts: AppShortcuts;
 }
 
 export default class Window extends Adw.ApplicationWindow {
@@ -28,17 +30,24 @@ export default class Window extends Adw.ApplicationWindow {
   private _keyController: Gtk.EventControllerKey;
   private _appName: string;
   private _layout: Layout;
+  private _shortcuts: AppShortcuts;
 
-  constructor({ notesDir, appName }: WindowParams) {
+  constructor({ notesDir, appName, shortcuts }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
     this.set_size_request(500, 300);
     this._notesDir = notesDir;
     this._appName = appName;
+    this._shortcuts = shortcuts;
     this.defineActions();
 
     this._keyController = new Gtk.EventControllerKey();
     this.add_controller(this._keyController);
-    this._layout = new Layout({ actionMap: this, appName, notesDir });
+    this._layout = new Layout({
+      actionMap: this,
+      appName,
+      notesDir,
+      shortcuts,
+    });
 
     this.set_content(this._layout);
 
@@ -50,7 +59,7 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   public presentPreferencesDialog() {
-    new AppPreferencesDialog({ parent: this });
+    new AppPreferencesDialog({ parent: this, shortcuts: this._shortcuts });
   }
 
   private defineActions() {
@@ -64,21 +73,20 @@ export default class Window extends Adw.ApplicationWindow {
       this.buildDeleteDialog(id)
     );
 
-    this._keyController.connect("key-pressed", (_, keyval, keycode, state) => {
-      const ctrl = state & Gdk.ModifierType.CONTROL_MASK;
+    this._keyController.connect("key-pressed", (_, keyval, _keycode, state) => {
+      switch (this._shortcuts.check(state, keyval)) {
+        case "new-note":
+          action.invoke(this, ContentHeader.Actions.NewNote);
+          return Gdk.EVENT_STOP;
+        case "rename-note":
+          action.invoke(this, NoteListItem.Actions.PromptRenameCurrent);
+          return Gdk.EVENT_STOP;
+        case "toggle-sidebar":
+          this._layout.toggleSideBar();
+          return Gdk.EVENT_STOP;
 
-      if (ctrl && (keyval === Gdk.KEY_N || keyval === Gdk.KEY_n)) {
-        action.invoke(this, ContentHeader.Actions.NewNote);
-        return Gdk.EVENT_STOP;
-      }
-
-      if (!ctrl && keyval === Gdk.KEY_F2) {
-        action.invoke(this, NoteListItem.Actions.PromptRenameCurrent);
-        return Gdk.EVENT_STOP;
-      }
-
-      if (ctrl && (keyval === Gdk.KEY_H || keyval === Gdk.KEY_h)) {
-        this._layout.toggleSideBar();
+        default:
+          return Gdk.EVENT_PROPAGATE;
       }
     });
   }

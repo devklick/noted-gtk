@@ -12,6 +12,7 @@ import SettingsWindow from "../SettingsWindow";
 import styles from "../../styles.css?inline";
 import AppDir from "../../core/fs/AppDir";
 import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
+import ShortcutManager from "../../core/ShortcutManager";
 
 const APPLICATION_ID = "io.github.devklick.noted";
 
@@ -30,6 +31,7 @@ export default class Application extends Adw.Application {
       this._window = new Window({
         notesDir: this.appDir.notesDir,
         appName: this.name,
+        shortcuts: this.shortcutManager,
       });
       this._window.set_application(this);
     }
@@ -56,8 +58,16 @@ export default class Application extends Adw.Application {
 
   private _appDir: AppDir | null = null;
   public get appDir(): AppDir {
-    this._appDir ??= this._appDir = new AppDir({ appName: this.name });
+    this._appDir ??= new AppDir({ appName: this.name });
     return this._appDir;
+  }
+
+  private _shortcutManager: ShortcutManager | null = null;
+  public get shortcutManager(): ShortcutManager {
+    this._shortcutManager ??= new ShortcutManager({
+      settings: this.appSettings,
+    });
+    return this._shortcutManager;
   }
 
   public get id() {

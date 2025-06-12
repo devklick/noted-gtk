@@ -2,19 +2,23 @@
 <schemalist>
     <schema id="io.github.devklick.noted.settings" path="/io/github/devklick/noted/">
         <key name="save-note" type="s">
-            <default>&apos;&lt;Ctrl&gt; S&apos;</default>
+            <default>&quot;&lt;Control&gt;s&quot;</default>
             <summary>Save Note</summary>
         </key>
         <key name="delete-note" type="s">
-            <default>&apos;&lt;Ctrl+Shift&gt; X&apos;</default>
+            <default>&quot;&lt;Shift&gt;Delete&quot;</default>
             <summary>Delete Note</summary>
         </key>
         <key name="new-note" type="s">
-            <default>&apos;&lt;Ctrl&gt; N&apos;</default>
+            <default>&quot;&lt;Control&gt;n&quot;</default>
             <summary>New Note</summary>
         </key>
-        <key name="new-note" type="s">
-            <default>&apos;F2&apos;</default>
+        <key name="rename-note" type="s">
+            <default>&quot;F12&quot;</default>
+            <summary>Rename Note</summary>
+        </key>
+        <key name="toggle-sidebar" type="s">
+            <default>&quot;&lt;Control&gt;h&quot;</default>
             <summary>Rename Note</summary>
         </key>
     </schema>

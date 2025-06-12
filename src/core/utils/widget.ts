@@ -160,7 +160,7 @@ type AdwHeaderBarParams = Partial<Adw.HeaderBar.ConstructorProps>;
 type CustomHeaderBarParams = Partial<{
   start: Gtk.Widget;
   end: Gtk.Widget;
-  title: Gtk.Widget;
+  title: Gtk.Widget | string;
 }>;
 const _customHeaderBarKeys: Record<keyof CustomHeaderBarParams, 1> = {
   start: 1,
@@ -195,7 +195,12 @@ function createHeaderBar(params: HeaderBarParams = {}): Adw.HeaderBar {
     header.pack_end(params.end);
   }
   if (params.title) {
-    header.set_title_widget(params.title);
+    const title =
+      params.title instanceof Gtk.Widget
+        ? params.title
+        : label.new(params.title);
+
+    header.set_title_widget(title);
   }
   return header;
 }

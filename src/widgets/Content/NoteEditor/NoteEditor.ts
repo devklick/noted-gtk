@@ -8,12 +8,14 @@ import NoteListItem from "../../SideBar/NoteList/NoteListItem";
 import action from "../../../core/utils/action";
 import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
+import { AppShortcuts } from "../../../core/ShortcutManager";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
 interface NoteEditorParams {
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
+  shortcuts: AppShortcuts;
 }
 
 export default class NoteEditor extends Gtk.ScrolledWindow {
@@ -38,6 +40,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   private _actionMap: Gio.ActionMap;
   private _buffer: Gtk.TextBuffer;
   private _textViewKeyController: Gtk.EventControllerKey;
+  private _shortcuts: AppShortcuts;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -61,12 +64,13 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     return currentText !== this._savedText;
   }
 
-  constructor({ notesDir, actionMap }: NoteEditorParams) {
+  constructor({ notesDir, actionMap, shortcuts }: NoteEditorParams) {
     super({ hexpand: true, vexpand: true });
     this.ensureActions();
 
     this._notesDir = notesDir;
     this._actionMap = actionMap;
+    this._shortcuts = shortcuts;
 
     this._textViewKeyController = new Gtk.EventControllerKey();
     this._textView = new Gtk.TextView({
@@ -146,20 +150,19 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._textViewKeyController.connect(
       "key-pressed",
       (_, keyval, _keycode, state) => {
-        const ctrl = state & Gdk.ModifierType.CONTROL_MASK;
-        const shift = state & Gdk.ModifierType.SHIFT_MASK;
-
-        if (ctrl && (keyval === Gdk.KEY_S || keyval === Gdk.KEY_s)) {
-          this.save();
-          return Gdk.EVENT_STOP;
-        }
-        if (ctrl && shift && (keyval === Gdk.KEY_X || keyval === Gdk.KEY_x)) {
-          action.invoke(
-            this._actionMap,
-            NoteListItem.Actions.PromptDelete,
-            this._noteId
-          );
-          return Gdk.EVENT_STOP;
+        switch (this._shortcuts.check(state, keyval)) {
+          case "delete-note":
+            action.invoke(
+              this._actionMap,
+              NoteListItem.Actions.PromptDelete,
+              this._noteId
+            );
+            return Gdk.EVENT_STOP;
+          case "save-note":
+            this.save();
+            return Gdk.EVENT_STOP;
+          default:
+            return Gdk.EVENT_PROPAGATE;
         }
       }
     );

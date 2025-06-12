@@ -2,18 +2,28 @@ import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
 import icon from "../../../core/utils/icon";
 import Gtk from "@girs/gtk-4.0";
+import widget from "../../../core/utils/widget";
+import { AppShortcuts } from "../../../core/ShortcutManager";
 
 interface AppPreferencesDialogParams {
   parent: Gtk.Window;
   autoPresent?: boolean;
+  shortcuts: AppShortcuts;
 }
 
 export default class AppPreferencesDialog extends Adw.PreferencesWindow {
   static {
     GObject.registerClass({ GTypeName: "AppPreferencesDialog" }, this);
   }
-  constructor({ parent, autoPresent = true }: AppPreferencesDialogParams) {
+
+  private shortcuts: AppShortcuts;
+  constructor({
+    parent,
+    shortcuts,
+    autoPresent = true,
+  }: AppPreferencesDialogParams) {
     super({ resizable: false, transientFor: parent });
+    this.shortcuts = shortcuts;
     this.addKeyBindingsPage();
 
     if (autoPresent) {
@@ -65,6 +75,32 @@ export default class AppPreferencesDialog extends Adw.PreferencesWindow {
       title: "Save",
       subtitle: "Save the current contents of the note",
     });
+    const [key, mode] = this.shortcuts.get("delete-note")!;
+    const label = Gtk.accelerator_name(key, mode);
+    const change = new Gtk.Button({
+      child: new Gtk.ShortcutLabel({
+        accelerator: label,
+      }),
+    });
+    change.connect("clicked", () => {
+      const dialog = new Adw.Window({ transientFor: this, modal: true });
+      const header = widget.header.new({ title: "Keys" });
+      const label = new Gtk.Label({ label: "test" });
+      const box = widget.box.v();
+
+      box.append(header);
+      box.append(label);
+      dialog.set_content(box);
+
+      const keyController = new Gtk.EventControllerKey();
+      keyController.connect("key-pressed", (_, keyval, keycode, state) => {
+        console.log(keyval, keycode, state);
+      });
+      dialog.add_controller(keyController);
+      dialog.grab_focus();
+      dialog.present();
+    });
+    saveRow.add_suffix(change);
     const deleteRow = new Adw.ActionRow({
       title: "Delete",
       subtitle: "Delete the currently-opened note",

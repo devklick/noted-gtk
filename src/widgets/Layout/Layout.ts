@@ -6,11 +6,13 @@ import SideBar from "../SideBar";
 import Content from "../Content";
 import NotesDir from "../../core/fs/NotesDir";
 import action from "../../core/utils/action";
+import { AppShortcuts } from "../../core/ShortcutManager";
 
 interface LayoutParams {
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
   appName: string;
+  shortcuts: AppShortcuts;
 }
 
 export default class Layout extends Adw.Bin {
@@ -28,7 +30,7 @@ export default class Layout extends Adw.Bin {
   private _actionMap: Gio.ActionMap;
   private _splitView: Adw.OverlaySplitView;
 
-  constructor({ actionMap, appName, notesDir }: LayoutParams) {
+  constructor({ actionMap, appName, notesDir, shortcuts }: LayoutParams) {
     super();
     this._actionMap = actionMap;
     this.ensureActions();
@@ -46,6 +48,7 @@ export default class Layout extends Adw.Bin {
       sideBar: this._sideBar,
       actionMap,
       notesDir,
+      shortcuts,
     });
 
     this._splitView.set_sidebar(this._sideBar);
