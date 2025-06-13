@@ -65,6 +65,7 @@ export default class BindKeyDialog extends Adw.Window {
     const header = widget.header.new({
       title: `Bind ${shortcuts.getLabel(shortcut)}`,
     });
+    header.titleWidget.add_css_class("title-2");
     const content = widget.box.v({
       margin: 10,
       spacing: 10,

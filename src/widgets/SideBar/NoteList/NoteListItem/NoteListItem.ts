@@ -99,11 +99,26 @@ export default class NoteListItem extends Gtk.ListBoxRow {
   }
 
   private buildRenamePopover(currentname: string): Gtk.Popover {
-    const popover = new Gtk.Popover({ name: "RenamePopover" });
-    const content = widget.box.v({ margin: 20, spacing: 10 });
+    const header = widget.label.new("Rename Note", { cssClasses: ["title-2"] });
+    const input = new Gtk.Entry({ text: currentname });
 
-    popover.set_child(content);
+    const confirm = new Gtk.Button({
+      label: "Rename",
+      cssClasses: ["suggested-action"],
+    });
+
+    const buttonBox = widget.box.h({ hAlign: "END", children: [confirm] });
+
+    const content = widget.box.v({
+      margin: 20,
+      spacing: 10,
+      children: [header, input, buttonBox],
+    });
+
+    const popover = new Gtk.Popover({ name: "RenamePopover" });
     popover.set_parent(this);
+    popover.set_child(content);
+
     popover.connect("closed", () => {
       GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
         if (popover.get_parent()) {
@@ -112,19 +127,6 @@ export default class NoteListItem extends Gtk.ListBoxRow {
         return GLib.SOURCE_REMOVE;
       });
     });
-
-    const header = widget.label.new("Rename Note", { cssClasses: ["title-2"] });
-    const input = new Gtk.Entry({ text: currentname });
-    const buttonBox = widget.box.h({ hAlign: "END" });
-    const confirm = new Gtk.Button({
-      label: "Rename",
-      cssClasses: ["suggested-action"],
-    });
-
-    buttonBox.append(confirm);
-    content.append(header);
-    content.append(input);
-    content.append(buttonBox);
 
     const submit = () =>
       action.invoke(

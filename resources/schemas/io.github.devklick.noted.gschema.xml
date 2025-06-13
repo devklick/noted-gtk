@@ -21,5 +21,9 @@
             <default>&quot;&lt;Control&gt;h&quot;</default>
             <summary>Rename Note</summary>
         </key>
+        <key name="auto-save" type="b">
+            <default>true</default>
+            <summary>Autosave</summary>
+        </key>
     </schema>
 </schemalist>
