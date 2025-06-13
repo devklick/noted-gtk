@@ -1,12 +1,12 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
-import widget from "../../../core/utils/widget";
+import widget from "../../../../core/utils/widget";
 import {
   AppShortcuts,
   ShortcutKeys,
   ShortcutType,
-} from "../../../core/ShortcutManager";
+} from "../../../../core/ShortcutManager";
 
 interface BindKeyDialogParams {
   parent: Gtk.Window;
@@ -16,6 +16,10 @@ interface BindKeyDialogParams {
   shortcuts: AppShortcuts;
 }
 
+/**
+ * A dialog that allows users to enter a new key combination
+ * to use as the binding for the specified shortcut.
+ */
 export default class BindKeyDialog extends Adw.Window {
   static {
     GObject.registerClass({ GTypeName: "BindKeyDialog" }, this);

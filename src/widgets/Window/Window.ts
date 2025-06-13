@@ -5,14 +5,14 @@ import Gdk from "@girs/gdk-4.0";
 
 import SideBar from "../SideBar";
 import Content from "../Content";
-import action from "../../core/utils/action";
-import NoteListItem from "../SideBar/NoteList/NoteListItem";
-import NotesDir from "../../core/fs/NotesDir";
-
 import ContentHeader from "../Content/ContentHeader";
-import AppAboutDialog from "./dialogs/AppAboutDialog";
-import AppPreferencesDialog from "./dialogs/AppPreferencesDialog";
+import AboutDialog from "./dialogs/AboutDialog";
+import PreferencesDialog from "./dialogs/PreferencesDialog/PreferencesDialog";
 import Layout from "../Layout/Layout";
+import NoteListItem from "../SideBar/NoteList/NoteListItem";
+
+import action from "../../core/utils/action";
+import NotesDir from "../../core/fs/NotesDir";
 import { AppShortcuts } from "../../core/ShortcutManager";
 
 interface WindowParams {
@@ -55,11 +55,11 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   public presentAboutDialog() {
-    new AppAboutDialog({ appName: this._appName, parent: this });
+    new AboutDialog({ appName: this._appName, parent: this });
   }
 
   public presentPreferencesDialog() {
-    new AppPreferencesDialog({ parent: this, shortcuts: this._shortcuts });
+    new PreferencesDialog({ parent: this, shortcuts: this._shortcuts });
   }
 
   private defineActions() {

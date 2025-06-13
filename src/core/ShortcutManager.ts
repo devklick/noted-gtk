@@ -14,6 +14,7 @@ export const Shortcuts = {
   ToggleSidebar: "toggle-sidebar",
 } as const;
 
+export type ShortcutGroup = "Application" | "Editor";
 export type ShortcutType = (typeof Shortcuts)[keyof typeof Shortcuts];
 export type ShortcutKeys = { key: number; modifier: Gdk.ModifierType };
 
@@ -26,12 +27,25 @@ export const ShortcutLabels = {
 } as const satisfies Record<ShortcutType, string>;
 
 export const ShortcutDescriptions = {
-  "delete-note": "",
-  "new-note": "",
-  "rename-note": "",
-  "save-note": "",
-  "toggle-sidebar": "",
+  "delete-note": "Rename the currently-opened note",
+  "new-note": "Create a new note and open it in the editor",
+  "rename-note": "Delete the currently-opened note",
+  "save-note": "Save the current contents of the note",
+  "toggle-sidebar": "Toggle (show/hide) the sidebar",
 } as const satisfies Record<ShortcutType, string>;
+
+export const ShortcutGroups: Record<ShortcutType, ShortcutGroup> = {
+  "delete-note": "Editor",
+  "save-note": "Editor",
+  "new-note": "Application",
+  "rename-note": "Editor",
+  "toggle-sidebar": "Application",
+} as const;
+
+export const ShortcutGroupDescriptions: Record<ShortcutGroup, string> = {
+  Application: "Key bindings to interact with the core application",
+  Editor: "Key bindings to interact with the note currently open in the editor",
+};
 
 // prettier-ignore
 const defaultShortcuts = {
@@ -42,6 +56,17 @@ const defaultShortcuts = {
   "toggle-sidebar": Gtk.accelerator_name(Gdk.KEY_h,Gdk.ModifierType.CONTROL_MASK),
 } satisfies Record<ShortcutType, string>;
 
+interface ShortcutGroupMetadata {
+  label: ShortcutGroup;
+  description: string;
+}
+interface ShortcutMetadata {
+  type: ShortcutType;
+  label: string;
+  description: string;
+  group: ShortcutGroupMetadata;
+}
+
 export interface AppShortcuts {
   isSaveNote(keys: ShortcutKeys): boolean;
   isNewNote(keys: ShortcutKeys): boolean;
@@ -51,8 +76,10 @@ export interface AppShortcuts {
   check(keys: ShortcutKeys): ShortcutType | null;
   get(shortcut: ShortcutType): ShortcutKeys;
   getLabel(shortcut: ShortcutType): string;
+  getMeta(shortcut: ShortcutType): ShortcutMetadata;
   set(shortcut: ShortcutType, keys: ShortcutKeys): void;
   reset(shortcut: ShortcutType): void;
+  getAll(): Array<ShortcutMetadata>;
 }
 
 export default class ShortcutManager implements AppShortcuts {
@@ -70,6 +97,30 @@ export default class ShortcutManager implements AppShortcuts {
     this.loadShortcuts();
 
     this.settings.connect("changed", () => this.loadShortcuts());
+  }
+
+  public getAll(): Array<ShortcutMetadata> {
+    return Object.values(Shortcuts).map((type) => ({
+      type,
+      label: ShortcutLabels[type],
+      description: ShortcutDescriptions[type],
+      group: {
+        label: ShortcutGroups[type],
+        description: ShortcutGroupDescriptions[ShortcutGroups[type]],
+      },
+    }));
+  }
+
+  public getMeta(shortcut: ShortcutType): ShortcutMetadata {
+    return {
+      description: ShortcutDescriptions[shortcut],
+      label: ShortcutLabels[shortcut],
+      type: shortcut,
+      group: {
+        description: ShortcutGroupDescriptions[ShortcutGroups[shortcut]],
+        label: ShortcutGroups[shortcut],
+      },
+    };
   }
 
   public reset(shortcut: ShortcutType): void {
@@ -167,10 +218,6 @@ export default class ShortcutManager implements AppShortcuts {
     this.saveNote = this.getShotcut("save-note");
     this.newNote = this.getShotcut("new-note");
     this.renameNote = this.getShotcut("rename-note");
-    console.log(
-      this.renameNote,
-      Gtk.accelerator_get_label(this.renameNote.key, this.renameNote.modifier)
-    );
     this.deleteNote = this.getShotcut("delete-note");
     this.toggleSidebar = this.getShotcut("toggle-sidebar");
   }

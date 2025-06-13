@@ -2,17 +2,17 @@ import Adw from "@girs/adw-1";
 import Gtk from "@girs/gtk-4.0";
 import GObject from "@girs/gobject-2.0";
 
-interface AppAboutDialogParams {
+interface AboutDialogParams {
   appName: string;
   parent: Gtk.Window;
   autoPresent?: boolean;
 }
-export default class AppAboutDialog extends Adw.Bin {
+export default class AboutDialog extends Adw.Bin {
   static {
-    GObject.registerClass({ GTypeName: "AppAboutDialog" }, this);
+    GObject.registerClass({ GTypeName: "AboutDialog" }, this);
   }
 
-  constructor({ appName, parent, autoPresent = true }: AppAboutDialogParams) {
+  constructor({ appName, parent, autoPresent = true }: AboutDialogParams) {
     super();
 
     // TODO: Load from package.json
