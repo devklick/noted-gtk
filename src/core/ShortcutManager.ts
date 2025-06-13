@@ -14,33 +14,45 @@ export const Shortcuts = {
   ToggleSidebar: "toggle-sidebar",
 } as const;
 
-type Shortcut = (typeof Shortcuts)[keyof typeof Shortcuts];
+export type ShortcutType = (typeof Shortcuts)[keyof typeof Shortcuts];
+export type ShortcutKeys = { key: number; modifier: Gdk.ModifierType };
 
+export const ShortcutLabels = {
+  "delete-note": "Delete Note",
+  "new-note": "New Note",
+  "rename-note": "Rename Note",
+  "save-note": "Save Note",
+  "toggle-sidebar": "Toggle Sidebar",
+} as const satisfies Record<ShortcutType, string>;
+
+export const ShortcutDescriptions = {
+  "delete-note": "",
+  "new-note": "",
+  "rename-note": "",
+  "save-note": "",
+  "toggle-sidebar": "",
+} as const satisfies Record<ShortcutType, string>;
+
+// prettier-ignore
 const defaultShortcuts = {
   "new-note": Gtk.accelerator_name(Gdk.KEY_n, Gdk.ModifierType.CONTROL_MASK),
   "rename-note": Gtk.accelerator_name(Gdk.KEY_F12, null),
   "save-note": Gtk.accelerator_name(Gdk.KEY_s, Gdk.ModifierType.CONTROL_MASK),
-  "delete-note": Gtk.accelerator_name(
-    Gdk.KEY_Delete,
-    Gdk.ModifierType.SHIFT_MASK
-  ),
-  "toggle-sidebar": Gtk.accelerator_name(
-    Gdk.KEY_h,
-    Gdk.ModifierType.CONTROL_MASK
-  ),
-} satisfies Record<Shortcut, string>;
-
-type ShortcutKeys = [key: number, modifier: Gdk.ModifierType];
+  "delete-note": Gtk.accelerator_name(Gdk.KEY_Delete,Gdk.ModifierType.SHIFT_MASK),
+  "toggle-sidebar": Gtk.accelerator_name(Gdk.KEY_h,Gdk.ModifierType.CONTROL_MASK),
+} satisfies Record<ShortcutType, string>;
 
 export interface AppShortcuts {
-  isSaveNote(modifier: Gdk.ModifierType, key: number): boolean;
-  isNewNote(modifier: Gdk.ModifierType, key: number): boolean;
-  isDeleteNote(modifier: Gdk.ModifierType, key: number): boolean;
-  isRenameNote(modifier: Gdk.ModifierType, key: number): boolean;
-  isToggleSidebar(modifier: Gdk.ModifierType, key: number): boolean;
-  check(modifier: Gdk.ModifierType, key: number): Shortcut | null;
-  get(shortcut: Shortcut): ShortcutKeys | null;
-  set(shortcut: Shortcut, keys: ShortcutKeys): void;
+  isSaveNote(keys: ShortcutKeys): boolean;
+  isNewNote(keys: ShortcutKeys): boolean;
+  isDeleteNote(keys: ShortcutKeys): boolean;
+  isRenameNote(keys: ShortcutKeys): boolean;
+  isToggleSidebar(keys: ShortcutKeys): boolean;
+  check(keys: ShortcutKeys): ShortcutType | null;
+  get(shortcut: ShortcutType): ShortcutKeys;
+  getLabel(shortcut: ShortcutType): string;
+  set(shortcut: ShortcutType, keys: ShortcutKeys): void;
+  reset(shortcut: ShortcutType): void;
 }
 
 export default class ShortcutManager implements AppShortcuts {
@@ -60,7 +72,11 @@ export default class ShortcutManager implements AppShortcuts {
     this.settings.connect("changed", () => this.loadShortcuts());
   }
 
-  public get(shortcut: Shortcut): ShortcutKeys | null {
+  public reset(shortcut: ShortcutType): void {
+    this.settings.set_string(shortcut, defaultShortcuts[shortcut]);
+  }
+
+  public get(shortcut: ShortcutType): ShortcutKeys {
     switch (shortcut) {
       case "delete-note":
         return this.deleteNote;
@@ -73,55 +89,63 @@ export default class ShortcutManager implements AppShortcuts {
       case "toggle-sidebar":
         return this.toggleSidebar;
       default:
-        return null;
+        throw new Error(`Invalid shortcut: ${shortcut}`);
     }
   }
 
-  public set(shortcut: Shortcut, keys: ShortcutKeys): void {
-    this.settings.set_string(shortcut, Gtk.accelerator_name(keys[0], keys[1]));
+  getLabel(shortcut: ShortcutType): string {
+    return ShortcutLabels[shortcut];
   }
 
-  public isSaveNote(modifier: Gdk.ModifierType, key: number): boolean {
-    return this.isMatch([key, modifier], this.saveNote);
+  public set(shortcut: ShortcutType, { key, modifier }: ShortcutKeys): void {
+    this.settings.set_string(shortcut, Gtk.accelerator_name(key, modifier));
   }
 
-  public isNewNote(modifier: Gdk.ModifierType, key: number): boolean {
-    return this.isMatch([key, modifier], this.newNote);
+  public isSaveNote(keys: ShortcutKeys): boolean {
+    return this.isMatch(keys, this.saveNote);
   }
 
-  public isDeleteNote(modifier: Gdk.ModifierType, key: number): boolean {
-    return this.isMatch([key, modifier], this.deleteNote);
+  public isNewNote(keys: ShortcutKeys): boolean {
+    return this.isMatch(keys, this.newNote);
   }
 
-  public isRenameNote(modifier: Gdk.ModifierType, key: number): boolean {
-    return this.isMatch([key, modifier], this.renameNote);
+  public isDeleteNote(keys: ShortcutKeys): boolean {
+    return this.isMatch(keys, this.deleteNote);
   }
 
-  public isToggleSidebar(modifier: Gdk.ModifierType, key: number): boolean {
-    return this.isMatch([key, modifier], this.toggleSidebar);
+  public isRenameNote(keys: ShortcutKeys): boolean {
+    return this.isMatch(keys, this.renameNote);
   }
 
-  public check(modifier: Gdk.ModifierType, key: number): Shortcut | null {
-    if (this.isSaveNote(modifier, key)) return "save-note";
-    if (this.isNewNote(modifier, key)) return "new-note";
-    if (this.isDeleteNote(modifier, key)) return "delete-note";
-    if (this.isRenameNote(modifier, key)) return "rename-note";
-    if (this.isToggleSidebar(modifier, key)) return "toggle-sidebar";
+  public isToggleSidebar(keys: ShortcutKeys): boolean {
+    return this.isMatch(keys, this.toggleSidebar);
+  }
+
+  public check(keys: ShortcutKeys): ShortcutType | null {
+    if (this.isSaveNote(keys)) return "save-note";
+    if (this.isNewNote(keys)) return "new-note";
+    if (this.isDeleteNote(keys)) return "delete-note";
+    if (this.isRenameNote(keys)) return "rename-note";
+    if (this.isToggleSidebar(keys)) return "toggle-sidebar";
     return null;
   }
 
   private isMatch(
-    [inKey, inMod]: ShortcutKeys,
-    [actKey, actMod]: ShortcutKeys
+    { key: inKey, modifier: inMod }: ShortcutKeys,
+    { key: actKey, modifier: actMod }: ShortcutKeys
   ): boolean {
     return inKey === actKey && (inMod & actMod) === actMod;
   }
 
-  private getShotcut(name: Shortcut): ShortcutKeys {
+  private getShotcut(name: ShortcutType): ShortcutKeys {
     const shortcut = this.settings.get_string(name);
     let [success, keyval, mods] = Gtk.accelerator_parse(shortcut);
 
-    if (success) return [keyval, mods ?? Gdk.ModifierType.NO_MODIFIER_MASK];
+    if (success)
+      return {
+        key: keyval,
+        modifier: mods ?? Gdk.ModifierType.NO_MODIFIER_MASK,
+      };
 
     console.log(
       `Error with keybinding ${name} ${shortcut}. Reverting to redefault ${defaultShortcuts[name]}`
@@ -130,7 +154,11 @@ export default class ShortcutManager implements AppShortcuts {
     this.settings.set_string(name, defaultShortcuts[name]);
     [success, keyval, mods] = Gtk.accelerator_parse(defaultShortcuts[name]);
 
-    if (success) return [keyval, mods ?? Gdk.ModifierType.NO_MODIFIER_MASK];
+    if (success)
+      return {
+        key: keyval,
+        modifier: mods ?? Gdk.ModifierType.NO_MODIFIER_MASK,
+      };
 
     throw new Error(`Problem with keybindings: ${name}`);
   }
@@ -139,6 +167,10 @@ export default class ShortcutManager implements AppShortcuts {
     this.saveNote = this.getShotcut("save-note");
     this.newNote = this.getShotcut("new-note");
     this.renameNote = this.getShotcut("rename-note");
+    console.log(
+      this.renameNote,
+      Gtk.accelerator_get_label(this.renameNote.key, this.renameNote.modifier)
+    );
     this.deleteNote = this.getShotcut("delete-note");
     this.toggleSidebar = this.getShotcut("toggle-sidebar");
   }

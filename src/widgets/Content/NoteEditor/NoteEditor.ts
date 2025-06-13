@@ -149,8 +149,8 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
     this._textViewKeyController.connect(
       "key-pressed",
-      (_, keyval, _keycode, state) => {
-        switch (this._shortcuts.check(state, keyval)) {
+      (_, key, _keycode, modifier) => {
+        switch (this._shortcuts.check({ key, modifier })) {
           case "delete-note":
             action.invoke(
               this._actionMap,
@@ -160,6 +160,12 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
             return Gdk.EVENT_STOP;
           case "save-note":
             this.save();
+            return Gdk.EVENT_STOP;
+          case "rename-note":
+            action.invoke(
+              this._actionMap,
+              NoteListItem.Actions.PromptRenameCurrent
+            );
             return Gdk.EVENT_STOP;
           default:
             return Gdk.EVENT_PROPAGATE;

@@ -73,13 +73,10 @@ export default class Window extends Adw.ApplicationWindow {
       this.buildDeleteDialog(id)
     );
 
-    this._keyController.connect("key-pressed", (_, keyval, _keycode, state) => {
-      switch (this._shortcuts.check(state, keyval)) {
+    this._keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
+      switch (this._shortcuts.check({ key, modifier })) {
         case "new-note":
           action.invoke(this, ContentHeader.Actions.NewNote);
-          return Gdk.EVENT_STOP;
-        case "rename-note":
-          action.invoke(this, NoteListItem.Actions.PromptRenameCurrent);
           return Gdk.EVENT_STOP;
         case "toggle-sidebar":
           this._layout.toggleSideBar();

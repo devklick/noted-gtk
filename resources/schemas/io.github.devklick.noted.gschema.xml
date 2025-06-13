@@ -14,7 +14,7 @@
             <summary>New Note</summary>
         </key>
         <key name="rename-note" type="s">
-            <default>&quot;F12&quot;</default>
+            <default>&quot;F2&quot;</default>
             <summary>Rename Note</summary>
         </key>
         <key name="toggle-sidebar" type="s">

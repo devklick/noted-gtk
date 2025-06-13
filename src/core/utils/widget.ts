@@ -39,6 +39,13 @@ function applyCustomBaseParams(params: WidgetParams): GtkWidgetParams {
   return omitKeys(params, CustomWidgetParamKeys);
 }
 
+function ensureClasses<T extends Partial<Gtk.Widget.ConstructorProps>>(
+  params: T
+): T & { cssClasses: string[] } {
+  if (!params.cssClasses) params.cssClasses = [];
+  return params as T & { cssClasses: string[] };
+}
+
 function omitKeys<T extends object, K extends keyof T>(
   obj: T,
   keys: K[]
@@ -53,20 +60,41 @@ function omitKeys<T extends object, K extends keyof T>(
 
 //#region ======================= Box =======================
 type GtkBoxParams = GtkWidgetParams & Partial<Gtk.Box.ConstructorProps>;
-type BoxParams = GtkBoxParams & CustomWidgetParams;
+type CustomBoxParams = Partial<{
+  children: Array<Gtk.Widget>;
+}>;
+const _customBoxParamKeys: Record<keyof CustomBoxParams, 1> = {
+  children: 1,
+} as const;
+
+const CustomBoxtParamKeys = Object.keys(_customBoxParamKeys) as Array<
+  keyof typeof _customBoxParamKeys
+>;
+
+type BoxParams = GtkBoxParams & CustomWidgetParams & CustomBoxParams;
+
+function applyCustomBoxParams(params: BoxParams): GtkBoxParams {
+  applyCustomBaseParams(params);
+
+  return omitKeys(params, [...CustomWidgetParamKeys, ...CustomBoxtParamKeys]);
+}
+
+export function createBox(params: BoxParams = {}): Gtk.Box {
+  const box = new Gtk.Box({
+    ...applyCustomBoxParams(params),
+  });
+  for (const child of params.children ?? []) {
+    box.append(child);
+  }
+  return box;
+}
 
 export function vBox(params: BoxParams = {}): Gtk.Box {
-  return new Gtk.Box({
-    ...applyCustomBaseParams(params),
-    orientation: Gtk.Orientation.VERTICAL,
-  });
+  return createBox({ ...params, orientation: Gtk.Orientation.VERTICAL });
 }
 
 export function hBox(params: BoxParams = {}): Gtk.Box {
-  return new Gtk.Box({
-    ...applyCustomBaseParams(params),
-    orientation: Gtk.Orientation.HORIZONTAL,
-  });
+  return createBox({ ...params, orientation: Gtk.Orientation.HORIZONTAL });
 }
 
 function removeAllChildren(box: Gtk.Box) {
@@ -78,7 +106,40 @@ function removeAllChildren(box: Gtk.Box) {
   }
 }
 
-export const box = { v: vBox, h: hBox, removeAllChildren };
+function hasChild(box: Gtk.Box, child: Gtk.Widget): boolean {
+  if (!box.get_first_child()) return false;
+
+  for (
+    let _child = box.get_first_child();
+    _child !== null;
+    _child = _child.get_next_sibling()
+  ) {
+    if (_child === child) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function safeAppend(box: Gtk.Box, child: Gtk.Widget) {
+  if (!hasChild(box, child)) {
+    box.append(child);
+  }
+}
+function safeRemove(box: Gtk.Box, child: Gtk.Widget) {
+  if (hasChild(box, child)) {
+    box.remove(child);
+  }
+}
+
+export const box = {
+  v: vBox,
+  h: hBox,
+  removeAllChildren,
+  hasChild,
+  safeAppend,
+  safeRemove,
+};
 
 //#endregion
 
@@ -107,7 +168,7 @@ function applyCustomLabelParams(params: LabelParams): GtkLabelParams {
   return omitKeys(params, [...CustomLabelParamKeys, ...CustomWidgetParamKeys]);
 }
 
-function createLabel(value: string | null, params: LabelParams = {}) {
+function createLabel(value: string | null = null, params: LabelParams = {}) {
   return new Gtk.Label({
     ...applyCustomLabelParams(params),
     label: value ?? "",
@@ -208,9 +269,59 @@ function createHeaderBar(params: HeaderBarParams = {}): Adw.HeaderBar {
 export const header = { new: createHeaderBar };
 //#endregion
 
+//#region ======================= Button =======================
+type GtkButtonParams = Partial<Gtk.Button.ConstructorProps>;
+type ButtonShape = "normal" | "circular" | "pill";
+type ButtonActionType = "suggested" | "destructive" | "normal";
+type ButtonDepth = "flat" | "raised";
+type CustomButtonParams = Partial<{
+  shape: ButtonShape;
+  actionType: ButtonActionType;
+  depth: ButtonDepth;
+}>;
+const _customButtonKeys: Record<keyof CustomButtonParams, 1> = {
+  shape: 1,
+  actionType: 1,
+  depth: 1,
+} as const;
+
+const CustomButtonKeys = Object.keys(_customButtonKeys) as Array<
+  keyof typeof _customButtonKeys
+>;
+
+type ButtonParams = WidgetParams & GtkButtonParams & CustomButtonParams;
+
+function applyCustomButtonParams(params: ButtonParams): GtkButtonParams {
+  applyCustomBaseParams(params);
+  ensureClasses(params);
+  if (params.shape && params.shape !== "normal") {
+    params.cssClasses?.push(params.shape);
+  }
+  if (params.actionType && params.actionType !== "normal") {
+    params.cssClasses?.push(`${params.actionType}-action`);
+  }
+  if (params.depth) {
+    params.cssClasses?.push(params.depth);
+  }
+
+  return omitKeys(params, [...CustomWidgetParamKeys, ...CustomButtonKeys]);
+}
+
+function createButton(params: ButtonParams = {}): Gtk.Button {
+  const button = new Gtk.Button({
+    ...applyCustomButtonParams(params),
+  });
+
+  return button;
+}
+
+export const button = { new: createButton };
+//#endregion
+
 export default {
   box,
   label,
   toolbarView,
   header,
+  button,
 };

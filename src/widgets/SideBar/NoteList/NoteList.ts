@@ -213,6 +213,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
   }
 
   private handlePromptRenameCurrent() {
+    console.log("handlePromptRenameCurrent");
     if (!this._openNoteId) return;
     action.invoke(this._actionMap, Layout.Actions.ShowSidebarChanged, true);
     this.promptRename(this._openNoteId);

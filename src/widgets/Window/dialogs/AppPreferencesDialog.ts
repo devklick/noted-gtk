@@ -3,7 +3,8 @@ import GObject from "@girs/gobject-2.0";
 import icon from "../../../core/utils/icon";
 import Gtk from "@girs/gtk-4.0";
 import widget from "../../../core/utils/widget";
-import { AppShortcuts } from "../../../core/ShortcutManager";
+import { AppShortcuts, ShortcutType } from "../../../core/ShortcutManager";
+import BindKeyDialog from "./BindKeyDialog";
 
 interface AppPreferencesDialogParams {
   parent: Gtk.Window;
@@ -54,10 +55,12 @@ export default class AppPreferencesDialog extends Adw.PreferencesWindow {
       title: "New note",
       subtitle: "Create a new note and open it in the editor",
     });
+    addNoteRow.add_suffix(this.createSuffix("new-note"));
     const toggleSideBarRow = new Adw.ActionRow({
       title: "Toggle Sidebar",
       subtitle: "Toggle (show/hide) the sidebar",
     });
+    toggleSideBarRow.add_suffix(this.createSuffix("toggle-sidebar"));
 
     group.add(addNoteRow);
     group.add(toggleSideBarRow);
@@ -75,39 +78,87 @@ export default class AppPreferencesDialog extends Adw.PreferencesWindow {
       title: "Save",
       subtitle: "Save the current contents of the note",
     });
-    const [key, mode] = this.shortcuts.get("delete-note")!;
-    const label = Gtk.accelerator_name(key, mode);
-    const change = new Gtk.Button({
-      child: new Gtk.ShortcutLabel({
-        accelerator: label,
-      }),
-    });
-    change.connect("clicked", () => {
-      const dialog = new Adw.Window({ transientFor: this, modal: true });
-      const header = widget.header.new({ title: "Keys" });
-      const label = new Gtk.Label({ label: "test" });
-      const box = widget.box.v();
 
-      box.append(header);
-      box.append(label);
-      dialog.set_content(box);
+    saveRow.add_suffix(this.createSuffix("save-note"));
 
-      const keyController = new Gtk.EventControllerKey();
-      keyController.connect("key-pressed", (_, keyval, keycode, state) => {
-        console.log(keyval, keycode, state);
-      });
-      dialog.add_controller(keyController);
-      dialog.grab_focus();
-      dialog.present();
-    });
-    saveRow.add_suffix(change);
     const deleteRow = new Adw.ActionRow({
       title: "Delete",
       subtitle: "Delete the currently-opened note",
     });
 
+    deleteRow.add_suffix(this.createSuffix("delete-note"));
+
+    const renameRow = new Adw.ActionRow({
+      title: "Rename",
+      subtitle: "Rename the currently-opened note",
+    });
+
+    renameRow.add_suffix(this.createSuffix("rename-note"));
+
     group.add(saveRow);
     group.add(deleteRow);
+    group.add(renameRow);
     page.add(group);
+  }
+
+  private createSuffix(shortcut: ShortcutType) {
+    const { changeButton, resetButton, content, shortcutKeys, shortcutLabel } =
+      this.createSuffixWidgets(shortcut);
+
+    changeButton.connect("clicked", () => {
+      new BindKeyDialog({
+        shortcut,
+        shortcutKeys,
+        shortcuts: this.shortcuts,
+        parent: this,
+        onConfirm: ({ key, modifier }) => {
+          this.shortcuts.set(shortcut, { key, modifier });
+          shortcutLabel.set_accelerator(Gtk.accelerator_name(key, modifier));
+        },
+      });
+    });
+
+    resetButton.connect("clicked", () => {
+      this.shortcuts.reset(shortcut);
+      const { key, modifier } = this.shortcuts.get(shortcut);
+      shortcutLabel.set_accelerator(Gtk.accelerator_name(key, modifier));
+    });
+
+    return content;
+  }
+
+  private createSuffixWidgets(shortcut: ShortcutType) {
+    const changeButton = widget.button.new({
+      actionType: "suggested",
+      icon_name: icon.symbolic("document-edit"),
+      marginTop: 10,
+      marginBottom: 10,
+      tooltip_text: "Edit binding",
+    });
+    const resetButton = widget.button.new({
+      actionType: "destructive",
+      icon_name: icon.symbolic("view-refresh"),
+      marginTop: 10,
+      marginBottom: 10,
+      tooltip_text: "Reset binding",
+    });
+
+    const shortcutKeys = this.shortcuts.get(shortcut);
+
+    const shortcutLabel = new Gtk.ShortcutLabel({
+      accelerator: Gtk.accelerator_name(
+        shortcutKeys.key,
+        shortcutKeys.modifier
+      ),
+      marginTop: 10,
+      marginBottom: 10,
+    });
+
+    const content = widget.box.h({
+      spacing: 10,
+      children: [shortcutLabel, changeButton, resetButton],
+    });
+
+    return { changeButton, resetButton, shortcutKeys, shortcutLabel, content };
   }
 }
