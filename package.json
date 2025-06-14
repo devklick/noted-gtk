@@ -16,7 +16,7 @@
     "private": true,
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "build:app": "vite build",
+        "build:app": "vite build && cp src/io.github.devklick.noted.js dist/io.github.devklick.noted.js && cp src/io.github.devklick.noted.src.gresource.xml dist/io.github.devklick.noted.src.gresource.xml && cp src/meson.build dist/meson.build",
         "build": "npm run build:app",
         "start:app": "XDG_DATA_DIRS=$(pwd)/.compiled-schemas:${XDG_DATA_DIRS} gjs -m dist/main.js",
         "debug:app": "GTK_DEBUG=interactive gjs -m dist/main.js",
@@ -24,7 +24,7 @@
         "validate": "npm run validate:types",
         "validate:types": "tsc --noEmit",
         "clear": "rm -rf dist",
-        "compile-schemas": "mkdir -p .compiled-schemas/glib-2.0/schemas && glib-compile-schemas resources/schemas --targetdir .compiled-schemas/glib-2.0/schemas"
+        "compile-schemas": "mkdir -p .compiled-schemas/glib-2.0/schemas && glib-compile-schemas data/gschemas --targetdir .compiled-schemas/glib-2.0/schemas"
     },
     "keywords": [],
     "dependencies": {

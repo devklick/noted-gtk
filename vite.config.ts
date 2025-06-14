@@ -10,11 +10,12 @@ export default defineConfig({
     target: "firefox115", // Since GJS 1.77.2
     assetsDir: ".",
     minify: false,
+    lib: {
+      entry: "src/main.ts",
+      formats: ["es"], // ✅ Needed for ESM output
+      fileName: () => "main.js", // ✅ Name of the output file
+    },
     rollupOptions: {
-      input: "src/main.ts",
-      output: {
-        entryFileNames: "main.js",
-      },
       external: [
         new RegExp("^gi://*", "i"),
         new RegExp("^resource://*", "i"),
