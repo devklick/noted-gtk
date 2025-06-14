@@ -1,3 +1,6 @@
+# Flatpak Manifest
+# See: https://docs.flatpak.org/en/latest/manifests.html
+
 app-id: io.github.devklick.noted
 runtime: org.gnome.Platform
 runtime-version: '47'

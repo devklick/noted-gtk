@@ -13,8 +13,7 @@ imports.package.init({
 // Import the main module and run the main function
 const loop = new GLib.MainLoop(null, false);
 
-// Import the resource declared in our gresource XML file:
-// io.github.devklick.noted.src.gresource.xml
+// Import the resource declared in our gresource XML file
 // @ts-expect-error
 import("resource:///io/github/devklick/noted/main.js")
   .then((main) => {
@@ -25,7 +24,5 @@ import("resource:///io/github/devklick/noted/main.js")
       return GLib.SOURCE_REMOVE;
     });
   })
-  .catch((error) => {
-    logError(error);
-  });
+  .catch(logError);
 loop.run();
