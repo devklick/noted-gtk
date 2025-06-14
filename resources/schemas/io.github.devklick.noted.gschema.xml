@@ -21,6 +21,10 @@
             <default>&quot;&lt;Control&gt;h&quot;</default>
             <summary>Rename Note</summary>
         </key>
+        <key name="search-notes" type="s">
+            <default>&quot;&lt;Control&gt;&lt;Shift&gt;f&quot;</default>
+            <summary>Search Note</summary>
+        </key>
         <key name="auto-save" type="b">
             <default>true</default>
             <summary>Autosave</summary>

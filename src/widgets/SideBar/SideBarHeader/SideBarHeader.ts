@@ -8,6 +8,7 @@ import Gdk from "@girs/gdk-4.0";
 import icon from "../../../core/utils/icon";
 import action from "../../../core/utils/action";
 import widget from "../../../core/utils/widget";
+import Layout from "../../Layout";
 
 interface SideBarHeaderParams {
   actionMap: Gio.ActionMap;
@@ -31,6 +32,7 @@ export default class SideBarHeader extends Adw.Bin {
 
   public static Actions = {
     SearchUpdated: "sidebar-search-updated",
+    FocusSearch: "sidebar-focus-search",
   } as const;
 
   constructor({ actionMap, appName }: SideBarHeaderParams) {
@@ -64,6 +66,7 @@ export default class SideBarHeader extends Adw.Bin {
 
   public static defineActions(actionMap: Gio.ActionMap) {
     action.create(actionMap, SideBarHeader.Actions.SearchUpdated, "string");
+    action.create(actionMap, SideBarHeader.Actions.FocusSearch);
     SideBarHeader._actionsCreated = true;
   }
 
@@ -95,13 +98,15 @@ export default class SideBarHeader extends Adw.Bin {
     }
   }
 
+  private openSearchInHeader() {
+    this._header.set_title_widget(this._searchEntry);
+    this._searchButton.hide();
+    this._searchEntry.grab_focus();
+  }
+
   private registerActionHandlers() {
     // Expand the search box to fill the header when the search button is clicked
-    this._searchButton.connect("clicked", () => {
-      this._header.set_title_widget(this._searchEntry);
-      this._searchButton.hide();
-      this._searchEntry.grab_focus();
-    });
+    this._searchButton.connect("clicked", () => this.openSearchInHeader());
 
     // Restore the header back to default when we're done searching.
     // This fires when we hit ESC or input has stopped.
@@ -123,6 +128,17 @@ export default class SideBarHeader extends Adw.Bin {
         this.restoreHeader(true);
       }
     });
+
+    action.handle(
+      this._actionMap,
+      SideBarHeader.Actions.FocusSearch,
+      null,
+      () => {
+        console.log("Handling focus-search");
+        action.invoke(this._actionMap, Layout.Actions.ShowSidebarChanged, true);
+        this.openSearchInHeader();
+      }
+    );
   }
   private ensureActions() {
     if (!SideBarHeader._actionsCreated) {

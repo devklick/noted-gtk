@@ -14,6 +14,7 @@ import NoteListItem from "../SideBar/NoteList/NoteListItem";
 import action from "../../core/utils/action";
 import NotesDir from "../../core/fs/NotesDir";
 import { AppShortcuts } from "../../core/ShortcutManager";
+import SideBarHeader from "../SideBar/SideBarHeader";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -74,12 +75,16 @@ export default class Window extends Adw.ApplicationWindow {
     );
 
     this._keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
+      console.log(this._shortcuts.check({ key, modifier }), { key, modifier });
       switch (this._shortcuts.check({ key, modifier })) {
         case "new-note":
           action.invoke(this, ContentHeader.Actions.NewNote);
           return Gdk.EVENT_STOP;
         case "toggle-sidebar":
           this._layout.toggleSideBar();
+          return Gdk.EVENT_STOP;
+        case "search-notes":
+          action.invoke(this, SideBarHeader.Actions.FocusSearch);
           return Gdk.EVENT_STOP;
 
         default:

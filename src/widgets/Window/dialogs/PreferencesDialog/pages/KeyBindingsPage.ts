@@ -5,18 +5,13 @@ import Gtk from "@girs/gtk-4.0";
 import BindKeyDialog from "../BindKeyDialog";
 import {
   AppShortcuts,
-  ShortcutGroup,
+  ShortcutGroupType,
   Shortcuts,
   ShortcutType,
 } from "../../../../../core/ShortcutManager";
 import icon from "../../../../../core/utils/icon";
 
 import widget from "../../../../../core/utils/widget";
-
-const groupDescriptions: Record<ShortcutGroup, string> = {
-  Application: "Key bindings to interact with the core application",
-  Editor: "Key bindings to interact with the note currently open in the editor",
-};
 
 interface KeyBindingsPageParams {
   shortcuts: AppShortcuts;
@@ -34,16 +29,18 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
     this.shortcuts = shortcuts;
     this._parent = parent;
 
-    const prefGroups: Partial<Record<ShortcutGroup, Adw.PreferencesGroup>> = {};
+    const prefGroups: Partial<Record<ShortcutGroupType, Adw.PreferencesGroup>> =
+      {};
 
     shortcuts.getAll().forEach((shortcut) => {
-      const prefsGroup =
-        prefGroups[shortcut.group.label] ??
-        new Adw.PreferencesGroup({
-          title: shortcut.group.label,
-          description: shortcut.group.description,
-        });
-      prefGroups[shortcut.group.label] = prefsGroup;
+      const groupType = shortcut.group.type;
+      // prettier-ignore
+      const prefsGroup = prefGroups[groupType] ?? new Adw.PreferencesGroup({
+        title: shortcut.group.label,
+        description: shortcut.group.description,
+      });
+
+      prefGroups[groupType] = prefsGroup;
 
       const row = new Adw.ActionRow({
         title: shortcut.label,
@@ -51,6 +48,7 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
       });
 
       prefsGroup.add(row);
+
       row.add_suffix(this.createSuffix(shortcut.type));
     });
 
@@ -87,15 +85,11 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
     const changeButton = widget.button.new({
       actionType: "suggested",
       icon_name: icon.symbolic("document-edit"),
-      marginTop: 10,
-      marginBottom: 10,
       tooltip_text: "Edit binding",
     });
     const resetButton = widget.button.new({
       actionType: "destructive",
       icon_name: icon.symbolic("view-refresh"),
-      marginTop: 10,
-      marginBottom: 10,
       tooltip_text: "Reset binding",
     });
 
@@ -106,13 +100,14 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
         shortcutKeys.key,
         shortcutKeys.modifier
       ),
-      marginTop: 10,
-      marginBottom: 10,
+      hexpand: false,
     });
 
     const content = widget.box.h({
       spacing: 10,
       children: [shortcutLabel, changeButton, resetButton],
+      vexpand: false,
+      vAlign: "CENTER",
     });
 
     return { changeButton, resetButton, shortcutKeys, shortcutLabel, content };
