@@ -9,6 +9,7 @@
         "url": "https://github.com/github/noted-gtk/issues"
     },
     "devDependencies": {
+        "cross-env": "^7.0.3",
         "typescript": "^5.8.3",
         "vite": "^6.3.3"
     },
@@ -18,8 +19,8 @@
         "test": "echo \"Error: no test specified\" && exit 1",
         "build:app": "vite build && cp src/io.github.devklick.noted.js dist/io.github.devklick.noted.js && cp src/io.github.devklick.noted.src.gresource.xml dist/io.github.devklick.noted.src.gresource.xml && cp src/meson.build dist/meson.build",
         "build": "npm run build:app",
-        "start:app": "XDG_DATA_DIRS=$(pwd)/.compiled-schemas:${XDG_DATA_DIRS} gjs -m dist/main.js",
-        "debug:app": "GTK_DEBUG=interactive gjs -m dist/main.js",
+        "start:app": "cross-env NOTED_DEV=1 XDG_DATA_DIRS=$(pwd)/.compiled-schemas:${XDG_DATA_DIRS} gjs -m dist/main.js",
+        "debug:app": "cross-env NOTED_DEV=1 GTK_DEBUG=interactive gjs -m dist/main.js",
         "start": "npm run build && npm run start:app",
         "validate": "npm run validate:types",
         "validate:types": "tsc --noEmit",

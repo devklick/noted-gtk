@@ -75,7 +75,6 @@ export default class Window extends Adw.ApplicationWindow {
     );
 
     this._keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
-      console.log(this._shortcuts.check({ key, modifier }), { key, modifier });
       switch (this._shortcuts.check({ key, modifier })) {
         case "new-note":
           action.invoke(this, ContentHeader.Actions.NewNote);

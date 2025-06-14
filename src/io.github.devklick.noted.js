@@ -18,7 +18,6 @@ const loop = new GLib.MainLoop(null, false);
 // @ts-expect-error
 import("resource:///io/github/devklick/noted/main.js")
   .then((main) => {
-    console.log('IMPORTED... HERE', main  );
     GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
       loop.quit();
       
@@ -27,7 +26,6 @@ import("resource:///io/github/devklick/noted/main.js")
     });
   })
   .catch((error) => {
-    console.log('BANG HERE');
     logError(error);
   });
 loop.run();
