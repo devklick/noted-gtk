@@ -16,7 +16,8 @@ interface NotesDirEntry {
   createdOn: Date;
   updatedOn: Date;
   starred: boolean;
-  archived: boolean;
+  locked: boolean;
+  hidden: boolean;
 }
 
 interface NotesDirParams {
@@ -52,7 +53,7 @@ export default class NotesDir {
 
   public list(): Record<string, NotesDirEntry> {
     return Object.entries(this.metaFile.getNotesMetadata()).reduce(
-      (acc, [id, { path, name, archived, starred }]) => {
+      (acc, [id, { path, name, locked, starred, hidden }]) => {
         const file = Gio.File.new_for_path(path);
         const info = fs.file.queryInfo(file, "created", "modified");
 
@@ -66,8 +67,9 @@ export default class NotesDir {
           name,
           path,
           updatedOn,
-          archived,
+          locked,
           starred,
+          hidden,
         };
         return acc;
       },

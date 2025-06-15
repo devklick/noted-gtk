@@ -92,11 +92,12 @@ export default class NoteList extends Gtk.ScrolledWindow {
     const lowerSearch = this._search?.toLowerCase();
     Object.entries(this._notesDir.list())
       .filter(
-        ([_, { name, starred, archived }]) =>
+        ([_, { name, starred, locked, hidden }]) =>
           (!lowerSearch || name.toLowerCase().includes(lowerSearch)) &&
           (this._currentCategory === "all" ||
             (this._currentCategory === "favourite" && starred) ||
-            (this._currentCategory === "archive" && archived))
+            (this._currentCategory === "locked" && locked) ||
+            (this._currentCategory === "hidden" && hidden))
       )
       .sort(([_a, a], [_b, b]) => b.updatedOn.getTime() - a.updatedOn.getTime())
       .forEach(([id, data]) => {
@@ -104,11 +105,13 @@ export default class NoteList extends Gtk.ScrolledWindow {
           id,
           name: data.name,
           actionMap: this._actionMap,
-          archived: data.archived,
+          locked: data.locked,
           starred: data.starred,
+          hidden: data.hidden,
         });
-        note.connect("note-context-menu-requested", (_, noteId, x, y) =>
-          this.showListContextMenu(x, y, noteId)
+        note.connect(
+          NoteListItem.Signals.ContextMenuRequested.name,
+          (_, noteId, x, y) => this.showListContextMenu(x, y, noteId)
         );
 
         if (id === this._openNoteId) {

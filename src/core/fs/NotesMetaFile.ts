@@ -12,7 +12,8 @@ export interface NoteMetadata {
   name: string;
   path: string;
   starred: boolean;
-  archived: boolean;
+  locked: boolean;
+  hidden: boolean;
 }
 
 /**
@@ -60,7 +61,7 @@ export default class NotesMetaFile {
 
   public addNote(id: string, name: string, path: string) {
     const data = this.getNotesMetadata();
-    data[id] = { name, path, archived: false, starred: false };
+    data[id] = { name, path, locked: false, starred: false, hidden: false };
     this.save(data);
   }
 
@@ -97,7 +98,8 @@ export default class NotesMetaFile {
         typeof value.name !== "string" ||
         typeof value.path !== "string" ||
         typeof value.starred !== "boolean" ||
-        typeof value.archived !== "boolean"
+        typeof value.locked !== "boolean" ||
+        typeof value.hidden !== "boolean"
       ) {
         return false;
       }

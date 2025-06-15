@@ -1,5 +1,6 @@
 import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
+import GObject from "@girs/gobject-2.0";
 
 const VariantTypes = {
   string: GLib.VariantType.new("s"),
@@ -161,9 +162,52 @@ function getParamVariant<T>(param: T | null): null | GLib.Variant {
   }
 }
 
+//#region ================ SIGNAL ======================
+const gobjectTypeNames = [
+  "TYPE_STRING",
+  "TYPE_BOOLEAN",
+  "TYPE_INT",
+  "TYPE_UINT",
+  "TYPE_DOUBLE",
+  "TYPE_OBJECT",
+  "TYPE_NONE",
+] as const;
+
+type GObjectTypeName = (typeof gobjectTypeNames)[number];
+
+export type Signal = {
+  name: string;
+  params?: Array<GObject.GType>;
+};
+
+export type SignalParams = {
+  name: string;
+  params?: Array<GObjectTypeName>;
+};
+
+export function defineSignal(signal: SignalParams): Signal {
+  return {
+    name: signal.name,
+    params: signal.params?.map((p) => GObject[p]),
+  };
+}
+
+export function defineSignals<T extends Record<string, SignalParams>>(
+  signals: T
+): { [K in keyof T]: Signal } {
+  const result = {} as { [K in keyof T]: Signal };
+  for (const key in signals) {
+    result[key] = defineSignal(signals[key]);
+  }
+  return result;
+}
+
+const signal = { one: defineSignal, many: defineSignals };
+
 export default {
   create: createAction,
   handle: handleAction,
   invoke: invokeAction,
   p: VariantParser,
+  signal,
 };

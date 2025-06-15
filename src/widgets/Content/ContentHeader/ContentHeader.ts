@@ -156,14 +156,14 @@ export default class ContentHeader extends Adw.Bin {
 
     const noteButtonGroup = widget.box.h({ cssClasses: ["linked"] });
     const addNoteButton = new Gtk.Button({
-      iconName: icon.name("list-add", "symbolic"),
+      iconName: icon.symbolic("list-add"),
       tooltip_text: "New Note",
     });
     addNoteButton.connect("clicked", () => {
       action.invoke(this._actionMap, ContentHeader.Actions.NewNote);
     });
     const saveNotButton = new Gtk.Button({
-      iconName: icon.name("document-save", "symbolic"),
+      iconName: icon.symbolic("media-floppy"),
       tooltip_text: "Save Note",
       sensitive: false,
     });
@@ -171,7 +171,7 @@ export default class ContentHeader extends Adw.Bin {
       action.invoke(this._actionMap, NoteListItem.Actions.DoSave);
     });
     const deleteNoteButton = new Gtk.Button({
-      iconName: icon.name("edit-delete", "symbolic"),
+      iconName: icon.symbolic("edit-delete"),
       tooltip_text: "Delete Note",
       sensitive: false,
     });

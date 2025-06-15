@@ -62,9 +62,11 @@ function omitKeys<T extends object, K extends keyof T>(
 type GtkBoxParams = GtkWidgetParams & Partial<Gtk.Box.ConstructorProps>;
 type CustomBoxParams = Partial<{
   children: Array<Gtk.Widget>;
+  linked: boolean;
 }>;
 const _customBoxParamKeys: Record<keyof CustomBoxParams, 1> = {
   children: 1,
+  linked: 1,
 } as const;
 
 const CustomBoxtParamKeys = Object.keys(_customBoxParamKeys) as Array<
@@ -85,6 +87,9 @@ export function createBox(params: BoxParams = {}): Gtk.Box {
   });
   for (const child of params.children ?? []) {
     box.append(child);
+  }
+  if (params.linked) {
+    box.add_css_class("linked");
   }
   return box;
 }

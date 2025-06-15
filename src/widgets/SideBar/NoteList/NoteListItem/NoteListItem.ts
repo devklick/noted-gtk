@@ -13,21 +13,25 @@ interface NoteListItemParams {
   name: string;
   actionMap: Gio.ActionMap;
   starred: boolean;
-  archived: boolean;
+  locked: boolean;
+  hidden: boolean;
 }
 
 export default class NoteListItem extends Gtk.ListBoxRow {
+  static Signals = action.signal.many({
+    ContextMenuRequested: {
+      name: "note-context-menu-requested",
+      params: ["TYPE_STRING", "TYPE_INT", "TYPE_INT"],
+    },
+  });
+
   static {
     GObject.registerClass(
       {
         GTypeName: "NoteListItem",
         Signals: {
-          "note-context-menu-requested": {
-            param_types: [
-              GObject.TYPE_STRING,
-              GObject.TYPE_INT,
-              GObject.TYPE_INT,
-            ],
+          [this.Signals.ContextMenuRequested.name]: {
+            param_types: this.Signals.ContextMenuRequested.params,
           },
         },
       },
@@ -45,20 +49,31 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     DoSave: "note-do-save",
     DoOpen: "note-do-open",
     ToggleStarred: "note-toggle-starred",
-    ToggleArchived: "note-toggle-archived",
+    ToggleLocked: "note-toggle-locked",
   } as const;
 
   private _id: string;
   private _actionMap: Gio.ActionMap;
   private _name: string;
 
-  constructor({ name, actionMap, id, archived, starred }: NoteListItemParams) {
+  constructor({
+    name,
+    actionMap,
+    id,
+    locked,
+    starred,
+    hidden,
+  }: NoteListItemParams) {
     super({
       name: "NoteListItem",
       hexpand: true,
       tooltipText: name,
       hexpandSet: false,
       cssClasses: ["note-listitem"],
+      marginStart: 0,
+      marginEnd: 0,
+      marginTop: 0,
+      marginBottom: 0,
     });
     this.ensureActions();
 
@@ -79,26 +94,31 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       })
     );
 
-    const buttons = widget.box.v({ hAlign: "END", heightRequest: 10 });
-    const starButton = widget.button.new({
-      iconName: icon.symbolic("starred"),
-      depth: "flat",
-      cssClasses: [
-        "small-button",
-        `favorite-${starred ? "active" : "inactive"}`,
-      ],
+    const decors = widget.box.v({
+      hAlign: "CENTER",
+      vAlign: "CENTER",
+      linked: true,
+      cssClasses: ["note-decorations"],
     });
-    const archivebutton = widget.button.new({
-      iconName: icon.symbolic("system-lock-screen"),
-      depth: "flat",
-      cssClasses: [
-        "small-button",
-        `archive-${archived ? "active" : "inactive"}`,
-      ],
-    });
-    buttons.append(starButton);
-    buttons.append(archivebutton);
-    content.append(buttons);
+
+    if (starred) {
+      const image = Gtk.Image.new_from_icon_name(icon.symbolic("non-starred"));
+      image.set_tooltip_text("Starred");
+      decors.append(image);
+    }
+    if (locked) {
+      const image = Gtk.Image.new_from_icon_name(
+        icon.symbolic("system-lock-screen")
+      );
+      image.set_tooltip_text("Locked");
+      decors.append(image);
+    }
+    if (hidden) {
+      const image = Gtk.Image.new_from_icon_name(icon.symbolic("view-conceal"));
+      image.set_tooltip_text("Hidden");
+      decors.append(image);
+    }
+    content.append(decors);
 
     this.registerClickHandlers();
   }
@@ -114,7 +134,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
 
   private registerRightClickHandler() {
     click.handle("right", this, ({ x, y }) =>
-      this.emit("note-context-menu-requested", this._id, x, y)
+      this.emit(NoteListItem.Signals.ContextMenuRequested.name, this._id, x, y)
     );
   }
 
@@ -188,7 +208,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     );
 
     action.create(actionMap, NoteListItem.Actions.ToggleStarred, "bool");
-    action.create(actionMap, NoteListItem.Actions.ToggleArchived, "bool");
+    action.create(actionMap, NoteListItem.Actions.ToggleLocked, "bool");
 
     NoteListItem._actionsCreated = true;
   }

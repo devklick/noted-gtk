@@ -2,6 +2,7 @@ import Gtk from "@girs/gtk-4.0";
 import GObject from "@girs/gobject-2.0";
 
 import icon from "../../../core/utils/icon";
+import action from "../../../core/utils/action";
 
 export type NoteCategory =
   (typeof NoteCategories.Category)[keyof typeof NoteCategories.Category];
@@ -10,15 +11,17 @@ export default class NoteCategories extends Gtk.Box {
   public static Category = {
     All: "all",
     Favourite: "favourite",
-    Archive: "archive",
+    Locked: "locked",
+    Hidden: "hidden",
   } as const;
 
-  public static Signals = {
+  public static Signals = action.signal.many({
     CategoryClicked: {
       name: "category-clicked",
-      params: [GObject.TYPE_STRING],
+      params: ["TYPE_STRING"],
     },
-  };
+  });
+
   static {
     GObject.registerClass(
       {
@@ -56,8 +59,9 @@ export default class NoteCategories extends Gtk.Box {
 
     const iconMap: Record<NoteCategory, string> = {
       all: icon.symbolic("view-list"),
-      archive: icon.symbolic("system-lock-screen"),
+      locked: icon.symbolic("system-lock-screen"),
       favourite: icon.symbolic("starred"),
+      hidden: icon.symbolic("view-conceal"),
     };
 
     Object.entries(NoteCategories.Category).forEach(([label, category]) => {
