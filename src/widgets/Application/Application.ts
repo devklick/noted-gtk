@@ -7,7 +7,6 @@ import Gst from "@girs/gst-1.0";
 import { exit } from "@girs/gjs/system";
 
 import Window from "../Window";
-import SettingsWindow from "../SettingsWindow";
 
 import styles from "../../styles.css?inline";
 import AppDir from "../../core/fs/AppDir";
@@ -36,16 +35,6 @@ export default class Application extends Adw.Application {
       this._window.set_application(this);
     }
     return this._window;
-  }
-
-  // Settings window not currently used
-  private _settingsWindow: SettingsWindow | null = null;
-  private get settingsWindow(): SettingsWindow {
-    this._settingsWindow ??= new SettingsWindow({
-      application: this,
-      settings: this.appSettings,
-    });
-    return this._settingsWindow;
   }
 
   private _appSettings: Gio.Settings | null = null;
@@ -112,9 +101,6 @@ export default class Application extends Adw.Application {
   }
 
   private defineActions() {
-    const openSettings = new Gio.SimpleAction({ name: "settings" });
-    openSettings.connect("activate", () => this.settingsWindow.present());
-
     const preferencesActions = new Gio.SimpleAction({
       name: BurgerMenu.Actions.Preferences,
     });
@@ -129,7 +115,6 @@ export default class Application extends Adw.Application {
       this.window.presentAboutDialog();
     });
 
-    this.add_action(openSettings);
     this.add_action(preferencesActions);
     this.add_action(aboutActions);
   }
