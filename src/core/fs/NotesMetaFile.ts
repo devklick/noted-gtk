@@ -11,6 +11,8 @@ import fs from "../utils/fs";
 export interface NoteMetadata {
   name: string;
   path: string;
+  starred: boolean;
+  archived: boolean;
 }
 
 /**
@@ -58,7 +60,7 @@ export default class NotesMetaFile {
 
   public addNote(id: string, name: string, path: string) {
     const data = this.getNotesMetadata();
-    data[id] = { name, path };
+    data[id] = { name, path, archived: false, starred: false };
     this.save(data);
   }
 
@@ -93,7 +95,9 @@ export default class NotesMetaFile {
         typeof value !== "object" ||
         value === null ||
         typeof value.name !== "string" ||
-        typeof value.path !== "string"
+        typeof value.path !== "string" ||
+        typeof value.starred !== "boolean" ||
+        typeof value.archived !== "boolean"
       ) {
         return false;
       }

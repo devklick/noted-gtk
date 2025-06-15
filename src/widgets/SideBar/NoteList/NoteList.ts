@@ -13,6 +13,7 @@ import action from "../../../core/utils/action";
 import Layout from "../../Layout";
 import { debounce } from "../../../core/utils/timing";
 import ContextMenu from "../../ContextMenu";
+import { NoteCategory } from "../SideBarContent/NoteCategories";
 
 // TODO: Consider allowing multiple rows to be selected.
 // It's a bit of a pain trying to delete multiple notes at the moment.
@@ -34,6 +35,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private _openNoteId: string | null = null;
   private _search: string | null = null;
   private _contextMenu: ContextMenu;
+  private _currentCategory: NoteCategory = "all";
   private showListContextMenu: (x: number, y: number, noteId: string) => void;
 
   constructor({ notesDir, actionMap }: NoteListParams) {
@@ -76,16 +78,25 @@ export default class NoteList extends Gtk.ScrolledWindow {
     this.sync();
   }
 
+  public filterCategory(category: NoteCategory) {
+    this._currentCategory = category;
+    this.sync();
+  }
+
   public sync() {
     this._listBox.remove_all();
     this._listItems = {};
 
+    // TODO: Refactor
     let selected: string | null = null;
     const lowerSearch = this._search?.toLowerCase();
     Object.entries(this._notesDir.list())
       .filter(
-        ([_, { name }]) =>
-          !lowerSearch || name.toLowerCase().includes(lowerSearch)
+        ([_, { name, starred, archived }]) =>
+          (!lowerSearch || name.toLowerCase().includes(lowerSearch)) &&
+          (this._currentCategory === "all" ||
+            (this._currentCategory === "favourite" && starred) ||
+            (this._currentCategory === "archive" && archived))
       )
       .sort(([_a, a], [_b, b]) => b.updatedOn.getTime() - a.updatedOn.getTime())
       .forEach(([id, data]) => {
@@ -93,6 +104,8 @@ export default class NoteList extends Gtk.ScrolledWindow {
           id,
           name: data.name,
           actionMap: this._actionMap,
+          archived: data.archived,
+          starred: data.starred,
         });
         note.connect("note-context-menu-requested", (_, noteId, x, y) =>
           this.showListContextMenu(x, y, noteId)

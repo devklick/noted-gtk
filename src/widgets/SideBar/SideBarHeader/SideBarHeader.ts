@@ -134,7 +134,6 @@ export default class SideBarHeader extends Adw.Bin {
       SideBarHeader.Actions.FocusSearch,
       null,
       () => {
-        console.log("Handling focus-search");
         action.invoke(this._actionMap, Layout.Actions.ShowSidebarChanged, true);
         this.openSearchInHeader();
       }

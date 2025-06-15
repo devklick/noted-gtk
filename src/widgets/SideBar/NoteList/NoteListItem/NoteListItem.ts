@@ -3,17 +3,17 @@ import Gtk from "@girs/gtk-4.0";
 import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
 
-import ContextMenu from "../../../ContextMenu";
-
 import click from "../../../../core/utils/click";
 import action from "../../../../core/utils/action";
 import widget from "../../../../core/utils/widget";
-import { debounce } from "../../../../core/utils/timing";
+import icon from "../../../../core/utils/icon";
 
 interface NoteListItemParams {
   id: string;
   name: string;
   actionMap: Gio.ActionMap;
+  starred: boolean;
+  archived: boolean;
 }
 
 export default class NoteListItem extends Gtk.ListBoxRow {
@@ -44,18 +44,21 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     DoDelete: "note-do-delete",
     DoSave: "note-do-save",
     DoOpen: "note-do-open",
+    ToggleStarred: "note-toggle-starred",
+    ToggleArchived: "note-toggle-archived",
   } as const;
 
   private _id: string;
   private _actionMap: Gio.ActionMap;
   private _name: string;
 
-  constructor({ name, actionMap, id }: NoteListItemParams) {
+  constructor({ name, actionMap, id, archived, starred }: NoteListItemParams) {
     super({
       name: "NoteListItem",
       hexpand: true,
-      cssClasses: [],
       tooltipText: name,
+      hexpandSet: false,
+      cssClasses: ["note-listitem"],
     });
     this.ensureActions();
 
@@ -64,12 +67,38 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     this._name = name;
     this.add_controller;
 
-    const content = widget.box.h({ margin: 8, cssClasses: ["sidebar-row"] });
+    const content = widget.box.h({ cssClasses: ["sidebar-row"] });
     this.set_child(content);
 
     content.append(
-      widget.label.new(name, { xalign: 0, ellipse: "END", hAlign: "START" })
+      widget.label.new(name, {
+        xalign: 0,
+        ellipse: "END",
+        hAlign: "START",
+        hexpand: true,
+      })
     );
+
+    const buttons = widget.box.v({ hAlign: "END", heightRequest: 10 });
+    const starButton = widget.button.new({
+      iconName: icon.symbolic("starred"),
+      depth: "flat",
+      cssClasses: [
+        "small-button",
+        `favorite-${starred ? "active" : "inactive"}`,
+      ],
+    });
+    const archivebutton = widget.button.new({
+      iconName: icon.symbolic("system-lock-screen"),
+      depth: "flat",
+      cssClasses: [
+        "small-button",
+        `archive-${archived ? "active" : "inactive"}`,
+      ],
+    });
+    buttons.append(starButton);
+    buttons.append(archivebutton);
+    content.append(buttons);
 
     this.registerClickHandlers();
   }
@@ -157,6 +186,10 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       NoteListItem.Actions.DoRename,
       GLib.VariantType.new("(ss)")
     );
+
+    action.create(actionMap, NoteListItem.Actions.ToggleStarred, "bool");
+    action.create(actionMap, NoteListItem.Actions.ToggleArchived, "bool");
+
     NoteListItem._actionsCreated = true;
   }
   private ensureActions() {

@@ -1,0 +1,18 @@
+button.small-button {
+    padding: 0;
+    min-width: 16px;
+    min-height: 16px;
+}
+
+button.favorite-inactive {
+    color: rgba(128, 128, 128, 0.2);
+}
+button.archive-inactive {
+    color: rgba(128, 128, 128, 0.2);
+}
+button.favorite-active {
+    color: rgb(255, 208, 0);
+}
+button.archive-active {
+    color: rgb(134, 134, 134);
+}
