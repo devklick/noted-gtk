@@ -39,8 +39,10 @@ export default class ContentHeader extends Adw.Bin {
   private readonly _saveButton: Gtk.Button;
   private readonly _deleteButton: Gtk.Button;
   private readonly _toggleSidebar: Gtk.Button;
+  private readonly _addNoteButton: Gtk.Button;
 
   private _openNoteId: string | null = null;
+  private _sidebarOpen: boolean = true;
 
   constructor({ actionMap, sideBar, notesDir }: ContentHeaderParams) {
     super({ name: "header-wrapper" });
@@ -64,6 +66,7 @@ export default class ContentHeader extends Adw.Bin {
       saveNotButton: this._saveButton,
       deleteNoteButton: this._deleteButton,
       toggleSidebar: this._toggleSidebar,
+      addNoteButton: this._addNoteButton,
     } = this.createLeftIcons(sideBar));
   }
 
@@ -109,8 +112,10 @@ export default class ContentHeader extends Adw.Bin {
   }
 
   private handleShowSideBar(show: boolean) {
+    this._sidebarOpen = show;
     const iconName = icon.name(show ? "pan-start" : "pan-end", "symbolic");
     this._toggleSidebar.set_icon_name(iconName);
+    this.toggleNewNoteSuggested();
   }
 
   private handleNoteOpened(noteId: string) {
@@ -119,6 +124,7 @@ export default class ContentHeader extends Adw.Bin {
     this._titleWidget.setTitle(note.name);
     this._saveButton.set_sensitive(true);
     this._deleteButton.set_sensitive(true);
+    this.toggleNewNoteSuggested();
   }
 
   private handleNoteDeleted(id: string) {
@@ -127,7 +133,14 @@ export default class ContentHeader extends Adw.Bin {
       this._titleWidget.clearTitle();
       this._saveButton.set_sensitive(false);
       this._deleteButton.set_sensitive(false);
+      this.toggleNewNoteSuggested();
     }
+  }
+
+  private toggleNewNoteSuggested() {
+    const suggested = !this._sidebarOpen && !this._openNoteId;
+    const action = suggested ? "add" : "remove";
+    this._addNoteButton[`${action}_css_class`]("suggested-action");
   }
 
   private createLeftIcons(sideBar: ICollapsable) {
