@@ -27,6 +27,8 @@ export default class PreferencesDialog extends Adw.PreferencesWindow {
     super({ resizable: false, transientFor: parent });
 
     this.add(new pages.KeyBindingsPage({ parent: this, shortcuts }));
+    this.add(new pages.CategoriesPage());
+    this.add(new pages.EditorPage());
 
     if (autoPresent) {
       this.present();

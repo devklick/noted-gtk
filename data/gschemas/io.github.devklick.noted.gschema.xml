@@ -29,5 +29,9 @@
             <default>true</default>
             <summary>Autosave</summary>
         </key>
+        <key name="enable-categories" type="b">
+            <default>true</default>
+            <summary>Enable categories</summary>
+        </key>
     </schema>
 </schemalist>
