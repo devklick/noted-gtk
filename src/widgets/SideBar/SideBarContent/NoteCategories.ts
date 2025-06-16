@@ -12,6 +12,8 @@ interface NoteCategoriesParams {
   prefs: AppPrefs;
 }
 
+// TODO: consider a "trash" category - deleted notes go here
+
 export default class NoteCategories extends Gtk.Box {
   public static Category = {
     All: "all",

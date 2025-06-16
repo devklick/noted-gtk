@@ -12,6 +12,10 @@ import { AppShortcuts } from "../../../core/ShortcutManager";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
+// TODO: Swap TextView out for SourceView to allow more control over text formatting etc
+// Tried to do this but the girs bindings on npm had a dependency conflict that I couldnt solve.
+// Need to tackle this again, as it's deffo needed.
+
 interface NoteEditorParams {
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
