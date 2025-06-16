@@ -47,21 +47,18 @@ export default class ContentHeader extends Adw.Bin {
   constructor({ actionMap, sideBar, notesDir }: ContentHeaderParams) {
     super({ name: "header-wrapper" });
     this.ensureActions();
-    this._titleWidget = new ContentHeaderTitle();
-    this._adwHeader = new Adw.HeaderBar({
-      name: "header",
-      titleWidget: this._titleWidget,
-    });
     this._actionMap = actionMap;
     this._notesDir = notesDir;
 
-    const burgerMenu = new BurgerMenu({});
-    this._adwHeader.pack_end(burgerMenu);
+    this._titleWidget = new ContentHeaderTitle();
+    this._adwHeader = widget.header.new({
+      name: "header",
+      title: this._titleWidget,
+      end: new BurgerMenu(),
+    });
 
     this.set_child(this._adwHeader);
-
     this.registerActionHandlers();
-
     ({
       saveNotButton: this._saveButton,
       deleteNoteButton: this._deleteButton,

@@ -1,8 +1,9 @@
 import Gtk from "@girs/gtk-4.0";
-import icon from "../../../core/utils/icon";
 import Gio from "@girs/gio-2.0";
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
+
+import icon from "../../../core/utils/icon";
 
 interface BurgerMenuParams {}
 
@@ -24,7 +25,7 @@ export default class BurgerMenu extends Adw.Bin {
   private menuButton: Gtk.MenuButton;
   private menu: Gio.Menu = this.buildMenu(BurgerMenu.Actions);
 
-  constructor({}: BurgerMenuParams) {
+  constructor({}: BurgerMenuParams = {}) {
     super();
 
     this.popover = new Gtk.PopoverMenu({ menuModel: this.menu });
