@@ -25,13 +25,21 @@
             <default>&quot;&lt;Control&gt;&lt;Shift&gt;f&quot;</default>
             <summary>Search Note</summary>
         </key>
+        <key name="open-prefs" type="s">
+            <default>&quot;&lt;Control&gt;,&quot;</default>
+            <summary>Open Preferences</summary>
+        </key>
         <key name="auto-save" type="b">
             <default>true</default>
             <summary>Autosave</summary>
         </key>
         <key name="enable-categories" type="b">
             <default>true</default>
-            <summary>Enable categories</summary>
+            <summary>Enable Categories</summary>
+        </key>
+        <key name="enable-category-decorations" type="b">
+            <default>true</default>
+            <summary>Enable Category Decorations</summary>
         </key>
     </schema>
 </schemalist>

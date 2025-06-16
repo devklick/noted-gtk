@@ -3,6 +3,7 @@ import Gtk from "@girs/gtk-4.0";
 import Pango from "@girs/pango-1.0";
 
 //#region ======================= Base =======================
+type Color = "accent" | "success" | "warning" | "error";
 type Align = keyof typeof Gtk.Align;
 type Elipsize = keyof typeof Pango.EllipsizeMode;
 type GtkWidgetParams = Partial<Gtk.Widget.ConstructorProps>;
@@ -10,11 +11,13 @@ type CustomWidgetParams = Partial<{
   margin: number;
   hAlign: Align;
   vAlign: Align;
+  color: Color;
 }>;
 const _customWidgetParamKeys: Record<keyof CustomWidgetParams, 1> = {
   margin: 1,
   hAlign: 1,
   vAlign: 1,
+  color: 1,
 } as const;
 
 const CustomWidgetParamKeys = Object.keys(_customWidgetParamKeys) as Array<
@@ -35,6 +38,9 @@ function applyCustomBaseParams(params: WidgetParams): GtkWidgetParams {
   }
   if (params.vAlign !== undefined) {
     params.valign = Gtk.Align[params.vAlign] as Gtk.Align;
+  }
+  if (params.color) {
+    ensureClasses(params).cssClasses.push(params.color);
   }
   return omitKeys(params, CustomWidgetParamKeys);
 }
@@ -150,11 +156,24 @@ export const box = {
 
 //#region ======================= Label =======================
 type GtkLabelParams = GtkWidgetParams & Partial<Gtk.Label.ConstructorProps>;
+type TypographyStyle =
+  | "title-1"
+  | "title-2"
+  | "title-3"
+  | "title-4"
+  | "heading"
+  | "body"
+  | "caption"
+  | "caption-heading"
+  | "monospace"
+  | "numeric";
 type CustomLabelParams = Partial<{
   ellipse: Elipsize;
+  typography: TypographyStyle;
 }>;
 const _customLabelParamKeys: Record<keyof CustomLabelParams, 1> = {
   ellipse: 1,
+  typography: 1,
 } as const;
 
 const CustomLabelParamKeys = Object.keys(_customLabelParamKeys) as Array<
@@ -169,6 +188,9 @@ function applyCustomLabelParams(params: LabelParams): GtkLabelParams {
     params.ellipsize = Pango.EllipsizeMode[
       params.ellipse
     ] as Pango.EllipsizeMode;
+  }
+  if (params.typography) {
+    ensureClasses(params).cssClasses.push(params.typography);
   }
   return omitKeys(params, [...CustomLabelParamKeys, ...CustomWidgetParamKeys]);
 }
@@ -297,8 +319,8 @@ const CustomButtonKeys = Object.keys(_customButtonKeys) as Array<
 type ButtonParams = WidgetParams & GtkButtonParams & CustomButtonParams;
 
 function applyCustomButtonParams(params: ButtonParams): GtkButtonParams {
-  applyCustomBaseParams(params);
-  ensureClasses(params);
+  params = applyCustomBaseParams(params);
+  params = ensureClasses(params);
   if (params.shape && params.shape !== "normal") {
     params.cssClasses?.push(params.shape);
   }

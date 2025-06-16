@@ -37,7 +37,7 @@ export default class BindKeyDialog extends Adw.Window {
     super({ transientFor: parent, modal: true });
     this._pendingShortcut = { ..._shortcutKeys };
 
-    const error = widget.label.new();
+    const error = widget.label.new(null, { cssClasses: ["error"] });
     const shortcutLabel = new Gtk.ShortcutLabel({
       accelerator: Gtk.accelerator_name(
         this._pendingShortcut.key,

@@ -7,6 +7,7 @@ import click from "../../../../core/utils/click";
 import action from "../../../../core/utils/action";
 import widget from "../../../../core/utils/widget";
 import icon from "../../../../core/utils/icon";
+import { AppPrefs } from "../../../../core/PreferencesManager";
 
 interface NoteListItemParams {
   id: string;
@@ -15,6 +16,7 @@ interface NoteListItemParams {
   starred: boolean;
   locked: boolean;
   hidden: boolean;
+  prefs: AppPrefs;
 }
 
 export default class NoteListItem extends Gtk.ListBoxRow {
@@ -63,6 +65,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     locked,
     starred,
     hidden,
+    prefs,
   }: NoteListItemParams) {
     super({
       name: "NoteListItem",
@@ -94,7 +97,7 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       })
     );
 
-    const decors = widget.box.v({
+    const decors = widget.box.h({
       hAlign: "CENTER",
       vAlign: "CENTER",
       linked: true,
@@ -113,12 +116,21 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       image.set_tooltip_text("Locked");
       decors.append(image);
     }
+
     if (hidden) {
       const image = Gtk.Image.new_from_icon_name(icon.symbolic("view-conceal"));
       image.set_tooltip_text("Hidden");
       decors.append(image);
     }
+
     content.append(decors);
+
+    prefs.onChanged("enable-categories", (enabled) =>
+      decors.set_visible(enabled && prefs.get("enable-category-decorations"))
+    );
+    prefs.onChanged("enable-category-decorations", (enabled) =>
+      decors.set_visible(enabled && prefs.get("enable-categories"))
+    );
 
     this.registerClickHandlers();
   }

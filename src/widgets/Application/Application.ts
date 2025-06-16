@@ -12,6 +12,7 @@ import styles from "../../styles.css?inline";
 import AppDir from "../../core/fs/AppDir";
 import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 import ShortcutManager from "../../core/ShortcutManager";
+import PreferencesManager, { AppPrefs } from "../../core/PreferencesManager";
 
 const APPLICATION_ID = "io.github.devklick.noted";
 
@@ -31,6 +32,7 @@ export default class Application extends Adw.Application {
         notesDir: this.appDir.notesDir,
         appName: this.name,
         shortcuts: this.shortcutManager,
+        prefs: this.appPrefs,
       });
       this._window.set_application(this);
     }
@@ -43,6 +45,12 @@ export default class Application extends Adw.Application {
       schemaId: `${this.id}.settings`,
     });
     return this._appSettings;
+  }
+
+  private _appPrefs: AppPrefs | null = null;
+  private get appPrefs() {
+    this._appPrefs ??= new PreferencesManager({ settings: this.appSettings });
+    return this._appPrefs;
   }
 
   private _appDir: AppDir | null = null;
@@ -104,6 +112,7 @@ export default class Application extends Adw.Application {
     const preferencesActions = new Gio.SimpleAction({
       name: BurgerMenu.Actions.Preferences,
     });
+
     preferencesActions.connect("activate", () => {
       this.window.presentPreferencesDialog();
     });
@@ -117,5 +126,10 @@ export default class Application extends Adw.Application {
 
     this.add_action(preferencesActions);
     this.add_action(aboutActions);
+  }
+
+  override quit() {
+    this.appPrefs.dispose();
+    super.quit();
   }
 }

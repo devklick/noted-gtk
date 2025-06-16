@@ -14,6 +14,7 @@ import Layout from "../../Layout";
 import { debounce } from "../../../core/utils/timing";
 import ContextMenu from "../../ContextMenu";
 import { NoteCategory } from "../SideBarContent/NoteCategories";
+import { AppPrefs } from "../../../core/PreferencesManager";
 
 // TODO: Consider allowing multiple rows to be selected.
 // It's a bit of a pain trying to delete multiple notes at the moment.
@@ -21,6 +22,7 @@ import { NoteCategory } from "../SideBarContent/NoteCategories";
 interface NoteListParams {
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
+  prefs: AppPrefs;
 }
 
 export default class NoteList extends Gtk.ScrolledWindow {
@@ -28,6 +30,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
     GObject.registerClass({ GTypeName: "NoteList" }, this);
   }
 
+  private readonly _prefs: AppPrefs;
   private readonly _notesDir: Readonly<NotesDir>;
   private readonly _listBox: Gtk.ListBox;
   private _listItems: Record<string, NoteListItem>;
@@ -38,10 +41,11 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private _currentCategory: NoteCategory = "all";
   private showListContextMenu: (x: number, y: number, noteId: string) => void;
 
-  constructor({ notesDir, actionMap }: NoteListParams) {
+  constructor({ notesDir, actionMap, prefs }: NoteListParams) {
     super();
     this._notesDir = notesDir;
     this._actionMap = actionMap;
+    this._prefs = prefs;
     this._listItems = {};
     this.registerActionHandlers();
 
@@ -91,14 +95,20 @@ export default class NoteList extends Gtk.ScrolledWindow {
     let selected: string | null = null;
     const lowerSearch = this._search?.toLowerCase();
     Object.entries(this._notesDir.list())
-      .filter(
-        ([_, { name, starred, locked, hidden }]) =>
-          (!lowerSearch || name.toLowerCase().includes(lowerSearch)) &&
-          (this._currentCategory === "all" ||
-            (this._currentCategory === "favourite" && starred) ||
-            (this._currentCategory === "locked" && locked) ||
-            (this._currentCategory === "hidden" && hidden))
-      )
+      .filter(([_, { name, starred, locked, hidden }]) => {
+        if (lowerSearch && !name.toLowerCase().includes(lowerSearch)) {
+          return false;
+        }
+        if (!this._prefs.categoriesEnabled) {
+          return true;
+        }
+        return (
+          (this._currentCategory === "all" && !hidden) ||
+          (this._currentCategory === "favourite" && starred) ||
+          (this._currentCategory === "locked" && locked) ||
+          (this._currentCategory === "hidden" && hidden)
+        );
+      })
       .sort(([_a, a], [_b, b]) => b.updatedOn.getTime() - a.updatedOn.getTime())
       .forEach(([id, data]) => {
         const note = new NoteListItem({
@@ -108,6 +118,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
           locked: data.locked,
           starred: data.starred,
           hidden: data.hidden,
+          prefs: this._prefs,
         });
         note.connect(
           NoteListItem.Signals.ContextMenuRequested.name,

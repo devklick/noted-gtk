@@ -83,12 +83,12 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
 
   private createSuffixWidgets(shortcut: ShortcutType) {
     const changeButton = widget.button.new({
-      actionType: "suggested",
+      color: "accent",
       icon_name: icon.symbolic("document-edit"),
       tooltip_text: "Edit binding",
     });
     const resetButton = widget.button.new({
-      actionType: "destructive",
+      color: "error",
       icon_name: icon.symbolic("view-refresh"),
       tooltip_text: "Reset binding",
     });
@@ -103,9 +103,14 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
       hexpand: false,
     });
 
+    const buttons = widget.box.h({
+      linked: true,
+      children: [changeButton, resetButton],
+    });
+
     const content = widget.box.h({
       spacing: 10,
-      children: [shortcutLabel, changeButton, resetButton],
+      children: [shortcutLabel, buttons],
       vexpand: false,
       vAlign: "CENTER",
     });

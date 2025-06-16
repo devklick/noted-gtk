@@ -5,10 +5,12 @@ import Gio from "@girs/gio-2.0";
 import NoteList from "../NoteList";
 import NoteCategories from "./NoteCategories";
 import NotesDir from "../../../core/fs/NotesDir";
+import { AppPrefs } from "../../../core/PreferencesManager";
 
 interface SideBarContentParams {
   actionMap: Gio.ActionMap;
   notesDir: Readonly<NotesDir>;
+  prefs: AppPrefs;
 }
 export default class SideBarContent extends Gtk.Box {
   static {
@@ -18,10 +20,10 @@ export default class SideBarContent extends Gtk.Box {
   private categories: NoteCategories;
   private noteList: NoteList;
 
-  constructor({ actionMap, notesDir }: SideBarContentParams) {
+  constructor({ actionMap, notesDir, prefs }: SideBarContentParams) {
     super({ orientation: Gtk.Orientation.VERTICAL });
-    this.categories = new NoteCategories();
-    this.noteList = new NoteList({ actionMap, notesDir });
+    this.categories = new NoteCategories({ prefs });
+    this.noteList = new NoteList({ actionMap, notesDir, prefs });
 
     this.categories.connect(
       NoteCategories.Signals.CategoryClicked.name,

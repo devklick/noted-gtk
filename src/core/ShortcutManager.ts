@@ -72,6 +72,14 @@ export const Shortcuts = {
     ),
     caseSensitive: false,
   },
+  OpenPreferences: {
+    type: "open-prefs",
+    description: "Opens the preferences dialog",
+    label: "Open Preferences",
+    group: ShortcutGroups.Application,
+    default: Gtk.accelerator_name(Gdk.KEY_comma, Gdk.ModifierType.CONTROL_MASK),
+    caseSensitive: false,
+  },
 } as const satisfies Record<
   string,
   {
@@ -102,6 +110,7 @@ export interface AppShortcuts {
   isRenameNote(keys: ShortcutKeys): boolean;
   isToggleSidebar(keys: ShortcutKeys): boolean;
   isSearchNotes(keys: ShortcutKeys): boolean;
+  isOpenPrefs(keys: ShortcutKeys): boolean;
   check(keys: ShortcutKeys): ShortcutType | null;
   get(shortcut: ShortcutType): ShortcutKeys;
   getLabel(shortcut: ShortcutType): string;
@@ -124,6 +133,7 @@ export default class ShortcutManager implements AppShortcuts {
   private deleteNote!: ShortcutKeys;
   private toggleSidebar!: ShortcutKeys;
   private searchNotes!: ShortcutKeys;
+  private openPrefs!: ShortcutKeys;
 
   constructor({ settings }: ShortcutManagerParams) {
     this.settings = settings;
@@ -159,12 +169,14 @@ export default class ShortcutManager implements AppShortcuts {
         return this.toggleSidebar;
       case "search-notes":
         return this.searchNotes;
+      case "open-prefs":
+        return this.openPrefs;
       default:
         throw new Error(`Invalid shortcut: ${shortcut}`);
     }
   }
 
-  getLabel(shortcut: ShortcutType): string {
+  public getLabel(shortcut: ShortcutType): string {
     return this.getMeta(shortcut).label;
   }
 
@@ -219,6 +231,14 @@ export default class ShortcutManager implements AppShortcuts {
     );
   }
 
+  public isOpenPrefs(keys: ShortcutKeys): boolean {
+    return this.isMatch(
+      keys,
+      this.openPrefs,
+      this.getMeta("open-prefs").caseSensitive
+    );
+  }
+
   public check(keys: ShortcutKeys): ShortcutType | null {
     if (this.isSaveNote(keys)) return "save-note";
     if (this.isNewNote(keys)) return "new-note";
@@ -226,6 +246,7 @@ export default class ShortcutManager implements AppShortcuts {
     if (this.isRenameNote(keys)) return "rename-note";
     if (this.isToggleSidebar(keys)) return "toggle-sidebar";
     if (this.isSearchNotes(keys)) return "search-notes";
+    if (this.isOpenPrefs(keys)) return "open-prefs";
     return null;
   }
 
@@ -278,5 +299,6 @@ export default class ShortcutManager implements AppShortcuts {
     this.deleteNote = this.getShotcut("delete-note");
     this.toggleSidebar = this.getShotcut("toggle-sidebar");
     this.searchNotes = this.getShotcut("search-notes");
+    this.openPrefs = this.getShotcut("open-prefs");
   }
 }

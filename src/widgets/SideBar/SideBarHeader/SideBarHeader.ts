@@ -39,8 +39,7 @@ export default class SideBarHeader extends Adw.Bin {
     super();
     this.ensureActions();
     this._actionMap = actionMap;
-    this._label = new Gtk.Label({ label: appName });
-    this._label.get_style_context().add_class("title");
+    this._label = widget.label.new(appName, { typography: "heading" });
 
     this._keyController = new Gtk.EventControllerKey();
     this._focusController = new Gtk.EventControllerFocus();

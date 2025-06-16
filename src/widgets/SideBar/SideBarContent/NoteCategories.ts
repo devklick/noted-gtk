@@ -3,9 +3,14 @@ import GObject from "@girs/gobject-2.0";
 
 import icon from "../../../core/utils/icon";
 import action from "../../../core/utils/action";
+import { AppPrefs } from "../../../core/PreferencesManager";
 
 export type NoteCategory =
   (typeof NoteCategories.Category)[keyof typeof NoteCategories.Category];
+
+interface NoteCategoriesParams {
+  prefs: AppPrefs;
+}
 
 export default class NoteCategories extends Gtk.Box {
   public static Category = {
@@ -38,7 +43,7 @@ export default class NoteCategories extends Gtk.Box {
 
   private buttons: Record<NoteCategory, Gtk.ToggleButton> = this.buildButtons();
 
-  constructor() {
+  constructor({ prefs }: NoteCategoriesParams) {
     super({
       orientation: Gtk.Orientation.HORIZONTAL,
       homogeneous: true,
@@ -52,6 +57,10 @@ export default class NoteCategories extends Gtk.Box {
     Object.values(this.buttons).forEach((button) => this.append(button));
 
     this.toggleButtonActive("all", true);
+
+    prefs.onChanged("enable-categories", (enabled) => {
+      this.set_visible(enabled);
+    });
   }
 
   private buildButtons(): Record<NoteCategory, Gtk.ToggleButton> {
@@ -68,6 +77,7 @@ export default class NoteCategories extends Gtk.Box {
       const button = new Gtk.ToggleButton({
         iconName: iconMap[category],
         tooltipText: label,
+        cssClasses: ["flat"],
       });
 
       button.connect("clicked", () => this.buttonClicked(category));
@@ -79,7 +89,7 @@ export default class NoteCategories extends Gtk.Box {
   }
 
   private buttonClicked(category: NoteCategory) {
-    Object.entries(this.buttons).forEach(([key, button]) =>
+    Object.keys(this.buttons).forEach((key) =>
       this.toggleButtonActive(key as NoteCategory, key === category)
     );
     this.emit(NoteCategories.Signals.CategoryClicked.name, category);
@@ -87,8 +97,6 @@ export default class NoteCategories extends Gtk.Box {
 
   private toggleButtonActive(category: NoteCategory, active: boolean) {
     const button = this.buttons[category];
-    const action = active ? "add" : "remove";
-    button[`${action}_css_class`]("suggested-action");
     button.set_active(active);
   }
 }

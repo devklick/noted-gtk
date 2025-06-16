@@ -15,11 +15,13 @@ import action from "../../core/utils/action";
 import NotesDir from "../../core/fs/NotesDir";
 import { AppShortcuts } from "../../core/ShortcutManager";
 import SideBarHeader from "../SideBar/SideBarHeader";
+import { AppPrefs } from "../../core/PreferencesManager";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
   appName: string;
   shortcuts: AppShortcuts;
+  prefs: AppPrefs;
 }
 
 export default class Window extends Adw.ApplicationWindow {
@@ -32,13 +34,15 @@ export default class Window extends Adw.ApplicationWindow {
   private _appName: string;
   private _layout: Layout;
   private _shortcuts: AppShortcuts;
+  private _prefs: AppPrefs;
 
-  constructor({ notesDir, appName, shortcuts }: WindowParams) {
+  constructor({ notesDir, appName, shortcuts, prefs }: WindowParams) {
     super({ name: "main-window", defaultHeight: 600, defaultWidth: 600 });
     this.set_size_request(500, 300);
     this._notesDir = notesDir;
     this._appName = appName;
     this._shortcuts = shortcuts;
+    this._prefs = prefs;
     this.defineActions();
 
     this._keyController = new Gtk.EventControllerKey();
@@ -48,6 +52,7 @@ export default class Window extends Adw.ApplicationWindow {
       appName,
       notesDir,
       shortcuts,
+      prefs,
     });
 
     this.set_content(this._layout);
@@ -60,7 +65,11 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   public presentPreferencesDialog() {
-    new PreferencesDialog({ parent: this, shortcuts: this._shortcuts });
+    new PreferencesDialog({
+      parent: this,
+      shortcuts: this._shortcuts,
+      prefs: this._prefs,
+    });
   }
 
   private defineActions() {
@@ -84,6 +93,9 @@ export default class Window extends Adw.ApplicationWindow {
           return Gdk.EVENT_STOP;
         case "search-notes":
           action.invoke(this, SideBarHeader.Actions.FocusSearch);
+          return Gdk.EVENT_STOP;
+        case "open-prefs":
+          this.presentPreferencesDialog();
           return Gdk.EVENT_STOP;
 
         default:

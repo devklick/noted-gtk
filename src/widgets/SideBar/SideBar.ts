@@ -9,12 +9,14 @@ import NotesDir from "../../core/fs/NotesDir";
 import widget from "../../core/utils/widget";
 import action from "../../core/utils/action";
 import SideBarContent from "./SideBarContent/SideBarContent";
+import { AppPrefs } from "../../core/PreferencesManager";
 
 interface SideBarProps {
   onToggleOpen(open: boolean): void;
   notesDir: Readonly<NotesDir>;
   actionMap: Gio.ActionMap;
   appName: string;
+  prefs: AppPrefs;
 }
 
 export interface ICollapsable {
@@ -34,7 +36,13 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
   private _notesDir: Readonly<NotesDir>;
   private _actionMap: Gio.ActionMap;
 
-  constructor({ onToggleOpen, notesDir, actionMap, appName }: SideBarProps) {
+  constructor({
+    onToggleOpen,
+    notesDir,
+    actionMap,
+    appName,
+    prefs,
+  }: SideBarProps) {
     super();
     this.ensureActions();
 
@@ -42,7 +50,7 @@ export default class SideBar extends Adw.Bin implements ICollapsable {
     this._notesDir = notesDir;
     this._actionMap = actionMap;
 
-    const content = new SideBarContent({ actionMap, notesDir });
+    const content = new SideBarContent({ actionMap, notesDir, prefs });
     const header = new SideBarHeader({ actionMap, appName });
     const view = widget.toolbarView.new({
       topBar: header,
