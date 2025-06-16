@@ -87,7 +87,7 @@ export default class NotesDir {
   public renameNote(id: string, name: string) {
     // The file name is the ID which doesnt change,
     // so we just rename the note in the meta file
-    this.metaFile.renameNote(id, name);
+    this.metaFile.setName(id, name);
   }
 
   public deleteNote(id: string) {

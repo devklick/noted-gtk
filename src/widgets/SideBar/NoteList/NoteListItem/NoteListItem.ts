@@ -52,7 +52,12 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     DoOpen: "note-do-open",
     ToggleStarred: "note-toggle-starred",
     ToggleLocked: "note-toggle-locked",
+    ToggleHide: "note-toggle-hide",
   } as const;
+
+  public readonly starred: boolean;
+  public readonly hidden: boolean;
+  public readonly locked: boolean;
 
   private _id: string;
   private _actionMap: Gio.ActionMap;
@@ -84,6 +89,9 @@ export default class NoteListItem extends Gtk.ListBoxRow {
     this._actionMap = actionMap;
     this._name = name;
     this.add_controller;
+    this.starred = starred;
+    this.hidden = hidden;
+    this.locked = locked;
 
     const content = widget.box.h({ cssClasses: ["sidebar-row"] });
     this.set_child(content);
@@ -216,8 +224,10 @@ export default class NoteListItem extends Gtk.ListBoxRow {
       GLib.VariantType.new("(ss)")
     );
 
-    action.create(actionMap, NoteListItem.Actions.ToggleStarred, "bool");
-    action.create(actionMap, NoteListItem.Actions.ToggleLocked, "bool");
+    const variantSB = GLib.VariantType.new("(sb)");
+    action.create(actionMap, NoteListItem.Actions.ToggleStarred, variantSB);
+    action.create(actionMap, NoteListItem.Actions.ToggleLocked, variantSB);
+    action.create(actionMap, NoteListItem.Actions.ToggleHide, variantSB);
 
     NoteListItem._actionsCreated = true;
   }

@@ -1,5 +1,4 @@
 import Gio from "@girs/gio-2.0";
-import GLib from "@girs/glib-2.0";
 import fs from "../utils/fs";
 
 // TODO: Add favourite/starred to notes. Notes whch are starred are pinned at the top of the list
@@ -45,10 +44,9 @@ export default class NotesMetaFile {
     this.ensureExists();
   }
 
-  public renameNote(id: string, name: string) {
+  public addNote(id: string, name: string, path: string) {
     const data = this.getNotesMetadata();
-    if (!data[id]) return;
-    data[id].name = name;
+    data[id] = { name, path, locked: false, starred: false, hidden: false };
     this.save(data);
   }
 
@@ -59,9 +57,30 @@ export default class NotesMetaFile {
     this.save(data);
   }
 
-  public addNote(id: string, name: string, path: string) {
+  public setName(id: string, name: string) {
+    this.setProperty(id, "name", name);
+  }
+
+  public setHidden(id: string, hidden: boolean) {
+    this.setProperty(id, "hidden", hidden);
+  }
+
+  public setStarred(id: string, starred: boolean) {
+    this.setProperty(id, "starred", starred);
+  }
+
+  public setLocked(id: string, locked: boolean) {
+    this.setProperty(id, "locked", locked);
+  }
+
+  public setProperty<K extends Exclude<keyof NoteMetadata, "path">>(
+    id: string,
+    key: K,
+    value: NoteMetadata[K]
+  ) {
     const data = this.getNotesMetadata();
-    data[id] = { name, path, locked: false, starred: false, hidden: false };
+    if (!data[id]) return;
+    data[id][key] = value;
     this.save(data);
   }
 

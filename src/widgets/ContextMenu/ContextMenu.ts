@@ -5,9 +5,11 @@ import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
 import { DeepReadonly } from "../../core/utils/mutability";
 
-export type ContextMenuActions = ReadonlyArray<
-  Readonly<{ label: string; key: string }>
->;
+export type ContextMenuActions = Array<{
+  label: string;
+  action: string;
+  param: GLib.Variant;
+}>;
 
 interface ContextMenuParams<Actions extends ContextMenuActions> {
   actions: Actions;
@@ -21,7 +23,7 @@ export default class ContextMenu<
     GObject.registerClass({ GTypeName: "ContextMenu" }, this);
   }
 
-  public actions: DeepReadonly<Actions>;
+  public actions: Actions;
 
   private _menu: Gio.Menu;
 
@@ -30,7 +32,13 @@ export default class ContextMenu<
     this._menu = new Gio.Menu();
     this.actions = actions;
 
-    this.actions.forEach(({ key, label }) => this._menu.append(label, key));
+    this.actions.forEach(({ action, label, param }) => {
+      const menuItem = new Gio.MenuItem();
+      menuItem.set_label(label);
+      menuItem.set_attribute_value("action", GLib.Variant.new_string(action));
+      menuItem.set_attribute_value("target", param);
+      this._menu.append_item(menuItem);
+    });
     this.set_menu_model(this._menu);
     this.set_has_arrow(false);
 
@@ -41,42 +49,16 @@ export default class ContextMenu<
     this.ensureCleanup();
   }
 
-  public static fromObject<
-    T extends Readonly<Record<string, string>>,
-    S extends "win" | "app"
-  >(
-    obj: T,
-    { parent, scope }: { scope?: S; parent?: Gtk.Widget } = {}
-  ): ContextMenu<
-    Array<{ label: keyof T & string; key: `${S}.${T[keyof T]}` }>
-  > {
-    const actions = Object.entries(obj).map(([label, key]) => ({
-      label,
-      key: scope ? [scope, key].join(".") : key,
-    })) as Array<{
-      label: keyof T & string;
-      key: `${S}.${T[keyof T]}`;
-    }>;
-
-    return new ContextMenu({ actions, parent });
+  public static builder() {
+    return new ContextMenuBuilder();
   }
 
-  public popupAt(x: number, y: number, noteId: string, parent: Gtk.Widget) {
-    this.prepareActions(noteId);
+  public popupAt(x: number, y: number) {
     const width = 115; // dont ask
     const rect = new Gdk.Rectangle({ x, y, height: 1, width });
-    this.unparent();
-    this.set_parent(parent);
     this.set_pointing_to(rect);
     this.popup();
     return GLib.SOURCE_REMOVE;
-  }
-
-  private prepareActions(noteId: string) {
-    this._menu.remove_all();
-    this.actions.forEach(({ key, label }) =>
-      this._menu.append(label, `${key}::${noteId}`)
-    );
   }
 
   private ensureCleanup() {
@@ -105,6 +87,48 @@ export default class ContextMenu<
         }
         return GLib.SOURCE_REMOVE;
       });
+    });
+  }
+}
+
+/**
+ * Builder class to try and simplify the somewhat over-complicated
+ * process of creating a context menu (Popover + Gio.Menu).
+ */
+class ContextMenuBuilder {
+  private _actions: Array<{
+    label: string;
+    action: string;
+    param: GLib.Variant;
+  }> = [];
+
+  private _parent: Gtk.Widget | undefined = undefined;
+
+  public add(
+    label: string,
+    prefix: string,
+    action: string,
+    param: string | [type: string, value: unknown]
+  ): this {
+    const type = typeof param === "string" ? "s" : param[0];
+    const value = typeof param === "string" ? param : param[1];
+    this._actions.push({
+      label,
+      action: `${prefix}.${action}`,
+      param: GLib.Variant.new(type, value),
+    });
+    return this;
+  }
+
+  public parent(widget: Gtk.Widget): this {
+    this._parent = widget;
+    return this;
+  }
+
+  public build() {
+    return new ContextMenu({
+      actions: this._actions,
+      parent: this._parent,
     });
   }
 }

@@ -37,7 +37,6 @@ export default class NoteList extends Gtk.ScrolledWindow {
   private readonly _actionMap: Gio.ActionMap;
   private _openNoteId: string | null = null;
   private _search: string | null = null;
-  private _contextMenu: ContextMenu;
   private _currentCategory: NoteCategory = "all";
   private showListContextMenu: (x: number, y: number, noteId: string) => void;
 
@@ -56,21 +55,10 @@ export default class NoteList extends Gtk.ScrolledWindow {
       cssClasses: ["navigation-sidebar"],
     });
 
-    this._contextMenu = ContextMenu.fromObject(
-      {
-        Open: NoteListItem.Actions.DoOpen,
-        Rename: NoteListItem.Actions.PromptRename,
-        Delete: NoteListItem.Actions.PromptDelete,
-      },
-      { parent: this, scope: "win" }
-    );
-
-    // Probably wont need this debounce now that I'm hooking into the button release event
     this.showListContextMenu = debounce(
-      0,
-      (x: number, y: number, noteId: string) => {
-        this._contextMenu.popupAt(x, y, noteId, this._listItems[noteId]);
-      }
+      50,
+      (x: number, y: number, noteId: string) =>
+        this.buildContextMenu(noteId).popupAt(x, y)
     );
 
     this.set_child(this._listBox);
@@ -200,6 +188,37 @@ export default class NoteList extends Gtk.ScrolledWindow {
       "string",
       (id) => this.handleNoteOpened(id)
     );
+
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.ToggleHide,
+      (param) => param!.deepUnpack() as [string, boolean],
+      ([noteId, hidden]) => this.handleToggleHidden(noteId, hidden)
+    );
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.ToggleLocked,
+      (param) => param!.deepUnpack() as [string, boolean],
+      ([noteId, locked]) => this.handleToggleLocked(noteId, locked)
+    );
+    action.handle(
+      this._actionMap,
+      NoteListItem.Actions.ToggleStarred,
+      (param) => param!.deepUnpack() as [string, boolean],
+      ([noteId, starred]) => this.handleToggleStarred(noteId, starred)
+    );
+  }
+  private handleToggleHidden(noteId: string, hidden: boolean): void {
+    this._notesDir.metaFile.setHidden(noteId, hidden);
+    this.sync();
+  }
+  private handleToggleStarred(noteId: string, starred: boolean): void {
+    this._notesDir.metaFile.setStarred(noteId, starred);
+    this.sync();
+  }
+  private handleToggleLocked(noteId: string, locked: boolean): void {
+    this._notesDir.metaFile.setLocked(noteId, locked);
+    this.sync();
   }
 
   private deleteNote(id: string) {
@@ -243,5 +262,25 @@ export default class NoteList extends Gtk.ScrolledWindow {
     if (!this._openNoteId) return;
     action.invoke(this._actionMap, Layout.Actions.ShowSidebarChanged, true);
     this.promptRename(this._openNoteId);
+  }
+
+  private buildContextMenu(noteId: string) {
+    const { starred, hidden, locked } = this._listItems[noteId];
+
+    const builder = ContextMenu.builder()
+      .add("Open", "win", NoteListItem.Actions.DoOpen, noteId)
+      .add("Rename", "win", NoteListItem.Actions.PromptRename, noteId)
+      .add("Delete", "win", NoteListItem.Actions.PromptDelete, noteId)
+      .add("Rename", "win", NoteListItem.Actions.PromptRename, noteId);
+
+    if (this._prefs.get("enable-categories")) {
+      // prettier-ignore
+      builder
+        .add(starred ? 'Unstar' : 'Star', 'win', NoteListItem.Actions.ToggleStarred, ['(sb)', [noteId, !starred]])
+        .add(locked ? 'Unlock' : 'Lock', 'win', NoteListItem.Actions.ToggleLocked, ['(sb)', [noteId, !locked]])
+        .add(hidden ? 'Unhide' : 'Hide', 'win', NoteListItem.Actions.ToggleHide, ['(sb)', [noteId, !hidden]])
+    }
+
+    return builder.parent(this._listItems[noteId]).build();
   }
 }
