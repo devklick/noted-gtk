@@ -159,12 +159,11 @@ export default class PreferencesManager implements AppPrefs {
 
   private listen() {
     Object.values(PreferenceKeys).forEach((key) => {
-      const id = this.settings.connect(`changed::${key}`, () => {
-        console.log("Changed", key);
+      const id = this.settings.connect(`changed::${key}`, () =>
         this.changeHandlers[key]?.forEach((handler) => {
           handler(this.get(key));
-        });
-      });
+        })
+      );
       this.signalIds.push(id);
     });
   }
