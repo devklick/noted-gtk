@@ -13,6 +13,7 @@ import AppDir from "../../core/fs/AppDir";
 import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 import ShortcutManager from "../../core/ShortcutManager";
 import PreferencesManager, { AppPrefs } from "../../core/PreferencesManager";
+import action from "../../core/utils/action";
 
 const APPLICATION_ID = "io.github.devklick.noted";
 
@@ -123,6 +124,21 @@ export default class Application extends Adw.Application {
     aboutActions.connect("activate", () => {
       this.window.presentAboutDialog();
     });
+
+    action.create(this, BurgerMenu.Actions.Open["Notes Folder"]);
+    action.handle(this, BurgerMenu.Actions.Open["Notes Folder"], null, () => {
+      this.appDir.notesDir.open();
+    });
+
+    action.create(this, BurgerMenu.Actions.Open["Notes Meta File"]);
+    action.handle(
+      this,
+      BurgerMenu.Actions.Open["Notes Meta File"],
+      null,
+      () => {
+        this.appDir.notesDir.metaFile.open();
+      }
+    );
 
     this.add_action(preferencesActions);
     this.add_action(aboutActions);

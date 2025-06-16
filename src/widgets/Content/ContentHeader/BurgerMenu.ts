@@ -14,19 +14,18 @@ export default class BurgerMenu extends Adw.Bin {
   public static Actions = {
     Preferences: "preferences",
     About: "about",
+    Open: {
+      ["Notes Folder"]: "open-notes-folder",
+      ["Notes Meta File"]: "open-notes-meta-file",
+    },
   } as const;
 
   private popover: Gtk.PopoverMenu;
-  private menu: Gio.Menu;
   private menuButton: Gtk.MenuButton;
+  private menu: Gio.Menu = this.buildMenu(BurgerMenu.Actions);
 
   constructor({}: BurgerMenuParams) {
     super();
-    this.menu = new Gio.Menu();
-
-    Object.entries(BurgerMenu.Actions).forEach(([label, action]) =>
-      this.menu.append(label, `app.${action}`)
-    );
 
     this.popover = new Gtk.PopoverMenu({ menuModel: this.menu });
 
@@ -35,5 +34,19 @@ export default class BurgerMenu extends Adw.Bin {
       popover: this.popover,
     });
     this.set_child(this.menuButton);
+  }
+
+  private buildMenu(actions: object) {
+    const menu = new Gio.Menu();
+
+    Object.entries(actions).forEach(([label, action]) => {
+      if (typeof action === "object") {
+        menu.append_submenu(label, this.buildMenu(action));
+      } else if (typeof action === "string") {
+        menu.append(label, `app.${action}`);
+      }
+    });
+
+    return menu;
   }
 }

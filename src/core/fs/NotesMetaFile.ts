@@ -104,6 +104,11 @@ export default class NotesMetaFile {
     return this.getNotesMetadata()[id];
   }
 
+  public open() {
+    const folder = Gio.File.new_for_path(this._path);
+    Gio.AppInfo.launch_default_for_uri(folder.get_uri(), null);
+  }
+
   private isValidNotesMetadata(data: unknown): data is NotesMetadata {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       return false;

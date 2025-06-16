@@ -139,6 +139,11 @@ export default class NotesDir {
     if (!success) throw new Error(`Failed to update file: ${message}`);
   }
 
+  public open() {
+    const folder = Gio.File.new_for_path(this._path);
+    Gio.AppInfo.launch_default_for_uri(folder.get_uri(), null);
+  }
+
   private getNoteFile(noteId: string): Gio.File {
     return Gio.File.new_for_path(this.getNotePath(noteId));
   }
