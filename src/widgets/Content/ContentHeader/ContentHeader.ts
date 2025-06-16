@@ -100,7 +100,7 @@ export default class ContentHeader extends Adw.Bin {
       this._actionMap,
       NoteEditor.Actions.EditorDirty,
       "bool",
-      (dirty) => this._titleWidget.setDirty(dirty)
+      (dirty) => this.handleEditorDirty(dirty)
     );
 
     action.handle(
@@ -109,6 +109,11 @@ export default class ContentHeader extends Adw.Bin {
       "bool",
       (show) => this.handleShowSideBar(show)
     );
+  }
+
+  private handleEditorDirty(dirty: boolean): void {
+    this._titleWidget.setDirty(dirty);
+    this._saveButton.set_sensitive(dirty);
   }
 
   private handleShowSideBar(show: boolean) {
@@ -122,7 +127,7 @@ export default class ContentHeader extends Adw.Bin {
     this._openNoteId = noteId;
     const note = this._notesDir.metaFile.getNoteMetadata(noteId);
     this._titleWidget.setTitle(note.name);
-    this._saveButton.set_sensitive(true);
+    this._saveButton.set_sensitive(false);
     this._deleteButton.set_sensitive(true);
     this.toggleNewNoteSuggested();
   }
