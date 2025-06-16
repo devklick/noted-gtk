@@ -97,6 +97,8 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._savedText = this._notesDir.loadNote(id);
     this.bufferText = this._savedText;
     this._textView.visible = true;
+    this._textView.sensitive =
+      !this._notesDir.metaFile.getNoteMetadata(id).locked;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorOpened, id);
     GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
