@@ -9,7 +9,7 @@ import {
 } from "../../../../core/ShortcutManager";
 
 interface BindKeyDialogParams {
-  parent: Gtk.Window;
+  parentWindow: Gtk.Window;
   shortcut: ShortcutType;
   shortcutKeys: Readonly<ShortcutKeys>;
   onConfirm(shortcutKeys: Readonly<ShortcutKeys>): void;
@@ -19,6 +19,10 @@ interface BindKeyDialogParams {
 /**
  * A dialog that allows users to enter a new key combination
  * to use as the binding for the specified shortcut.
+ *
+ * Note that this is an Adw.Window instance acting as a Adw.Dialog, rather than
+ * being an actual Adw.Dialog instance. This is becuase it seems linke key events
+ * don't get captured inside a Adw.Dialog.
  */
 export default class BindKeyDialog extends Adw.Window {
   static {
@@ -28,16 +32,20 @@ export default class BindKeyDialog extends Adw.Window {
   private _pendingShortcut: ShortcutKeys;
 
   constructor({
-    parent,
+    parentWindow: parentWindow,
     shortcutKeys: _shortcutKeys,
     onConfirm,
     shortcuts,
     shortcut,
   }: BindKeyDialogParams) {
-    super({ transientFor: parent, modal: true });
+    super({ transientFor: parentWindow, modal: true });
     this._pendingShortcut = { ..._shortcutKeys };
 
-    const error = widget.label.new(null, { cssClasses: ["error"] });
+    const error = widget.label.new(null, {
+      color: "error",
+      cssClasses: ["italic"],
+    });
+
     const shortcutLabel = new Gtk.ShortcutLabel({
       accelerator: Gtk.accelerator_name(
         this._pendingShortcut.key,
@@ -73,7 +81,7 @@ export default class BindKeyDialog extends Adw.Window {
     const content = widget.box.v({
       margin: 10,
       spacing: 10,
-      children: [error, shortcutLabel, buttonRow],
+      children: [shortcutLabel, error, buttonRow],
     });
     const view = widget.toolbarView.new({
       topBar: header,

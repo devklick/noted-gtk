@@ -15,19 +15,19 @@ import widget from "../../../../../core/utils/widget";
 
 interface KeyBindingsPageParams {
   shortcuts: AppShortcuts;
-  parent: Adw.PreferencesWindow;
+  parentWindow: Gtk.Window;
 }
 
 export default class KeyBindingsPage extends Adw.PreferencesPage {
   private shortcuts: AppShortcuts;
-  private _parent: Adw.PreferencesWindow;
+  private _parentWindow: Gtk.Window;
   static {
     GObject.registerClass({ GTypeName: "KeyBindingsPage" }, this);
   }
-  constructor({ shortcuts, parent }: KeyBindingsPageParams) {
+  constructor({ shortcuts, parentWindow }: KeyBindingsPageParams) {
     super({ title: "Key Bindings", iconName: icon.symbolic("input-keyboard") });
     this.shortcuts = shortcuts;
-    this._parent = parent;
+    this._parentWindow = parentWindow;
 
     const prefGroups: Partial<Record<ShortcutGroupType, Adw.PreferencesGroup>> =
       {};
@@ -64,7 +64,7 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
         shortcut,
         shortcutKeys,
         shortcuts: this.shortcuts,
-        parent: this._parent,
+        parentWindow: this._parentWindow,
         onConfirm: ({ key, modifier }) => {
           this.shortcuts.set(shortcut, { key, modifier });
           shortcutLabel.set_accelerator(Gtk.accelerator_name(key, modifier));

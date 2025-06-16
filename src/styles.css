@@ -2,3 +2,7 @@
     /* color: @theme_bg_color; */
     -gtk-icon-size: 12px;
 }
+
+.italic {
+    font-style: italic;
+}
