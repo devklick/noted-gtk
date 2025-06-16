@@ -275,7 +275,7 @@ export default class ShortcutManager implements AppShortcuts {
       };
 
     console.log(
-      `Error with keybinding ${type} ${shortcut}. Reverting to redefault ${
+      `Error with keybinding ${type} ${shortcut}. Reverting to default ${
         this.getMeta(type).default
       }`
     );
