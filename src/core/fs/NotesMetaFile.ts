@@ -95,6 +95,7 @@ export default class NotesMetaFile {
     const data = JSON.parse(text);
 
     if (!this.isValidNotesMetadata(data)) {
+      console.log(JSON.stringify(data, null, 2));
       throw new Error("Failed to parse notes metadata file");
     }
 
@@ -115,19 +116,53 @@ export default class NotesMetaFile {
       return false;
     }
 
-    for (const [key, value] of Object.entries(data)) {
-      if (typeof key !== "string") return false;
-      if (
-        typeof value !== "object" ||
-        value === null ||
-        typeof value.name !== "string" ||
-        typeof value.path !== "string" ||
-        typeof value.starred !== "boolean" ||
-        typeof value.locked !== "boolean" ||
-        typeof value.hidden !== "boolean"
-      ) {
+    let patched = false;
+
+    const ensureProp = (obj: any, name: string, defaultValue: unknown) => {
+      if (typeof obj[name] === "undefined") {
+        obj[name] = defaultValue;
+        patched = true;
+      }
+      if (typeof obj[name] !== typeof defaultValue) {
+        console.log("failed type check", typeof obj[name], typeof defaultValue);
         return false;
       }
+      return true;
+    };
+
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof key !== "string") {
+        console.log("Failed key");
+        return false;
+      }
+      if (typeof value !== "object" || value === null) {
+        return false;
+      }
+      // The only property that is required and we
+      // cannot patch if missing is the path
+      if (typeof value.path !== "string") {
+        return false;
+      }
+
+      // The following properties are all required,
+      // but we can patch with suitable default values if missing
+      if (!ensureProp(value, "name", "Unnamed Note")) {
+        return false;
+      }
+      if (!ensureProp(value, "starred", false)) {
+        return false;
+      }
+      if (!ensureProp(value, "locked", false)) {
+        return false;
+      }
+      if (!ensureProp(value, "hidden", false)) {
+        return false;
+      }
+    }
+
+    // Update the file if we had to patch missing data
+    if (patched) {
+      this.save(data as NotesMetadata);
     }
 
     return true;
