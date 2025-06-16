@@ -1,8 +1,9 @@
 import Gio from "@girs/gio-2.0";
 import fs from "../utils/fs";
 
-// TODO: Add favourite/starred to notes. Notes whch are starred are pinned at the top of the list
-// TODO: Add ability to "lock" a note. Notes which are locked cannot be edited and require double-confirmation to delete
+// TODO: Considering monitoring the metda file for changes.
+// Not sure if it's really worth it, since it's not expected for users to be altering this file.
+// It should be quite cheap to do, but will involve more actions being fired and handled, so adds complexity
 
 /**
  * An object representing an entry in the note metdata file

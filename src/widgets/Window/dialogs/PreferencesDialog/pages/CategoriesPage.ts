@@ -97,6 +97,5 @@ export default class CategoriesPage extends Adw.PreferencesPage {
   /*
     TODO:
       - Allow each note category to be enabled/disabled individually
-      - Allow all note categories to be enabled/disabled globally
   */
 }
