@@ -125,11 +125,8 @@ export default class NoteListItem extends Gtk.ListBoxRow {
 
     content.append(decors);
 
-    prefs.onChanged("enable-categories", (enabled) =>
-      decors.set_visible(enabled && prefs.get("enable-category-decorations"))
-    );
     prefs.onChanged("enable-category-decorations", (enabled) =>
-      decors.set_visible(enabled && prefs.get("enable-categories"))
+      decors.set_visible(enabled)
     );
 
     this.registerClickHandlers();
