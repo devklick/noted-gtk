@@ -75,7 +75,7 @@ export default class BindKeyDialog extends Adw.Window {
     });
 
     const header = widget.header.new({
-      title: `Bind ${shortcuts.getLabel(shortcut)}`,
+      title: `Bind ${shortcuts.getMeta(shortcut).label}`,
     });
     header.titleWidget.add_css_class("title-2");
     const content = widget.box.v({
@@ -106,7 +106,7 @@ export default class BindKeyDialog extends Adw.Window {
       );
       const existing = shortcuts.check(this._pendingShortcut);
       if (existing && existing != shortcut) {
-        error.set_label(`Conflicts with ${shortcuts.getLabel(existing)}`);
+        error.set_label(`Conflicts with ${shortcuts.getMeta(existing).label}`);
         confirm.set_sensitive(false);
       } else {
         error.set_label("");

@@ -40,6 +40,41 @@
         <key name="enable-category-decorations" type="b">
             <default>true</default>
             <summary>Enable Category Decorations</summary>
+        </key><!-- 
+
+        Editor Shortcuts 
+        -->
+        <key name="editor-shoctut-toggle-bold-text" type="s">
+            <default>&quot;&lt;Control&gt;b&quot;</default>
+            <summary>Enable/disable bold text</summary>
+        </key>
+        <key name="editor-shoctut-toggle-italic-text" type="s">
+            <default>&quot;&lt;Control&gt;i&quot;</default>
+            <summary>Enable/disable italic text</summary>
+        </key>
+        <key name="editor-shoctut-toggle-underline-text" type="s">
+            <default>&quot;&lt;Control&gt;u&quot;</default>
+            <summary>Enable/disable underline text</summary>
+        </key>
+        <key name="editor-shoctut-text-size-h1" type="s">
+            <default>&quot;&lt;Control&gt;1&quot;</default>
+            <summary>Set text size to header (1)</summary>
+        </key>
+        <key name="editor-shoctut-text-size-h2" type="s">
+            <default>&quot;&lt;Control&gt;2&quot;</default>
+            <summary>Set text size to header (2)</summary>
+        </key>
+        <key name="editor-shoctut-text-size-h3" type="s">
+            <default>&quot;&lt;Control&gt;3&quot;</default>
+            <summary>Set text size to header (3)</summary>
+        </key>
+        <key name="editor-shoctut-text-size-h4" type="s">
+            <default>&quot;&lt;Control&gt;4&quot;</default>
+            <summary>Set text size to header (4)</summary>
+        </key>
+        <key name="editor-shoctut-text-size-normal" type="s">
+            <default>&quot;&lt;Control&gt;0&quot;</default>
+            <summary>Set text size to normal</summary>
         </key>
     </schema>
 </schemalist>

@@ -19,7 +19,7 @@ const ShortcutGroups = {
   { type: string; label: string; description: string }
 >;
 
-export const Shortcuts = {
+const Shortcuts = {
   SaveNote: {
     type: "save-note",
     description: "Save the current contents of the note",
@@ -80,6 +80,70 @@ export const Shortcuts = {
     default: Gtk.accelerator_name(Gdk.KEY_comma, Gdk.ModifierType.CONTROL_MASK),
     caseSensitive: false,
   },
+  ToggleBoldText: {
+    type: "editor-shoctut-toggle-bold-text",
+    description: "Toggle bold text in the note editor",
+    label: "Toggle Bold",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_b, Gdk.ModifierType.CONTROL_MASK),
+  },
+  ToggleItalicText: {
+    type: "editor-shoctut-toggle-italic-text",
+    description: "Toggle italic text in the note editor",
+    label: "Toggle Italic",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_i, Gdk.ModifierType.CONTROL_MASK),
+  },
+  ToggleUnderlineText: {
+    type: "editor-shoctut-toggle-underline-text",
+    description: "Toggle underline text in the note editor",
+    label: "Toggle Italic",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_u, Gdk.ModifierType.CONTROL_MASK),
+  },
+  SetTextSizeH1: {
+    type: "editor-shoctut-text-size-h1",
+    description: "Set text size to header 1 in the note editor",
+    label: "Header (1)",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_1, Gdk.ModifierType.CONTROL_MASK),
+  },
+  SetH2Text: {
+    type: "editor-shoctut-text-size-h2",
+    description: "Set text size to header (2) in the note editor",
+    label: "Header (2)",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_2, Gdk.ModifierType.CONTROL_MASK),
+  },
+  SetH3Text: {
+    type: "editor-shoctut-text-size-h3",
+    description: "Set text size to header (3) in the note editor",
+    label: "Header (3)",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_3, Gdk.ModifierType.CONTROL_MASK),
+  },
+  SetH4Text: {
+    type: "editor-shoctut-text-size-h4",
+    description: "Set text size to header (4) in the note editor",
+    label: "Header (4)",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_4, Gdk.ModifierType.CONTROL_MASK),
+  },
+  SetTextSizeNormal: {
+    type: "editor-shoctut-text-size-normal",
+    description: "Set text size to normal in the note editor",
+    label: "Normal",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(Gdk.KEY_0, Gdk.ModifierType.CONTROL_MASK),
+  },
 } as const satisfies Record<
   string,
   {
@@ -93,6 +157,7 @@ export const Shortcuts = {
 >;
 
 export type Shortcut = (typeof Shortcuts)[keyof typeof Shortcuts];
+
 export type ShortcutType = (typeof Shortcuts)[keyof typeof Shortcuts]["type"];
 
 export type ShortcutGroup =
@@ -104,18 +169,11 @@ export type ShortcutGroupType =
 export type ShortcutKeys = { key: number; modifier: Gdk.ModifierType };
 
 export interface AppShortcuts {
-  isSaveNote(keys: ShortcutKeys): boolean;
-  isNewNote(keys: ShortcutKeys): boolean;
-  isDeleteNote(keys: ShortcutKeys): boolean;
-  isRenameNote(keys: ShortcutKeys): boolean;
-  isToggleSidebar(keys: ShortcutKeys): boolean;
-  isSearchNotes(keys: ShortcutKeys): boolean;
-  isOpenPrefs(keys: ShortcutKeys): boolean;
   check(keys: ShortcutKeys): ShortcutType | null;
   get(shortcut: ShortcutType): ShortcutKeys;
-  getLabel(shortcut: ShortcutType): string;
   getMeta(shortcut: ShortcutType): Shortcut;
   set(shortcut: ShortcutType, keys: ShortcutKeys): void;
+  is(keys: ShortcutKeys, shortcut: ShortcutType): boolean;
   reset(shortcut: ShortcutType): void;
   getAll(): Array<Shortcut>;
 }
@@ -126,21 +184,16 @@ interface ShortcutManagerParams {
 
 export default class ShortcutManager implements AppShortcuts {
   private settings: Gio.Settings;
-
-  private saveNote!: ShortcutKeys;
-  private newNote!: ShortcutKeys;
-  private renameNote!: ShortcutKeys;
-  private deleteNote!: ShortcutKeys;
-  private toggleSidebar!: ShortcutKeys;
-  private searchNotes!: ShortcutKeys;
-  private openPrefs!: ShortcutKeys;
+  private shortcuts: Record<ShortcutType, ShortcutKeys>;
 
   constructor({ settings }: ShortcutManagerParams) {
     this.settings = settings;
+    this.shortcuts = this.mapShortcuts();
 
-    this.loadShortcuts();
-
-    this.settings.connect("changed", () => this.loadShortcuts());
+    this.settings.connect(
+      "changed",
+      () => (this.shortcuts = this.mapShortcuts())
+    );
   }
 
   public getAll(): Array<Shortcut> {
@@ -156,105 +209,37 @@ export default class ShortcutManager implements AppShortcuts {
   }
 
   public get(shortcut: ShortcutType): ShortcutKeys {
-    switch (shortcut) {
-      case "delete-note":
-        return this.deleteNote;
-      case "new-note":
-        return this.newNote;
-      case "rename-note":
-        return this.renameNote;
-      case "save-note":
-        return this.saveNote;
-      case "toggle-sidebar":
-        return this.toggleSidebar;
-      case "search-notes":
-        return this.searchNotes;
-      case "open-prefs":
-        return this.openPrefs;
-      default:
-        throw new Error(`Invalid shortcut: ${shortcut}`);
+    const keys = this.shortcuts[shortcut];
+    if (!keys) {
+      throw new Error(`Invalid shortcut: ${shortcut}`);
     }
-  }
-
-  public getLabel(shortcut: ShortcutType): string {
-    return this.getMeta(shortcut).label;
+    return keys;
   }
 
   public set(shortcut: ShortcutType, { key, modifier }: ShortcutKeys): void {
     this.settings.set_string(shortcut, Gtk.accelerator_name(key, modifier));
   }
 
-  public isSaveNote(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.saveNote,
-      this.getMeta("save-note").caseSensitive
-    );
-  }
-
-  public isNewNote(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.newNote,
-      this.getMeta("new-note").caseSensitive
-    );
-  }
-
-  public isDeleteNote(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.deleteNote,
-      this.getMeta("delete-note").caseSensitive
-    );
-  }
-
-  public isRenameNote(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.renameNote,
-      this.getMeta("rename-note").caseSensitive
-    );
-  }
-
-  public isToggleSidebar(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.toggleSidebar,
-      this.getMeta("toggle-sidebar").caseSensitive
-    );
-  }
-  public isSearchNotes(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.searchNotes,
-      this.getMeta("search-notes").caseSensitive
-    );
-  }
-
-  public isOpenPrefs(keys: ShortcutKeys): boolean {
-    return this.isMatch(
-      keys,
-      this.openPrefs,
-      this.getMeta("open-prefs").caseSensitive
-    );
-  }
-
   public check(keys: ShortcutKeys): ShortcutType | null {
-    if (this.isSaveNote(keys)) return "save-note";
-    if (this.isNewNote(keys)) return "new-note";
-    if (this.isDeleteNote(keys)) return "delete-note";
-    if (this.isRenameNote(keys)) return "rename-note";
-    if (this.isToggleSidebar(keys)) return "toggle-sidebar";
-    if (this.isSearchNotes(keys)) return "search-notes";
-    if (this.isOpenPrefs(keys)) return "open-prefs";
+    for (const { type } of Object.values(Shortcuts)) {
+      if (this.isMatch(keys, type)) {
+        return type;
+      }
+    }
     return null;
+  }
+
+  public is(keys: ShortcutKeys, shortcut: ShortcutType): boolean {
+    return this.check(keys) === shortcut;
   }
 
   private isMatch(
     { key: inKey, modifier: inMod }: ShortcutKeys,
-    { key: actKey, modifier: actMod }: ShortcutKeys,
-    caseSensitive: boolean
+    shortcut: ShortcutType
   ): boolean {
+    const { key: actKey, modifier: actMod } = this.shortcuts[shortcut];
+    const caseSensitive = this.getMeta(shortcut).caseSensitive;
+
     // prettier-ignore
     const keyMatch = inKey === actKey || 
       (!caseSensitive && Gdk.keyval_to_lower(inKey) === Gdk.keyval_to_lower(actKey));
@@ -292,13 +277,13 @@ export default class ShortcutManager implements AppShortcuts {
     throw new Error(`Problem with keybindings: ${type}`);
   }
 
-  private loadShortcuts() {
-    this.saveNote = this.getShotcut("save-note");
-    this.newNote = this.getShotcut("new-note");
-    this.renameNote = this.getShotcut("rename-note");
-    this.deleteNote = this.getShotcut("delete-note");
-    this.toggleSidebar = this.getShotcut("toggle-sidebar");
-    this.searchNotes = this.getShotcut("search-notes");
-    this.openPrefs = this.getShotcut("open-prefs");
+  private mapShortcuts(): Record<ShortcutType, ShortcutKeys> {
+    return Object.values(Shortcuts).reduce(
+      (obj, entry) => ({
+        ...obj,
+        [entry.type]: this.getShotcut(entry.type),
+      }),
+      {} as Record<ShortcutType, ShortcutKeys>
+    );
   }
 }

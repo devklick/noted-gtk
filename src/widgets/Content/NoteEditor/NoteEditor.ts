@@ -1,20 +1,17 @@
 import Gtk from "@girs/gtk-4.0";
 import GObject from "@girs/gobject-2.0";
 import Gio from "@girs/gio-2.0";
+import Gdk from "@girs/gdk-4.0";
+import GLib from "@girs/glib-2.0";
 
 import NotesDir from "../../../core/fs/NotesDir";
 import NoteListItem from "../../SideBar/NoteList/NoteListItem";
+import { AppShortcuts } from "../../../core/ShortcutManager";
+import StyleManager from "../../../core/utils/StyleManager";
 
 import action from "../../../core/utils/action";
-import Gdk from "@girs/gdk-4.0";
-import GLib from "@girs/glib-2.0";
-import { AppShortcuts } from "../../../core/ShortcutManager";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
-
-// TODO: Swap TextView out for SourceView to allow more control over text formatting etc
-// Tried to do this but the girs bindings on npm had a dependency conflict that I couldnt solve.
-// Need to tackle this again, as it's deffo needed.
 
 interface NoteEditorParams {
   notesDir: Readonly<NotesDir>;
@@ -39,12 +36,12 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   private _noteId: string | null = null;
   private _savedText: string | null = null;
 
-  private _notesDir: Readonly<NotesDir>;
-  private _textView: Gtk.TextView;
-  private _actionMap: Gio.ActionMap;
-  private _buffer: Gtk.TextBuffer;
-  private _textViewKeyController: Gtk.EventControllerKey;
-  private _shortcuts: AppShortcuts;
+  private readonly _notesDir: Readonly<NotesDir>;
+  private readonly _textView: Gtk.TextView;
+  private readonly _actionMap: Gio.ActionMap;
+  private readonly _buffer: Gtk.TextBuffer;
+  private readonly _textViewKeyController: Gtk.EventControllerKey;
+  private readonly _shortcuts: AppShortcuts;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -77,20 +74,37 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._shortcuts = shortcuts;
 
     this._textViewKeyController = new Gtk.EventControllerKey();
-    this._textView = new Gtk.TextView({
+    this._buffer = this.createBuffer();
+    this._textView = this.createTextView(
+      this._buffer,
+      this._textViewKeyController
+    );
+
+    const styleManager = new StyleManager({
+      actionMap,
+      buffer: this._buffer,
+      keyController: this._textViewKeyController,
+      shortcuts,
+    });
+
+    this.set_child(this._textView);
+    this.registerActionHandlers(actionMap);
+  }
+
+  private createTextView(
+    buffer: Gtk.TextBuffer,
+    textViewKeyController: Gtk.EventControllerKey
+  ): Gtk.TextView {
+    const textView = new Gtk.TextView({
       left_margin: 12,
       right_margin: 12,
       top_margin: 12,
       bottomMargin: 12,
       visible: false,
+      buffer,
     });
-    this._textView.add_controller(this._textViewKeyController);
-
-    this._buffer = this._textView.get_buffer();
-    this._buffer.connect("changed", () => this.handleTextChanged());
-
-    this.set_child(this._textView);
-    this.registerActionHandlers(actionMap);
+    textView.add_controller(textViewKeyController);
+    return textView;
   }
 
   public load(id: string) {
@@ -200,5 +214,11 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
         "NoteEditor.defineActions must be called before instantiation"
       );
     }
+  }
+
+  private createBuffer() {
+    const buffer = new Gtk.TextBuffer();
+    buffer.connect("changed", () => this.handleTextChanged());
+    return buffer;
   }
 }

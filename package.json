@@ -9,16 +9,16 @@
         "url": "https://github.com/github/noted-gtk/issues"
     },
     "devDependencies": {
-        "cross-env": "^7.0.3",
-        "typescript": "^5.8.3",
-        "vite": "^6.3.3",
         "@girs/adw-1": "^1.8.0-4.0.0-beta.23",
         "@girs/gio-2.0": "^2.84.0-4.0.0-beta.23",
         "@girs/gjs": "^4.0.0-beta.23",
         "@girs/glib-2.0": "^2.84.0-4.0.0-beta.23",
         "@girs/gst-1.0": "^1.24.12-4.0.0-beta.23",
         "@girs/gtk-4.0": "^4.18.3-4.0.0-beta.23",
-        "@girs/pango-1.0": "^1.56.4-4.0.0-beta.23"
+        "@girs/pango-1.0": "^1.56.4-4.0.0-beta.23",
+        "cross-env": "^7.0.3",
+        "typescript": "^5.8.3",
+        "vite": "^6.3.3"
     },
     "type": "module",
     "private": true,
