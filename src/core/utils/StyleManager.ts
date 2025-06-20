@@ -142,6 +142,12 @@ export default class StyleManager {
     this._enabled = false;
   }
 
+  /**
+   * Temporarily disable the styles while executing the specified function.
+   *
+   * This is used when deserializing an existing note, which may already have
+   * style tags embeded in it.
+   */
   public tempDisable(doWhileDisabled: () => void) {
     this.disable();
     doWhileDisabled();
