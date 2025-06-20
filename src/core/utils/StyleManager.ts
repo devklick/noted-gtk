@@ -110,14 +110,6 @@ export default class StyleManager {
   private currentSize: TextSizeTagName = TextSizes[StylePresets.normal.size];
   private _enabled: boolean = true;
 
-  /**
-   * Whether or not styles added to newly-added text should be inherrited from
-   * the text styles at the current cursor position.
-   *
-   * This will always be true, unless the user changes styles after moving the cursor.
-   */
-  private inheritStyles: boolean = true;
-
   constructor({
     buffer,
     keyController,
@@ -222,16 +214,28 @@ export default class StyleManager {
     });
   }
 
-  private toggleDecoration(tagname: TextDecorationTagName) {
-    if (this.currentDecorations.has(tagname)) {
-      this.currentDecorations.delete(tagname);
+  private toggleDecoration(tagName: TextDecorationTagName) {
+    const [hasSelection, start, end] = this.buffer.get_selection_bounds();
+    if (hasSelection) {
+      this.toggleDecorationAtSelection(start, end, tagName);
+      return;
+    }
+
+    if (this.currentDecorations.has(tagName)) {
+      this.currentDecorations.delete(tagName);
     } else {
-      this.currentDecorations.add(tagname);
+      this.currentDecorations.add(tagName);
     }
   }
 
-  private setStylePreset(type: keyof typeof StylePresets) {
-    const { bold, italic, size, underline } = StylePresets[type];
+  private setStylePreset(preset: keyof typeof StylePresets) {
+    const [hasSelection, start, end] = this.buffer.get_selection_bounds();
+    if (hasSelection) {
+      this.replaceSelectionStylesWithPreset(start, end, preset);
+      return;
+    }
+
+    const { bold, italic, size, underline } = StylePresets[preset];
     this.currentDecorations.clear();
 
     bold && this.currentDecorations.add("bold");
@@ -258,5 +262,72 @@ export default class StyleManager {
 
       return GLib.SOURCE_REMOVE;
     });
+  }
+
+  /**
+   * When the user has text selected and tries to change styles, the styles
+   * should be applied only to the text that's currently selected.
+   */
+  private replaceSelectionStylesWithPreset(
+    start: Gtk.TextIter,
+    end: Gtk.TextIter,
+    preset: keyof typeof StylePresets
+  ) {
+    const { bold, italic, size, underline } = StylePresets[preset];
+
+    // Since we're replacing styles at the current selection, we need to
+    // remove all existing style tags first
+    for (const tag of Object.values(this.styleTags)) {
+      this.buffer.remove_tag(tag, start, end);
+    }
+
+    // Apply all decoration tags for the given preset
+    const applyDecoration = (tagName: TextDecorationTagName) => {
+      const tag = this.styleTags[tagName];
+      this.buffer.apply_tag(tag, start, end);
+    };
+    bold && applyDecoration("bold");
+    italic && applyDecoration("italic");
+    underline && applyDecoration("underline");
+
+    // Apply the font tag for the preset
+    const tag = this.styleTags[`size-${size}`];
+    this.buffer.apply_tag(tag, start, end);
+  }
+
+  private toggleDecorationAtSelection(
+    start: Gtk.TextIter,
+    end: Gtk.TextIter,
+    tagName: TextDecorationTagName
+  ) {
+    const tag = this.styleTags[tagName];
+
+    // If the tag is applied to the entire selection range, then remove it, othewise add it
+    if (this.isTagFullyAppliedAtSelection(tag, start, end)) {
+      this.buffer.remove_tag(tag, start, end);
+    } else {
+      this.buffer.apply_tag(this.styleTags[tagName], start, end);
+    }
+  }
+
+  private isTagFullyAppliedAtSelection(
+    tag: Gtk.TextTag,
+    start: Gtk.TextIter,
+    end: Gtk.TextIter
+  ): boolean {
+    const iter = start.copy();
+
+    while (iter.compare(end) < 0) {
+      if (!iter.has_tag(tag)) {
+        return false;
+      }
+      // Optimization: Skip forward to next place tag changes (toggle)
+      iter.forward_to_tag_toggle(tag);
+
+      // Prevent overshooting:
+      if (iter.compare(end) >= 0) break;
+    }
+
+    return true;
   }
 }
