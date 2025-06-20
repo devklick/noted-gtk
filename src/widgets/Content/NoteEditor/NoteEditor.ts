@@ -10,8 +10,11 @@ import { AppShortcuts } from "../../../core/ShortcutManager";
 import StyleManager from "../../../core/utils/StyleManager";
 
 import action from "../../../core/utils/action";
+import NoteSerializer from "../../../core/utils/NoteSerializer";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
+
+// When cursor moves, need to grab styles applied at that position and add them to current styles
 
 interface NoteEditorParams {
   notesDir: Readonly<NotesDir>;
@@ -42,6 +45,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   private readonly _buffer: Gtk.TextBuffer;
   private readonly _textViewKeyController: Gtk.EventControllerKey;
   private readonly _shortcuts: AppShortcuts;
+  private readonly _styleManager: StyleManager;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -59,10 +63,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   }
 
   private get _isDirty(): boolean {
-    const start = this._buffer.get_start_iter();
-    const end = this._buffer.get_end_iter();
-    const currentText = this._buffer.get_text(start, end, true);
-    return currentText !== this._savedText;
+    return NoteSerializer.serialize(this._buffer) !== this._savedText;
   }
 
   constructor({ notesDir, actionMap, shortcuts }: NoteEditorParams) {
@@ -80,7 +81,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       this._textViewKeyController
     );
 
-    const styleManager = new StyleManager({
+    this._styleManager = new StyleManager({
       actionMap,
       buffer: this._buffer,
       keyController: this._textViewKeyController,
@@ -112,8 +113,12 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this.save();
     this.unload();
     this._noteId = id;
-    this._savedText = this._notesDir.loadNote(id);
-    this.bufferText = this._savedText;
+
+    this._styleManager.tempDisable(() => {
+      this._savedText = this._notesDir.loadNote(id);
+      NoteSerializer.deserialize(this._savedText, this._buffer);
+    });
+
     this._textView.visible = true;
     this._textView.sensitive =
       !this._notesDir.metaFile.getNoteMetadata(id).locked;
@@ -127,7 +132,8 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
 
   public save() {
     if (!this._noteId || !this._isDirty) return;
-    this._notesDir.updateNote(this._noteId, this.bufferText);
+    const serialized = NoteSerializer.serialize(this._buffer);
+    this._notesDir.updateNote(this._noteId, serialized);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(
       this._actionMap,
@@ -163,7 +169,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       this.load(id)
     );
 
-    action.handle(actionMap, NoteListItem.Actions.DoSave, action.p.none, () =>
+    action.handle(actionMap, NoteListItem.Actions.DoSave, null, () =>
       this.save()
     );
 

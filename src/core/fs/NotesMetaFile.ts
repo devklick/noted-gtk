@@ -132,7 +132,6 @@ export default class NotesMetaFile {
 
     for (const [key, value] of Object.entries(data)) {
       if (typeof key !== "string") {
-        console.log("Failed key");
         return false;
       }
       if (typeof value !== "object" || value === null) {

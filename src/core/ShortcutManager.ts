@@ -106,8 +106,8 @@ const Shortcuts = {
   },
   SetTextSizeH1: {
     type: "editor-shoctut-text-size-h1",
-    description: "Set text size to header 1 in the note editor",
-    label: "Header (1)",
+    description: "Set text size to header (1) in the note editor",
+    label: "Set Text Style Header (1)",
     caseSensitive: false,
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_1, Gdk.ModifierType.CONTROL_MASK),
@@ -115,7 +115,7 @@ const Shortcuts = {
   SetH2Text: {
     type: "editor-shoctut-text-size-h2",
     description: "Set text size to header (2) in the note editor",
-    label: "Header (2)",
+    label: "Set Text Style Header (2)",
     caseSensitive: false,
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_2, Gdk.ModifierType.CONTROL_MASK),
@@ -123,7 +123,7 @@ const Shortcuts = {
   SetH3Text: {
     type: "editor-shoctut-text-size-h3",
     description: "Set text size to header (3) in the note editor",
-    label: "Header (3)",
+    label: "Set Text Style Header (3)",
     caseSensitive: false,
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_3, Gdk.ModifierType.CONTROL_MASK),
@@ -131,7 +131,7 @@ const Shortcuts = {
   SetH4Text: {
     type: "editor-shoctut-text-size-h4",
     description: "Set text size to header (4) in the note editor",
-    label: "Header (4)",
+    label: "Set Text Style Header (4)",
     caseSensitive: false,
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_4, Gdk.ModifierType.CONTROL_MASK),
@@ -139,7 +139,7 @@ const Shortcuts = {
   SetTextSizeNormal: {
     type: "editor-shoctut-text-size-normal",
     description: "Set text size to normal in the note editor",
-    label: "Normal",
+    label: "Set Text Style Normal",
     caseSensitive: false,
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_0, Gdk.ModifierType.CONTROL_MASK),
