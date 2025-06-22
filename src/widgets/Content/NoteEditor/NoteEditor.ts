@@ -5,16 +5,12 @@ import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
 
 import NotesDir from "../../../core/fs/NotesDir";
+import EditorStyles from "./EditorStyles";
 import NoteListItem from "../../SideBar/NoteList/NoteListItem";
 import { AppShortcuts } from "../../../core/ShortcutManager";
-import StyleManager from "../../../core/utils/StyleManager";
-
-import action from "../../../core/utils/action";
+import StyleManager from "../../../core/StyleManager";
 import NoteSerializer from "../../../core/utils/NoteSerializer";
-import icon from "../../../core/utils/icon";
-import widget, { button, label } from "../../../core/utils/widget";
-import click from "../../../core/utils/click";
-import EditorStyles from "./EditorStyles";
+import action from "../../../core/utils/action";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
@@ -131,6 +127,8 @@ export default class NoteEditor extends Gtk.Box {
     this.save();
     this.unload();
     this._noteId = id;
+
+    this._styleManager.reset();
 
     this._styleManager.tempDisable(() => {
       this._savedText = this._notesDir.loadNote(id);

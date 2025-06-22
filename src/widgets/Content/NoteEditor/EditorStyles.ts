@@ -5,7 +5,7 @@ import Pango from "@girs/pango-1.0";
 import icon from "../../../core/utils/icon";
 import click from "../../../core/utils/click";
 import widget from "../../../core/utils/widget";
-import StyleManager from "../../../core/utils/StyleManager";
+import StyleManager from "../../../core/StyleManager";
 
 interface EditorStylesParams {
   styleManager: StyleManager;

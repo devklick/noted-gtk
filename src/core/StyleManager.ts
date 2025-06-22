@@ -4,7 +4,7 @@ import Gdk from "@girs/gdk-4.0";
 import Pango from "@girs/pango-1.0";
 import GLib from "@girs/glib-2.0";
 
-import { AppShortcuts } from "../ShortcutManager";
+import { AppShortcuts } from "./ShortcutManager";
 
 interface StyleManagerParams {
   keyController: Gtk.EventControllerKey;
@@ -131,6 +131,11 @@ export default class StyleManager {
     });
 
     this.listenForShortcuts();
+  }
+
+  public reset() {
+    this.currentDecorations.clear();
+    this.currentSize = TextSizes[StylePresets.normal.size];
   }
 
   public get enabled() {
