@@ -11,6 +11,10 @@ import StyleManager from "../../../core/utils/StyleManager";
 
 import action from "../../../core/utils/action";
 import NoteSerializer from "../../../core/utils/NoteSerializer";
+import icon from "../../../core/utils/icon";
+import widget, { button, label } from "../../../core/utils/widget";
+import click from "../../../core/utils/click";
+import EditorStyles from "./EditorStyles";
 
 // TODO: Add spell checking when better supported within the Gtk4 ecosystem
 
@@ -22,7 +26,7 @@ interface NoteEditorParams {
   shortcuts: AppShortcuts;
 }
 
-export default class NoteEditor extends Gtk.ScrolledWindow {
+export default class NoteEditor extends Gtk.Box {
   static {
     GObject.registerClass({ GTypeName: "NoteEditor" }, this);
   }
@@ -46,6 +50,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   private readonly _textViewKeyController: Gtk.EventControllerKey;
   private readonly _shortcuts: AppShortcuts;
   private readonly _styleManager: StyleManager;
+  private readonly _editorStyles: EditorStyles;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -67,7 +72,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
   }
 
   constructor({ notesDir, actionMap, shortcuts }: NoteEditorParams) {
-    super({ hexpand: true, vexpand: true });
+    super({ orientation: Gtk.Orientation.VERTICAL });
     this.ensureActions();
 
     this._notesDir = notesDir;
@@ -88,7 +93,20 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
       shortcuts,
     });
 
-    this.set_child(this._textView);
+    this._editorStyles = new EditorStyles({
+      styleManager: this._styleManager,
+      visible: false,
+    });
+
+    this.append(this._editorStyles);
+
+    this.append(
+      new Gtk.ScrolledWindow({
+        child: this._textView,
+        hexpand: true,
+        vexpand: true,
+      })
+    );
     this.registerActionHandlers(actionMap);
   }
 
@@ -120,6 +138,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     });
 
     this._textView.visible = true;
+    this._editorStyles.visible = true;
     this._textView.sensitive =
       !this._notesDir.metaFile.getNoteMetadata(id).locked;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
@@ -148,6 +167,7 @@ export default class NoteEditor extends Gtk.ScrolledWindow {
     this._noteId = null;
     this.bufferText = null;
     this._textView.visible = false;
+    this._editorStyles.visible = false;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed, oldNoteId);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
   }

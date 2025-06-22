@@ -305,11 +305,13 @@ type CustomButtonParams = Partial<{
   shape: ButtonShape;
   actionType: ButtonActionType;
   depth: ButtonDepth;
+  onClick(): void;
 }>;
 const _customButtonKeys: Record<keyof CustomButtonParams, 1> = {
   shape: 1,
   actionType: 1,
   depth: 1,
+  onClick: 1,
 } as const;
 
 const CustomButtonKeys = Object.keys(_customButtonKeys) as Array<
@@ -338,6 +340,10 @@ function createButton(params: ButtonParams = {}): Gtk.Button {
   const button = new Gtk.Button({
     ...applyCustomButtonParams(params),
   });
+
+  if (params.onClick) {
+    button.connect("clicked", () => params.onClick?.());
+  }
 
   return button;
 }

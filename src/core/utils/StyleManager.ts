@@ -13,13 +13,13 @@ interface StyleManagerParams {
   actionMap: Gio.ActionMap;
 }
 
-const TextDecorations = {
+export const TextDecorations = {
   bold: "bold",
   italic: "italic",
   underline: "underline",
 } as const;
 
-const TextSizes = {
+export const TextSizes = {
   [10]: `size-10`,
   [11]: `size-11`,
   [12]: `size-12`,
@@ -60,7 +60,7 @@ interface StylePresetConfig {
   italic: boolean;
   underline: boolean;
 }
-const StylePresets = {
+export const StylePresets = {
   normal: {
     size: 11,
     bold: false,
@@ -98,6 +98,9 @@ export default class StyleManager {
     ToggleBold: "toggle-bold",
     ToggleItalics: "toggle-italics",
   } as const;
+
+  static TextSizes = TextSizes;
+  static StylePresets = StylePresets;
 
   private readonly keyController: Gtk.EventControllerKey;
   private readonly buffer: Gtk.TextBuffer;
