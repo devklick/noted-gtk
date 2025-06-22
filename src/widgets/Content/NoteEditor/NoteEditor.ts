@@ -153,6 +153,7 @@ export default class NoteEditor extends Gtk.Box {
     if (!this._noteId || !this._isDirty) return;
     const serialized = NoteSerializer.serialize(this._buffer);
     this._notesDir.updateNote(this._noteId, serialized);
+
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(
       this._actionMap,
@@ -167,7 +168,9 @@ export default class NoteEditor extends Gtk.Box {
     this._noteId = null;
     this.bufferText = null;
     this._textView.visible = false;
+    this._editorStyles.collapse();
     this._editorStyles.visible = false;
+
     action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed, oldNoteId);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
   }

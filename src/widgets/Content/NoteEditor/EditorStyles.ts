@@ -18,6 +18,10 @@ export default class EditorStyles extends Gtk.Box {
   }
 
   private styleManager: StyleManager;
+  private expanded: boolean = false;
+  private dropDownClickerBox: Gtk.Box;
+  private dropDownClicker: Gtk.Image;
+  private content: Gtk.Box;
 
   constructor({ styleManager, visible }: EditorStylesParams) {
     super({
@@ -32,6 +36,7 @@ export default class EditorStyles extends Gtk.Box {
 
     const toggleBold = new Gtk.ToggleButton({
       child: new Gtk.Label({ label: "<b>B</b>", useMarkup: true }),
+      tooltip_text: "Bold",
       cssClasses: ["flat", "style-toggle"],
     });
 
@@ -39,6 +44,7 @@ export default class EditorStyles extends Gtk.Box {
 
     const toggleItalic = new Gtk.ToggleButton({
       child: new Gtk.Label({ label: "<i>I</i>", useMarkup: true }),
+      tooltip_text: "Italic",
       cssClasses: ["flat", "style-toggle"],
     });
 
@@ -46,14 +52,18 @@ export default class EditorStyles extends Gtk.Box {
 
     const toggleUnderline = new Gtk.ToggleButton({
       child: new Gtk.Label({ label: "<u>U</u>", useMarkup: true }),
+      tooltip_text: "Underline",
       cssClasses: ["flat", "style-toggle"],
     });
 
     toggleUnderline.connect("toggled", () => {});
 
-    const buttons = widget.box.h({
+    this.content = widget.box.h({
       spacing: 6,
-      margin: 6,
+      marginTop: 6,
+      marginBottom: 6,
+      marginStart: 6,
+      marginEnd: 0,
       children: [
         toggleBold,
         toggleItalic,
@@ -64,34 +74,48 @@ export default class EditorStyles extends Gtk.Box {
       visible: false,
     });
 
-    const dropDownClickerBox = widget.box.h({
+    this.dropDownClicker = new Gtk.Image({
+      iconName: icon.symbolic("pan-down"),
+    });
+    this.dropDownClickerBox = widget.box.h({
       hexpand: true,
       hAlign: "END",
       marginEnd: 12,
-    });
-    const dropdownClicker = new Gtk.Image({
-      iconName: icon.symbolic("pan-down"),
-    });
-    dropDownClickerBox.append(dropdownClicker);
-
-    click.handle("left", dropdownClicker, () => {
-      const newVisible = !buttons.visible;
-      buttons.set_visible(newVisible);
-      dropdownClicker.iconName = icon.symbolic(
-        newVisible ? "pan-up" : "pan-down"
-      );
-
-      if (newVisible) {
-        this.remove(dropDownClickerBox);
-        buttons.append(dropDownClickerBox);
-      } else {
-        buttons.remove(dropDownClickerBox);
-        this.append(dropDownClickerBox);
-      }
+      children: [this.dropDownClicker],
     });
 
-    this.append(buttons);
-    this.append(dropDownClickerBox);
+    click.handle("left", this.dropDownClicker, () => this.toggleExpanded());
+
+    this.append(this.content);
+    this.append(this.dropDownClickerBox);
+  }
+
+  public expand() {
+    if (this.expanded) return;
+    this.remove(this.dropDownClickerBox);
+    this.content.append(this.dropDownClickerBox);
+    this.dropDownClicker.set_from_icon_name(icon.symbolic("pan-up"));
+    this.content.visible = true;
+    this.expanded = true;
+  }
+
+  public collapse() {
+    if (!this.expanded) return;
+    this.content.remove(this.dropDownClickerBox);
+    this.append(this.dropDownClickerBox);
+    this.dropDownClicker.set_from_icon_name(icon.symbolic("pan-down"));
+    this.content.visible = false;
+    this.expanded = false;
+  }
+
+  public setExpanded(expanded: boolean) {
+    if (expanded) this.expand();
+    else this.collapse();
+  }
+
+  private toggleExpanded() {
+    if (this.expanded) this.collapse();
+    else this.expand();
   }
 
   // TODO: Need to create a custom DropDown for the pickers.
@@ -111,16 +135,17 @@ export default class EditorStyles extends Gtk.Box {
     factory.connect("bind", (_, li) => {
       const listItem = li as Gtk.ListItem;
       const label = listItem.get_child() as Gtk.Label;
-      const item = listItem.get_item() as Gtk.StringObject; // GObject holding the string
+      const item = listItem.get_item() as Gtk.StringObject;
       const text = item.get_string();
       if (!label) return;
 
-      // Reset styles first
       label.set_attributes(null);
-      label.set_markup(text); // fallback to raw if you want
+      label.set_markup(text);
 
       const attrs = new Pango.AttrList();
 
+      // The text for the drop down item is a number represeting the text size,
+      // so we can use that to style the
       const textSize = Number(text) as keyof typeof StyleManager.TextSizes;
       attrs.insert(Pango.attr_size_new(textSize * Pango.SCALE));
 
@@ -148,20 +173,18 @@ export default class EditorStyles extends Gtk.Box {
     factory.connect("bind", (_, li) => {
       const listItem = li as Gtk.ListItem;
       const label = listItem.get_child() as Gtk.Label;
-      const item = listItem.get_item() as Gtk.StringObject; // GObject holding the string
+      const item = listItem.get_item() as Gtk.StringObject;
       const text = item.get_string();
       if (!label) return;
 
-      // Reset styles first
       label.set_attributes(null);
-      label.set_markup(text); // fallback to raw if you want
-
-      const attrs = new Pango.AttrList();
+      label.set_markup(text);
 
       const presetName = text as keyof typeof StyleManager.StylePresets;
       const { bold, italic, size, underline } =
         StyleManager.StylePresets[presetName];
 
+      const attrs = new Pango.AttrList();
       attrs.insert(Pango.attr_size_new(size * Pango.SCALE));
       bold && attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD));
       italic && attrs.insert(Pango.attr_style_new(Pango.Style.ITALIC));
