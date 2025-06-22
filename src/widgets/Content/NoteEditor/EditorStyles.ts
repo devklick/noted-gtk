@@ -1,15 +1,18 @@
 import Gtk from "@girs/gtk-4.0";
 import GObject from "@girs/gobject-2.0";
 import Pango from "@girs/pango-1.0";
+import Gio from "@girs/gio-2.0";
 
 import icon from "../../../core/utils/icon";
 import click from "../../../core/utils/click";
 import widget from "../../../core/utils/widget";
 import StyleManager from "../../../core/StyleManager";
+import action from "../../../core/utils/action";
 
 interface EditorStylesParams {
   styleManager: StyleManager;
   visible: boolean;
+  actionMap: Gio.ActionMap;
 }
 
 export default class EditorStyles extends Gtk.Box {
@@ -22,8 +25,13 @@ export default class EditorStyles extends Gtk.Box {
   private dropDownClickerBox: Gtk.Box;
   private dropDownClicker: Gtk.Image;
   private content: Gtk.Box;
+  private actionMap: Gio.ActionMap;
+  private fontSizePicker: Gtk.DropDown;
+  private boldButton: Gtk.ToggleButton;
+  private italicButton: Gtk.ToggleButton;
+  private underlineButton: Gtk.ToggleButton;
 
-  constructor({ styleManager, visible }: EditorStylesParams) {
+  constructor({ styleManager, visible, actionMap }: EditorStylesParams) {
     super({
       orientation: Gtk.Orientation.HORIZONTAL,
       halign: Gtk.Align.FILL,
@@ -33,30 +41,21 @@ export default class EditorStyles extends Gtk.Box {
     });
 
     this.styleManager = styleManager;
+    this.actionMap = actionMap;
 
-    const toggleBold = new Gtk.ToggleButton({
-      child: new Gtk.Label({ label: "<b>B</b>", useMarkup: true }),
-      tooltip_text: "Bold",
-      cssClasses: ["flat", "style-toggle"],
-    });
+    const toggler = (label: string, tooltip: string) =>
+      new Gtk.ToggleButton({
+        child: new Gtk.Label({ label, useMarkup: true }),
+        tooltip_text: tooltip,
+        cssClasses: ["flat", "style-toggle"],
+        canFocus: false,
+      });
 
-    toggleBold.connect("toggled", () => {});
+    this.boldButton = toggler("<b>B</b>", "Bold");
+    this.italicButton = toggler("<i>I</i>", "Italic");
+    this.underlineButton = toggler("<u>U</u>", "Underline");
 
-    const toggleItalic = new Gtk.ToggleButton({
-      child: new Gtk.Label({ label: "<i>I</i>", useMarkup: true }),
-      tooltip_text: "Italic",
-      cssClasses: ["flat", "style-toggle"],
-    });
-
-    toggleItalic.connect("toggled", () => {});
-
-    const toggleUnderline = new Gtk.ToggleButton({
-      child: new Gtk.Label({ label: "<u>U</u>", useMarkup: true }),
-      tooltip_text: "Underline",
-      cssClasses: ["flat", "style-toggle"],
-    });
-
-    toggleUnderline.connect("toggled", () => {});
+    this.fontSizePicker = this.buildFontSizePicker();
 
     this.content = widget.box.h({
       spacing: 6,
@@ -65,10 +64,10 @@ export default class EditorStyles extends Gtk.Box {
       marginStart: 6,
       marginEnd: 0,
       children: [
-        toggleBold,
-        toggleItalic,
-        toggleUnderline,
-        this.buildFontSizePicker(),
+        this.boldButton,
+        this.italicButton,
+        this.underlineButton,
+        this.fontSizePicker,
         this.buildStylePresetPicker(),
       ],
       visible: false,
@@ -88,6 +87,8 @@ export default class EditorStyles extends Gtk.Box {
 
     this.append(this.content);
     this.append(this.dropDownClickerBox);
+
+    this.registerActionHandlers();
   }
 
   public expand() {
@@ -196,5 +197,59 @@ export default class EditorStyles extends Gtk.Box {
     });
 
     return new Gtk.DropDown({ model, factory });
+  }
+
+  private registerActionHandlers() {
+    action.handle(
+      this.actionMap,
+      StyleManager.Actions.SetTextSize,
+      "int",
+      (size) =>
+        this.fontSizePicker.set_selected(
+          this.findIndexInModel(this.fontSizePicker.model, size.toString())
+        )
+    );
+    action.handle(
+      this.actionMap,
+      StyleManager.Actions.SetBoldEnabled,
+      "bool",
+      (active) =>
+        this.boldButton.active !== active && this.boldButton.set_active(active)
+    );
+
+    action.handle(
+      this.actionMap,
+      StyleManager.Actions.SetItalicEnabled,
+      "bool",
+      (active) =>
+        this.italicButton.active !== active &&
+        this.italicButton.set_active(active)
+    );
+
+    action.handle(
+      this.actionMap,
+      StyleManager.Actions.SetUnderlineEnabled,
+      "bool",
+      (active) =>
+        this.underlineButton.active !== active &&
+        this.underlineButton.set_active(active)
+    );
+    this.boldButton.connect("toggled", () =>
+      this.styleManager.toggleDecoration("bold")
+    );
+    this.italicButton.connect("toggled", () =>
+      this.styleManager.toggleDecoration("italic")
+    );
+    this.underlineButton.connect("toggled", () =>
+      this.styleManager.toggleDecoration("underline")
+    );
+  }
+
+  private findIndexInModel(model: Gio.ListModel, target: string) {
+    for (let i = 0; i < model.get_n_items(); i++) {
+      if ((model.get_item(i) as Gtk.StringObject)?.get_string() === target)
+        return i;
+    }
+    return -1;
   }
 }

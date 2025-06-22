@@ -92,6 +92,7 @@ export default class NoteEditor extends Gtk.Box {
     this._editorStyles = new EditorStyles({
       styleManager: this._styleManager,
       visible: false,
+      actionMap: this._actionMap,
     });
 
     this.append(this._editorStyles);

@@ -5,13 +5,9 @@ import Pango from "@girs/pango-1.0";
 import GLib from "@girs/glib-2.0";
 
 import { AppShortcuts } from "./ShortcutManager";
-
-interface StyleManagerParams {
-  keyController: Gtk.EventControllerKey;
-  buffer: Gtk.TextBuffer;
-  shortcuts: AppShortcuts;
-  actionMap: Gio.ActionMap;
-}
+import action from "./utils/action";
+import str from "./utils/str";
+import obj from "./utils/obj";
 
 export const TextDecorations = {
   bold: "bold",
@@ -32,27 +28,30 @@ export const TextSizes = {
   [32]: `size-32`,
 } as const;
 
-const StyleTagNames = {
-  ...Object.values(TextDecorations),
-  ...Object.values(TextSizes),
-} as const;
+const TextSizesByTagName = Object.entries(TextSizes).reduce(
+  (obj, [key, val]) => ({ ...obj, [val]: Number(key) }),
+  {} as {
+    [K in keyof typeof TextSizes as (typeof TextSizes)[K]]: K;
+  }
+);
 
 type TextDecorationTagName =
   (typeof TextDecorations)[keyof typeof TextDecorations];
-
 type TextSizeTagName = (typeof TextSizes)[keyof typeof TextSizes];
-
-// function isTextSizeDecorationName(value: string): value is TextSizeTagName {
-//   const parts = value.split("-");
-//   return (
-//     parts.length == 2 &&
-//     parts[0] === "size" &&
-//     !isNaN(parseInt(parts[1])) &&
-//     TextSizes[Number(parts[1]) as keyof typeof TextSizes] !== undefined
-//   );
-// }
-
 type StyleTagName = TextDecorationTagName | TextSizeTagName;
+
+function isTextDecorationTagName(
+  value: unknown
+): value is TextDecorationTagName {
+  return (
+    !!value &&
+    Object.values(TextDecorations).includes(value as TextDecorationTagName)
+  );
+}
+
+function isTextSizeTagName(value: unknown): value is TextSizeTagName {
+  return !!value && Object.values(TextSizes).includes(value as TextSizeTagName);
+}
 
 interface StylePresetConfig {
   size: keyof typeof TextSizes;
@@ -93,10 +92,22 @@ export const StylePresets = {
   },
 } as const satisfies Record<string, StylePresetConfig>;
 
+interface StyleManagerParams {
+  keyController: Gtk.EventControllerKey;
+  buffer: Gtk.TextBuffer;
+  shortcuts: AppShortcuts;
+  actionMap: Gio.ActionMap;
+}
+
 export default class StyleManager {
   static Actions = {
     ToggleBold: "toggle-bold",
     ToggleItalics: "toggle-italics",
+    ToggleUnderline: "toggle-underline",
+    SetBoldEnabled: "set-bold-enabled",
+    SetItalicEnabled: "set-italic-enabled",
+    SetUnderlineEnabled: "set-underline-enabled",
+    SetTextSize: "set-text-size",
   } as const;
 
   static TextSizes = TextSizes;
@@ -130,6 +141,11 @@ export default class StyleManager {
       this._enabled && this.handleBufferInsert(start, length);
     });
 
+    this.buffer.connect("mark-set", (_, iter, mark) => {
+      this._enabled && this.handleMarkSet(mark, iter);
+    });
+
+    this.registerActions();
     this.listenForShortcuts();
   }
 
@@ -228,18 +244,62 @@ export default class StyleManager {
     });
   }
 
-  private toggleDecoration(tagName: TextDecorationTagName) {
+  private handleMarkSet(mark: Gtk.TextMark, iter: Gtk.TextIter) {
+    if (mark.name !== "insert") return;
+
+    // Keep track of what tags are present, so we know which are not present
+    const has: Record<TextDecorationTagName, boolean> = {
+      bold: false,
+      italic: false,
+      underline: false,
+    };
+
+    // Cycle through tags and firing relevant action
+    for (const tag of iter.get_tags()) {
+      if (isTextSizeTagName(tag.name)) {
+        const size = TextSizesByTagName[tag.name];
+        action.invoke(this.actionMap, StyleManager.Actions.SetTextSize, size);
+      } else if (isTextDecorationTagName(tag.name)) {
+        has[tag.name] = true;
+        action.invoke(
+          this.actionMap,
+          StyleManager.Actions[`Set${str.pascal(tag.name)}Enabled`],
+          true
+        );
+      }
+    }
+
+    // Cycle through missing tags and fire relevant action
+    for (const key of obj.keys(has)) {
+      // if the tag was present, this is true, and we we've already fired an action for it.
+      if (has[key]) continue;
+
+      // we know this style tag is not enabled, so fire action to tell the rest of the app
+      const actionName = StyleManager.Actions[`Set${str.pascal(key)}Enabled`];
+      action.invoke(this.actionMap, actionName, false);
+    }
+  }
+
+  public toggleDecoration(tagName: TextDecorationTagName) {
     const [hasSelection, start, end] = this.buffer.get_selection_bounds();
     if (hasSelection) {
       this.toggleDecorationAtSelection(start, end, tagName);
       return;
     }
 
+    let enabled = false;
     if (this.currentDecorations.has(tagName)) {
       this.currentDecorations.delete(tagName);
+      enabled = false;
     } else {
       this.currentDecorations.add(tagName);
+      enabled = true;
     }
+    // action.invoke(
+    //   this.actionMap,
+    //   StyleManager.Actions[`Set${str.pascal(tagName)}Enabled`],
+    //   enabled
+    // );
   }
 
   private setStylePreset(preset: keyof typeof StylePresets) {
@@ -343,5 +403,20 @@ export default class StyleManager {
     }
 
     return true;
+  }
+
+  private registerActions() {
+    action.create(this.actionMap, StyleManager.Actions.SetTextSize, "int");
+    action.create(this.actionMap, StyleManager.Actions.SetBoldEnabled, "bool");
+    action.create(
+      this.actionMap,
+      StyleManager.Actions.SetItalicEnabled,
+      "bool"
+    );
+    action.create(
+      this.actionMap,
+      StyleManager.Actions.SetUnderlineEnabled,
+      "bool"
+    );
   }
 }
