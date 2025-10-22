@@ -29,15 +29,16 @@ export const TextSizes = {
 } as const;
 
 const TextSizesByTagName = Object.entries(TextSizes).reduce(
-  (obj, [key, val]) => ({ ...obj, [val]: Number(key) }),
+  (acc, [textSize, tagName]) => ({ ...acc, [tagName]: Number(textSize) }),
   {} as {
     [K in keyof typeof TextSizes as (typeof TextSizes)[K]]: K;
   }
 );
+type TextSizeTagName = (typeof TextSizes)[keyof typeof TextSizes];
 
 type TextDecorationTagName =
   (typeof TextDecorations)[keyof typeof TextDecorations];
-type TextSizeTagName = (typeof TextSizes)[keyof typeof TextSizes];
+
 type StyleTagName = TextDecorationTagName | TextSizeTagName;
 
 function isTextDecorationTagName(
@@ -93,29 +94,22 @@ export const StylePresets = {
 } as const satisfies Record<string, StylePresetConfig>;
 
 interface StyleManagerParams {
-  keyController: Gtk.EventControllerKey;
   buffer: Gtk.TextBuffer;
-  shortcuts: AppShortcuts;
   actionMap: Gio.ActionMap;
 }
 
 export default class StyleManager {
   static Actions = {
-    ToggleBold: "toggle-bold",
-    ToggleItalics: "toggle-italics",
-    ToggleUnderline: "toggle-underline",
-    SetBoldEnabled: "set-bold-enabled",
-    SetItalicEnabled: "set-italic-enabled",
-    SetUnderlineEnabled: "set-underline-enabled",
-    SetTextSize: "set-text-size",
+    BoldChanged: "bold-changed",
+    ItalicChanged: "italic-changed",
+    UnderlineChanged: "underline-changed",
+    SizeChanged: "size-changed",
   } as const;
 
   static TextSizes = TextSizes;
   static StylePresets = StylePresets;
 
-  private readonly keyController: Gtk.EventControllerKey;
   private readonly buffer: Gtk.TextBuffer;
-  private readonly shortcuts: AppShortcuts;
   private readonly actionMap: Gio.ActionMap;
 
   private readonly styleTags: Record<StyleTagName, Gtk.TextTag>;
@@ -124,15 +118,8 @@ export default class StyleManager {
   private currentSize: TextSizeTagName = TextSizes[StylePresets.normal.size];
   private _enabled: boolean = true;
 
-  constructor({
-    buffer,
-    keyController,
-    shortcuts,
-    actionMap,
-  }: StyleManagerParams) {
-    this.keyController = keyController;
+  constructor({ buffer, actionMap }: StyleManagerParams) {
     this.buffer = buffer;
-    this.shortcuts = shortcuts;
     this.actionMap = actionMap;
 
     this.styleTags = this.buildStyleTags();
@@ -146,7 +133,6 @@ export default class StyleManager {
     });
 
     this.registerActions();
-    this.listenForShortcuts();
   }
 
   public reset() {
@@ -210,42 +196,17 @@ export default class StyleManager {
     return tags;
   }
 
-  private listenForShortcuts() {
-    this.keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
-      const shortcut = this.shortcuts.check({ key, modifier });
-      switch (shortcut) {
-        case "editor-shoctut-toggle-bold-text":
-          this.toggleDecoration("bold");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-toggle-italic-text":
-          this.toggleDecoration("italic");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-toggle-underline-text":
-          this.toggleDecoration("underline");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-text-size-normal":
-          this.setStylePreset("normal");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-text-size-h1":
-          this.setStylePreset("h1");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-text-size-h2":
-          this.setStylePreset("h2");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-text-size-h3":
-          this.setStylePreset("h3");
-          return Gdk.EVENT_STOP;
-        case "editor-shoctut-text-size-h4":
-          this.setStylePreset("h4");
-          return Gdk.EVENT_STOP;
-        default:
-          return Gdk.EVENT_PROPAGATE;
-      }
-    });
-  }
-
   private handleMarkSet(mark: Gtk.TextMark, iter: Gtk.TextIter) {
     if (mark.name !== "insert") return;
+
+    // TODO: This code is meant to check which tags are currently applied
+    // and send an event that will cause the relevant style buttons to be set.
+    // However, there's a bug where changing the selection actually changes the styles
+    const [hasSelection, start, end] = this.buffer.get_selection_bounds();
+    if (hasSelection) {
+      this.emitDecorationsAtSelection(start, end);
+      return;
+    }
 
     // Keep track of what tags are present, so we know which are not present
     const has: Record<TextDecorationTagName, boolean> = {
@@ -258,12 +219,12 @@ export default class StyleManager {
     for (const tag of iter.get_tags()) {
       if (isTextSizeTagName(tag.name)) {
         const size = TextSizesByTagName[tag.name];
-        action.invoke(this.actionMap, StyleManager.Actions.SetTextSize, size);
+        action.invoke(this.actionMap, StyleManager.Actions.SizeChanged, size);
       } else if (isTextDecorationTagName(tag.name)) {
         has[tag.name] = true;
         action.invoke(
           this.actionMap,
-          StyleManager.Actions[`Set${str.pascal(tag.name)}Enabled`],
+          StyleManager.Actions[`${str.pascal(tag.name)}Changed`],
           true
         );
       }
@@ -275,15 +236,15 @@ export default class StyleManager {
       if (has[key]) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
-      const actionName = StyleManager.Actions[`Set${str.pascal(key)}Enabled`];
+      const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];
       action.invoke(this.actionMap, actionName, false);
     }
   }
 
-  public toggleDecoration(tagName: TextDecorationTagName) {
+  public toggleDecoration(tagName: TextDecorationTagName, active: boolean) {
     const [hasSelection, start, end] = this.buffer.get_selection_bounds();
     if (hasSelection) {
-      this.toggleDecorationAtSelection(start, end, tagName);
+      this.setDecorationActiveAtSelection(start, end, tagName, active);
       return;
     }
 
@@ -295,14 +256,16 @@ export default class StyleManager {
       this.currentDecorations.add(tagName);
       enabled = true;
     }
+    // This was previously causing infinit recursion.
+    // Removing it has not caused any obvious issues, but leaving it for later reference
     // action.invoke(
     //   this.actionMap,
-    //   StyleManager.Actions[`Set${str.pascal(tagName)}Enabled`],
+    //   StyleManager.Actions[`${str.pascal(tagName)}Changed`],
     //   enabled
     // );
   }
 
-  private setStylePreset(preset: keyof typeof StylePresets) {
+  public setStylePreset(preset: keyof typeof StylePresets) {
     const [hasSelection, start, end] = this.buffer.get_selection_bounds();
     if (hasSelection) {
       this.replaceSelectionStylesWithPreset(start, end, preset);
@@ -369,18 +332,48 @@ export default class StyleManager {
     this.buffer.apply_tag(tag, start, end);
   }
 
-  private toggleDecorationAtSelection(
+  private setDecorationActiveAtSelection(
     start: Gtk.TextIter,
     end: Gtk.TextIter,
-    tagName: TextDecorationTagName
+    tagName: TextDecorationTagName,
+    active: boolean
   ) {
     const tag = this.styleTags[tagName];
 
-    // If the tag is applied to the entire selection range, then remove it, othewise add it
-    if (this.isTagFullyAppliedAtSelection(tag, start, end)) {
-      this.buffer.remove_tag(tag, start, end);
-    } else {
+    if (active) {
       this.buffer.apply_tag(this.styleTags[tagName], start, end);
+    } else {
+      this.buffer.remove_tag(tag, start, end);
+    }
+  }
+
+  private emitDecorationsAtSelection(start: Gtk.TextIter, end: Gtk.TextIter) {
+    // Keep track of what tags are present, so we know which are not present
+    const has: Record<TextDecorationTagName, boolean> = {
+      bold: false,
+      italic: false,
+      underline: false,
+    };
+
+    for (const tagName of Object.values(TextDecorations)) {
+      if (
+        this.isTagFullyAppliedAtSelection(this.styleTags[tagName], start, end)
+      ) {
+        const actionName =
+          StyleManager.Actions[`${str.pascal(tagName)}Changed`];
+        action.invoke(this.actionMap, actionName, true);
+        has[tagName] = true;
+      }
+    }
+
+    // Cycle through missing tags and fire relevant action
+    for (const key of obj.keys(has)) {
+      // if the tag was present, this is true, and we we've already fired an action for it.
+      if (has[key]) continue;
+
+      // we know this style tag is not enabled, so fire action to tell the rest of the app
+      const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];
+      action.invoke(this.actionMap, actionName, false);
     }
   }
 
@@ -406,16 +399,12 @@ export default class StyleManager {
   }
 
   private registerActions() {
-    action.create(this.actionMap, StyleManager.Actions.SetTextSize, "int");
-    action.create(this.actionMap, StyleManager.Actions.SetBoldEnabled, "bool");
+    action.create(this.actionMap, StyleManager.Actions.SizeChanged, "int");
+    action.create(this.actionMap, StyleManager.Actions.BoldChanged, "bool");
+    action.create(this.actionMap, StyleManager.Actions.ItalicChanged, "bool");
     action.create(
       this.actionMap,
-      StyleManager.Actions.SetItalicEnabled,
-      "bool"
-    );
-    action.create(
-      this.actionMap,
-      StyleManager.Actions.SetUnderlineEnabled,
+      StyleManager.Actions.UnderlineChanged,
       "bool"
     );
   }

@@ -85,14 +85,14 @@ export default class NoteEditor extends Gtk.Box {
     this._styleManager = new StyleManager({
       actionMap,
       buffer: this._buffer,
-      keyController: this._textViewKeyController,
-      shortcuts,
     });
 
     this._editorStyles = new EditorStyles({
       styleManager: this._styleManager,
       visible: false,
       actionMap: this._actionMap,
+      keyController: this._textViewKeyController,
+      shortcuts,
     });
 
     this.append(this._editorStyles);

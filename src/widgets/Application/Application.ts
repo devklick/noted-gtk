@@ -14,6 +14,7 @@ import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 import ShortcutManager from "../../core/ShortcutManager";
 import PreferencesManager, { AppPrefs } from "../../core/PreferencesManager";
 import action from "../../core/utils/action";
+import AppChooserDialog from "../Window/dialogs/AppChooser";
 
 const APPLICATION_ID = "io.github.devklick.noted";
 
@@ -127,7 +128,12 @@ export default class Application extends Adw.Application {
 
     action.create(this, BurgerMenu.Actions.Open["Notes Folder"]);
     action.handle(this, BurgerMenu.Actions.Open["Notes Folder"], null, () => {
-      this.appDir.notesDir.open();
+      new AppChooserDialog({
+        parent: this.window,
+        type: "inode/directory",
+        onChosen: (appInfo) =>
+          appInfo.launch([this.appDir.notesDir.gioFile], null),
+      });
     });
 
     action.create(this, BurgerMenu.Actions.Open["Notes Meta File"]);
@@ -136,7 +142,12 @@ export default class Application extends Adw.Application {
       BurgerMenu.Actions.Open["Notes Meta File"],
       null,
       () => {
-        this.appDir.notesDir.metaFile.open();
+        new AppChooserDialog({
+          parent: this.window,
+          type: "application/json",
+          onChosen: (appInfo) =>
+            appInfo.launch([this.appDir.notesDir.metaFile.gioFile], null),
+        });
       }
     );
 

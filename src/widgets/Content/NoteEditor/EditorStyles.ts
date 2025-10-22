@@ -8,13 +8,25 @@ import click from "../../../core/utils/click";
 import widget from "../../../core/utils/widget";
 import StyleManager from "../../../core/StyleManager";
 import action from "../../../core/utils/action";
+import { AppShortcuts } from "../../../core/ShortcutManager";
+import Gdk from "@girs/gdk-4.0";
 
 interface EditorStylesParams {
   styleManager: StyleManager;
   visible: boolean;
   actionMap: Gio.ActionMap;
+  keyController: Gtk.EventControllerKey;
+  shortcuts: AppShortcuts;
 }
 
+/**
+ * Widget containing the elements that a user can interact with to change styles.
+ *
+ * Also responsible for listening for shortcuts known to change styles.
+ *
+ * When either scenarios occur, the EditorStyles widget is responsible for
+ * informing the StleManager about the changes to the styles.
+ */
 export default class EditorStyles extends Gtk.Box {
   static {
     GObject.registerClass({ GTypeName: "EditorSyles" }, this);
@@ -30,8 +42,16 @@ export default class EditorStyles extends Gtk.Box {
   private boldButton: Gtk.ToggleButton;
   private italicButton: Gtk.ToggleButton;
   private underlineButton: Gtk.ToggleButton;
+  private keyController: Gtk.EventControllerKey;
+  private readonly shortcuts: AppShortcuts;
 
-  constructor({ styleManager, visible, actionMap }: EditorStylesParams) {
+  constructor({
+    styleManager,
+    visible,
+    actionMap,
+    keyController,
+    shortcuts,
+  }: EditorStylesParams) {
     super({
       orientation: Gtk.Orientation.HORIZONTAL,
       halign: Gtk.Align.FILL,
@@ -42,6 +62,8 @@ export default class EditorStyles extends Gtk.Box {
 
     this.styleManager = styleManager;
     this.actionMap = actionMap;
+    this.keyController = keyController;
+    this.shortcuts = shortcuts;
 
     const toggler = (label: string, tooltip: string) =>
       new Gtk.ToggleButton({
@@ -89,6 +111,7 @@ export default class EditorStyles extends Gtk.Box {
     this.append(this.dropDownClickerBox);
 
     this.registerActionHandlers();
+    this.listenForShortcuts();
   }
 
   public expand() {
@@ -202,7 +225,7 @@ export default class EditorStyles extends Gtk.Box {
   private registerActionHandlers() {
     action.handle(
       this.actionMap,
-      StyleManager.Actions.SetTextSize,
+      StyleManager.Actions.SizeChanged,
       "int",
       (size) =>
         this.fontSizePicker.set_selected(
@@ -211,7 +234,7 @@ export default class EditorStyles extends Gtk.Box {
     );
     action.handle(
       this.actionMap,
-      StyleManager.Actions.SetBoldEnabled,
+      StyleManager.Actions.BoldChanged,
       "bool",
       (active) =>
         this.boldButton.active !== active && this.boldButton.set_active(active)
@@ -219,7 +242,7 @@ export default class EditorStyles extends Gtk.Box {
 
     action.handle(
       this.actionMap,
-      StyleManager.Actions.SetItalicEnabled,
+      StyleManager.Actions.ItalicChanged,
       "bool",
       (active) =>
         this.italicButton.active !== active &&
@@ -228,20 +251,23 @@ export default class EditorStyles extends Gtk.Box {
 
     action.handle(
       this.actionMap,
-      StyleManager.Actions.SetUnderlineEnabled,
+      StyleManager.Actions.UnderlineChanged,
       "bool",
       (active) =>
         this.underlineButton.active !== active &&
         this.underlineButton.set_active(active)
     );
     this.boldButton.connect("toggled", () =>
-      this.styleManager.toggleDecoration("bold")
+      this.styleManager.toggleDecoration("bold", this.boldButton.active)
     );
     this.italicButton.connect("toggled", () =>
-      this.styleManager.toggleDecoration("italic")
+      this.styleManager.toggleDecoration("italic", this.italicButton.active)
     );
     this.underlineButton.connect("toggled", () =>
-      this.styleManager.toggleDecoration("underline")
+      this.styleManager.toggleDecoration(
+        "underline",
+        this.underlineButton.active
+      )
     );
   }
 
@@ -251,5 +277,43 @@ export default class EditorStyles extends Gtk.Box {
         return i;
     }
     return -1;
+  }
+
+  private listenForShortcuts() {
+    this.keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
+      const shortcut = this.shortcuts.check({ key, modifier });
+      switch (shortcut) {
+        case "editor-shoctut-toggle-bold-text":
+          this.toggleButton(this.boldButton);
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-toggle-italic-text":
+          this.toggleButton(this.italicButton);
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-toggle-underline-text":
+          this.toggleButton(this.underlineButton);
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-text-size-normal":
+          this.styleManager.setStylePreset("normal");
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-text-size-h1":
+          this.styleManager.setStylePreset("h1");
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-text-size-h2":
+          this.styleManager.setStylePreset("h2");
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-text-size-h3":
+          this.styleManager.setStylePreset("h3");
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-text-size-h4":
+          this.styleManager.setStylePreset("h4");
+          return Gdk.EVENT_STOP;
+        default:
+          return Gdk.EVENT_PROPAGATE;
+      }
+    });
+  }
+
+  private toggleButton(button: Gtk.ToggleButton) {
+    button.set_active(!button.active);
   }
 }

@@ -39,16 +39,22 @@ export default class NotesDir {
    */
   public readonly metaFile: Readonly<NotesMetaFile>;
 
+  public gioFile: Gio.File;
   private readonly _path: string;
   private readonly _decoder: TextDecoder;
   private readonly _encoder: TextEncoder;
 
   constructor({ appDirPath }: NotesDirParams) {
     this._path = fs.path.build(appDirPath, "notes");
+    this.gioFile = Gio.File.new_for_path(this._path);
     GLib.mkdir_with_parents(this._path, 0o755);
     this.metaFile = new NotesMetaFile({ dirPath: this._path });
     this._decoder = new TextDecoder("utf8");
     this._encoder = new TextEncoder();
+  }
+
+  public get uri(): string {
+    return this.gioFile.get_uri();
   }
 
   public list(): Record<string, NotesDirEntry> {
@@ -137,11 +143,6 @@ export default class NotesDir {
       null
     );
     if (!success) throw new Error(`Failed to update file: ${message}`);
-  }
-
-  public open() {
-    const folder = Gio.File.new_for_path(this._path);
-    Gio.AppInfo.launch_default_for_uri(folder.get_uri(), null);
   }
 
   private getNoteFile(noteId: string): Gio.File {
