@@ -40,8 +40,11 @@ export default class EditorStyles extends Gtk.Box {
   private actionMap: Gio.ActionMap;
   private fontSizePicker: Gtk.DropDown;
   private boldButton: Gtk.ToggleButton;
+  private boldToggledHandlerId?: number;
   private italicButton: Gtk.ToggleButton;
+  private italicToggledHandlerId?: number;
   private underlineButton: Gtk.ToggleButton;
+  private underlineToggledHandlerId?: number;
   private keyController: Gtk.EventControllerKey;
   private readonly shortcuts: AppShortcuts;
 
@@ -237,7 +240,12 @@ export default class EditorStyles extends Gtk.Box {
       StyleManager.Actions.BoldChanged,
       "bool",
       (active) =>
-        this.boldButton.active !== active && this.boldButton.set_active(active)
+        this.boldButton.active !== active &&
+        this.silentlyUpdateToggle(
+          this.boldButton,
+          this.boldToggledHandlerId,
+          active
+        )
     );
 
     action.handle(
@@ -245,8 +253,11 @@ export default class EditorStyles extends Gtk.Box {
       StyleManager.Actions.ItalicChanged,
       "bool",
       (active) =>
-        this.italicButton.active !== active &&
-        this.italicButton.set_active(active)
+        this.silentlyUpdateToggle(
+          this.italicButton,
+          this.italicToggledHandlerId,
+          active
+        )
     );
 
     action.handle(
@@ -254,20 +265,26 @@ export default class EditorStyles extends Gtk.Box {
       StyleManager.Actions.UnderlineChanged,
       "bool",
       (active) =>
-        this.underlineButton.active !== active &&
-        this.underlineButton.set_active(active)
+        this.silentlyUpdateToggle(
+          this.underlineButton,
+          this.underlineToggledHandlerId,
+          active
+        )
     );
-    this.boldButton.connect("toggled", () =>
+
+    this.boldToggledHandlerId = this.boldButton.connect("toggled", () =>
       this.styleManager.toggleDecoration("bold", this.boldButton.active)
     );
-    this.italicButton.connect("toggled", () =>
+    this.italicToggledHandlerId = this.italicButton.connect("toggled", () =>
       this.styleManager.toggleDecoration("italic", this.italicButton.active)
     );
-    this.underlineButton.connect("toggled", () =>
-      this.styleManager.toggleDecoration(
-        "underline",
-        this.underlineButton.active
-      )
+    this.underlineToggledHandlerId = this.underlineButton.connect(
+      "toggled",
+      () =>
+        this.styleManager.toggleDecoration(
+          "underline",
+          this.underlineButton.active
+        )
     );
   }
 
@@ -315,5 +332,20 @@ export default class EditorStyles extends Gtk.Box {
 
   private toggleButton(button: Gtk.ToggleButton) {
     button.set_active(!button.active);
+  }
+
+  /**
+   * Update the specified ToggleButton's active property
+   * without firing the `toggled` event.
+   */
+  private silentlyUpdateToggle(
+    button: Gtk.ToggleButton,
+    handlerId: number | undefined,
+    toggled: boolean
+  ) {
+    if (!handlerId) return;
+    button.block_signal_handler(handlerId);
+    button.set_active(toggled);
+    button.unblock_signal_handler(handlerId);
   }
 }
