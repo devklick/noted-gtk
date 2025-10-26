@@ -17,7 +17,7 @@ export default class NoteSerializer {
 
       const text = buffer.get_text(iter, next, true);
       const iterTags = iter.get_tags();
-      let acts: Record<string, "open" | "close"> = {};
+      const acts: Record<string, "open" | "close"> = {};
 
       // tags which have been opened on this iter
       for (const tag of iterTags) {

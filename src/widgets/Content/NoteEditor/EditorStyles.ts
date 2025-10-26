@@ -1,7 +1,7 @@
 import Gtk from "@girs/gtk-4.0";
-import GObject from "@girs/gobject-2.0";
-import Pango from "@girs/pango-1.0";
+import Gdk from "@girs/gdk-4.0";
 import Gio from "@girs/gio-2.0";
+import GObject from "@girs/gobject-2.0";
 
 import icon from "../../../core/utils/icon";
 import click from "../../../core/utils/click";
@@ -9,7 +9,7 @@ import widget from "../../../core/utils/widget";
 import StyleManager from "../../../core/StyleManager";
 import action from "../../../core/utils/action";
 import { AppShortcuts } from "../../../core/ShortcutManager";
-import Gdk from "@girs/gdk-4.0";
+import { FontSizePicker, StylePresetPicker } from "../../DropDown";
 
 interface EditorStylesParams {
   styleManager: StyleManager;
@@ -38,7 +38,8 @@ export default class EditorStyles extends Gtk.Box {
   private dropDownClicker: Gtk.Image;
   private content: Gtk.Box;
   private actionMap: Gio.ActionMap;
-  private fontSizePicker: Gtk.DropDown;
+  private fontSizePicker: FontSizePicker;
+  private stylePresetPicker: StylePresetPicker;
   private boldButton: Gtk.ToggleButton;
   private boldToggledHandlerId?: number;
   private italicButton: Gtk.ToggleButton;
@@ -80,7 +81,8 @@ export default class EditorStyles extends Gtk.Box {
     this.italicButton = toggler("<i>I</i>", "Italic");
     this.underlineButton = toggler("<u>U</u>", "Underline");
 
-    this.fontSizePicker = this.buildFontSizePicker();
+    this.fontSizePicker = new FontSizePicker();
+    this.stylePresetPicker = new StylePresetPicker();
 
     this.content = widget.box.h({
       spacing: 6,
@@ -93,7 +95,7 @@ export default class EditorStyles extends Gtk.Box {
         this.italicButton,
         this.underlineButton,
         this.fontSizePicker,
-        this.buildStylePresetPicker(),
+        this.stylePresetPicker,
       ],
       visible: false,
     });
@@ -143,86 +145,6 @@ export default class EditorStyles extends Gtk.Box {
   private toggleExpanded() {
     if (this.expanded) this.collapse();
     else this.expand();
-  }
-
-  // TODO: Need to create a custom DropDown for the pickers.
-  // The items in the drop down list should be styled to reflect the style they represent,
-  // but the selected item (e.g. shown when list is closed) should just use default style.
-  // It's not possible to achieve this with the built-in DropDown widget.
-
-  private buildFontSizePicker() {
-    const model = Gtk.StringList.new(Object.keys(StyleManager.TextSizes));
-    const factory = Gtk.SignalListItemFactory.new();
-
-    factory.connect("setup", (_, listItem) => {
-      const label = new Gtk.Label({ xalign: 0 });
-      (listItem as Gtk.ListItem).set_child(label);
-    });
-
-    factory.connect("bind", (_, li) => {
-      const listItem = li as Gtk.ListItem;
-      const label = listItem.get_child() as Gtk.Label;
-      const item = listItem.get_item() as Gtk.StringObject;
-      const text = item.get_string();
-      if (!label) return;
-
-      label.set_attributes(null);
-      label.set_markup(text);
-
-      const attrs = new Pango.AttrList();
-
-      // The text for the drop down item is a number represeting the text size,
-      // so we can use that to style the
-      const textSize = Number(text) as keyof typeof StyleManager.TextSizes;
-      attrs.insert(Pango.attr_size_new(textSize * Pango.SCALE));
-
-      label.set_attributes(attrs);
-      label.set_text(text);
-    });
-
-    return new Gtk.DropDown({
-      model: model,
-      factory: factory,
-      cssClasses: ["style-toggle"],
-    });
-  }
-
-  private buildStylePresetPicker() {
-    const model = Gtk.StringList.new(Object.keys(StyleManager.StylePresets));
-
-    const factory = Gtk.SignalListItemFactory.new();
-
-    factory.connect("setup", (_, li) => {
-      const label = new Gtk.Label({ xalign: 0 });
-      (li as Gtk.ListItem).set_child(label);
-    });
-
-    factory.connect("bind", (_, li) => {
-      const listItem = li as Gtk.ListItem;
-      const label = listItem.get_child() as Gtk.Label;
-      const item = listItem.get_item() as Gtk.StringObject;
-      const text = item.get_string();
-      if (!label) return;
-
-      label.set_attributes(null);
-      label.set_markup(text);
-
-      const presetName = text as keyof typeof StyleManager.StylePresets;
-      const { bold, italic, size, underline } =
-        StyleManager.StylePresets[presetName];
-
-      const attrs = new Pango.AttrList();
-      attrs.insert(Pango.attr_size_new(size * Pango.SCALE));
-      bold && attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD));
-      italic && attrs.insert(Pango.attr_style_new(Pango.Style.ITALIC));
-      underline &&
-        attrs.insert(Pango.attr_underline_new(Pango.Underline.SINGLE));
-
-      label.set_attributes(attrs);
-      label.set_text(text);
-    });
-
-    return new Gtk.DropDown({ model, factory });
   }
 
   private registerActionHandlers() {
