@@ -5,6 +5,7 @@ import Pango from "@girs/pango-1.0";
 interface DropDownParams<T extends Record<string, unknown>> {
   options: T;
   getAttributes(option: keyof T): Pango.AttrList;
+  onChanged(option: keyof T): void;
 }
 
 export default class DropDown<
@@ -14,7 +15,7 @@ export default class DropDown<
     GObject.registerClass({ GTypeName: "DropDown" }, this);
   }
 
-  constructor({ options, getAttributes }: DropDownParams<T>) {
+  constructor({ options, getAttributes, onChanged }: DropDownParams<T>) {
     super();
 
     const model = Gtk.StringList.new(Object.keys(options));
@@ -53,5 +54,12 @@ export default class DropDown<
     this.set_model(model);
     this.set_factory(plainFactory);
     this.set_list_factory(styledFactory);
+
+    this.connect("notify::selected", () => {
+      const selected = this.get_selected_item() as Gtk.StringObject;
+      if (!selected) return;
+      const option = selected.get_string() as keyof T;
+      onChanged(option);
+    });
   }
 }

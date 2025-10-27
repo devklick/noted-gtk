@@ -118,6 +118,34 @@ export default class StyleManager {
   private currentSize: TextSizeTagName = TextSizes[StylePresets.normal.size];
   private _enabled: boolean = true;
 
+  public get currentStylePreset(): [
+    keyof typeof StylePresets,
+    StylePresetConfig
+  ] {
+    console.log("currentStylePreset", [
+      ...this.currentDecorations.keys(),
+      this.currentSize,
+    ]);
+    for (const [presetName, presetConfig] of Object.entries(StylePresets)) {
+      for (const [configName, configValue] of Object.entries(presetConfig)) {
+        if (
+          isTextDecorationTagName(configName) &&
+          this.currentDecorations.has(configName) !== configValue
+        ) {
+          break;
+        } else if (
+          configName === "size" &&
+          TextSizes[configValue as keyof typeof TextSizes] !== this.currentSize
+        ) {
+          break;
+        }
+      }
+      return [presetName as keyof typeof StylePresets, presetConfig];
+    }
+
+    return ["normal", StylePresets.normal];
+  }
+
   constructor({ buffer, actionMap }: StyleManagerParams) {
     this.buffer = buffer;
     this.actionMap = actionMap;
@@ -208,20 +236,15 @@ export default class StyleManager {
       return;
     }
 
-    // Keep track of what tags are present, so we know which are not present
-    const has: Record<TextDecorationTagName, boolean> = {
-      bold: false,
-      italic: false,
-      underline: false,
-    };
-
+    this.currentDecorations.clear();
     // Cycle through tags and firing relevant action
     for (const tag of iter.get_tags()) {
       if (isTextSizeTagName(tag.name)) {
         const size = TextSizesByTagName[tag.name];
+        this.currentSize = tag.name;
         action.invoke(this.actionMap, StyleManager.Actions.SizeChanged, size);
       } else if (isTextDecorationTagName(tag.name)) {
-        has[tag.name] = true;
+        this.currentDecorations.add(tag.name);
         action.invoke(
           this.actionMap,
           StyleManager.Actions[`${str.pascal(tag.name)}Changed`],
@@ -231,9 +254,9 @@ export default class StyleManager {
     }
 
     // Cycle through missing tags and fire relevant action
-    for (const key of obj.keys(has)) {
+    for (const key of obj.keys(TextDecorations) as TextDecorationTagName[]) {
       // if the tag was present, this is true, and we we've already fired an action for it.
-      if (has[key]) continue;
+      if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
       const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];
@@ -265,6 +288,20 @@ export default class StyleManager {
     // );
   }
 
+  public setSize(size: keyof typeof TextSizes) {
+    const [hasSelection, start, end] = this.buffer.get_selection_bounds();
+    if (hasSelection) {
+      this.replaceSelectionTextSize(start, end, size);
+      return;
+    }
+
+    this.currentSize = TextSizes[size];
+    console.log("setStylePreset", [
+      ...this.currentDecorations.keys(),
+      this.currentSize,
+    ]);
+  }
+
   public setStylePreset(preset: keyof typeof StylePresets) {
     const [hasSelection, start, end] = this.buffer.get_selection_bounds();
     if (hasSelection) {
@@ -273,12 +310,16 @@ export default class StyleManager {
     }
 
     const { bold, italic, size, underline } = StylePresets[preset];
-    this.currentDecorations.clear();
 
-    bold && this.currentDecorations.add("bold");
-    italic && this.currentDecorations.add("italic");
-    underline && this.currentDecorations.add("underline");
+    this.currentDecorations.clear();
+    if (bold) this.currentDecorations.add("bold");
+    if (italic) this.currentDecorations.add("italic");
+    if (underline) this.currentDecorations.add("underline");
     this.currentSize = TextSizes[size];
+    console.log("setStylePreset", [
+      ...this.currentDecorations.keys(),
+      this.currentSize,
+    ]);
   }
 
   private handleBufferInsert(start: Gtk.TextIter, length: number) {
@@ -327,6 +368,52 @@ export default class StyleManager {
     italic && applyDecoration("italic");
     underline && applyDecoration("underline");
 
+    this.currentDecorations.clear();
+    if (bold) this.currentDecorations.add("bold");
+    if (italic) this.currentDecorations.add("italic");
+    if (underline) this.currentDecorations.add("underline");
+    this.currentSize = TextSizes[size];
+    console.log("replaceSelectionStylesWithPreset", [
+      ...this.currentDecorations.keys(),
+      this.currentSize,
+    ]);
+
+    // Apply the font tag for the preset
+    const tag = this.styleTags[`size-${size}`];
+    this.buffer.apply_tag(tag, start, end);
+  }
+
+  private replaceSelectionTextSize(
+    start: Gtk.TextIter,
+    end: Gtk.TextIter,
+    size: keyof typeof TextSizes
+  ) {
+    for (const tag of Object.values(this.styleTags)) {
+      if (tag.name.startsWith("size-")) {
+        this.buffer.remove_tag(tag, start, end);
+      }
+    }
+
+    // Apply all decoration tags for the given preset
+    const applyDecoration = (tagName: TextDecorationTagName) => {
+      const tag = this.styleTags[tagName];
+      this.buffer.apply_tag(tag, start, end);
+    };
+    // bold && applyDecoration("bold");
+    // italic && applyDecoration("italic");
+    // underline && applyDecoration("underline");
+
+    // this.currentDecorations.clear();
+    // if (bold) this.currentDecorations.add("bold");
+    // if (italic) this.currentDecorations.add("italic");
+    // if (underline) this.currentDecorations.add("underline");
+    this.currentSize = TextSizes[size];
+
+    console.log("replaceSelectionStylesWithPreset", [
+      ...this.currentDecorations.keys(),
+      this.currentSize,
+    ]);
+
     // Apply the font tag for the preset
     const tag = this.styleTags[`size-${size}`];
     this.buffer.apply_tag(tag, start, end);
@@ -348,13 +435,6 @@ export default class StyleManager {
   }
 
   private emitDecorationsAtSelection(start: Gtk.TextIter, end: Gtk.TextIter) {
-    // Keep track of what tags are present, so we know which are not present
-    const has: Record<TextDecorationTagName, boolean> = {
-      bold: false,
-      italic: false,
-      underline: false,
-    };
-
     for (const tagName of Object.values(TextDecorations)) {
       if (
         this.isTagFullyAppliedAtSelection(this.styleTags[tagName], start, end)
@@ -362,14 +442,14 @@ export default class StyleManager {
         const actionName =
           StyleManager.Actions[`${str.pascal(tagName)}Changed`];
         action.invoke(this.actionMap, actionName, true);
-        has[tagName] = true;
+        this.currentDecorations.add(tagName);
       }
     }
 
     // Cycle through missing tags and fire relevant action
-    for (const key of obj.keys(has)) {
+    for (const key of obj.keys(TextDecorations)) {
       // if the tag was present, this is true, and we we've already fired an action for it.
-      if (has[key]) continue;
+      if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
       const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];

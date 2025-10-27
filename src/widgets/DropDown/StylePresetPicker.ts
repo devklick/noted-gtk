@@ -3,13 +3,16 @@ import Pango from "@girs/pango-1.0";
 import StyleManager from "../../core/StyleManager";
 import DropDown from "./DropDown";
 
+interface StylePresetPickerParams {
+  onChanged(option: keyof typeof StyleManager.StylePresets): void;
+}
 export class StylePresetPicker extends DropDown<
   typeof StyleManager.StylePresets
 > {
   static {
     GObject.registerClass({ GTypeName: "StylePresetPicker" }, this);
   }
-  constructor() {
+  constructor({ onChanged }: StylePresetPickerParams) {
     super({
       options: StyleManager.StylePresets,
       getAttributes: (option) => {
@@ -24,6 +27,7 @@ export class StylePresetPicker extends DropDown<
           attrs.insert(Pango.attr_underline_new(Pango.Underline.SINGLE));
         return attrs;
       },
+      onChanged,
     });
   }
 }

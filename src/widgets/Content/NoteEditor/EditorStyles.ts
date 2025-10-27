@@ -81,8 +81,13 @@ export default class EditorStyles extends Gtk.Box {
     this.italicButton = toggler("<i>I</i>", "Italic");
     this.underlineButton = toggler("<u>U</u>", "Underline");
 
-    this.fontSizePicker = new FontSizePicker();
-    this.stylePresetPicker = new StylePresetPicker();
+    this.fontSizePicker = new FontSizePicker({
+      onChanged: (size) => this.styleManager.setSize(size),
+    });
+
+    this.stylePresetPicker = new StylePresetPicker({
+      onChanged: (preset) => this.styleManager.setStylePreset(preset),
+    });
 
     this.content = widget.box.h({
       spacing: 6,
@@ -152,46 +157,74 @@ export default class EditorStyles extends Gtk.Box {
       this.actionMap,
       StyleManager.Actions.SizeChanged,
       "int",
-      (size) =>
+      (size) => {
         this.fontSizePicker.set_selected(
           this.findIndexInModel(this.fontSizePicker.model, size.toString())
-        )
+        );
+        this.stylePresetPicker.set_selected(
+          this.findIndexInModel(
+            this.stylePresetPicker.model,
+            this.styleManager.currentStylePreset[0]
+          )
+        );
+      }
     );
     action.handle(
       this.actionMap,
       StyleManager.Actions.BoldChanged,
       "bool",
-      (active) =>
+      (active) => {
         this.boldButton.active !== active &&
-        this.silentlyUpdateToggle(
-          this.boldButton,
-          this.boldToggledHandlerId,
-          active
-        )
+          this.silentlyUpdateToggle(
+            this.boldButton,
+            this.boldToggledHandlerId,
+            active
+          );
+        this.stylePresetPicker.set_selected(
+          this.findIndexInModel(
+            this.stylePresetPicker.model,
+            this.styleManager.currentStylePreset[0]
+          )
+        );
+      }
     );
 
     action.handle(
       this.actionMap,
       StyleManager.Actions.ItalicChanged,
       "bool",
-      (active) =>
+      (active) => {
         this.silentlyUpdateToggle(
           this.italicButton,
           this.italicToggledHandlerId,
           active
-        )
+        );
+        this.stylePresetPicker.set_selected(
+          this.findIndexInModel(
+            this.stylePresetPicker.model,
+            this.styleManager.currentStylePreset[0]
+          )
+        );
+      }
     );
 
     action.handle(
       this.actionMap,
       StyleManager.Actions.UnderlineChanged,
       "bool",
-      (active) =>
+      (active) => {
         this.silentlyUpdateToggle(
           this.underlineButton,
           this.underlineToggledHandlerId,
           active
-        )
+        );
+        this.stylePresetPicker.set_selected(
+          this.findIndexInModel(
+            this.stylePresetPicker.model,
+            this.styleManager.currentStylePreset[0]
+          )
+        );
+      }
     );
 
     this.boldToggledHandlerId = this.boldButton.connect("toggled", () =>
@@ -221,6 +254,7 @@ export default class EditorStyles extends Gtk.Box {
   private listenForShortcuts() {
     this.keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
       const shortcut = this.shortcuts.check({ key, modifier });
+      console.log("found shortcut", shortcut);
       switch (shortcut) {
         case "editor-shoctut-toggle-bold-text":
           this.toggleButton(this.boldButton);
@@ -235,6 +269,7 @@ export default class EditorStyles extends Gtk.Box {
           this.styleManager.setStylePreset("normal");
           return Gdk.EVENT_STOP;
         case "editor-shoctut-text-size-h1":
+          console.log("shortcut editor-shoctut-text-size-h1");
           this.styleManager.setStylePreset("h1");
           return Gdk.EVENT_STOP;
         case "editor-shoctut-text-size-h2":
