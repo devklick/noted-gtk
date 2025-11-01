@@ -11,22 +11,28 @@ import {
 import icon from "../../../../../core/utils/icon";
 
 import widget from "../../../../../core/utils/widget";
+import PreferencesPageBase from "./PreferencesPageBase";
+import { AppPrefs } from "../../../../../core/PreferencesManager";
 
 interface KeyBindingsPageParams {
   shortcuts: AppShortcuts;
-  parentWindow: Gtk.Window;
+  parent: Gtk.Window;
+  prefs: AppPrefs;
 }
 
-export default class KeyBindingsPage extends Adw.PreferencesPage {
+export default class KeyBindingsPage extends PreferencesPageBase {
   private shortcuts: AppShortcuts;
-  private _parentWindow: Gtk.Window;
   static {
     GObject.registerClass({ GTypeName: "KeyBindingsPage" }, this);
   }
-  constructor({ shortcuts, parentWindow }: KeyBindingsPageParams) {
-    super({ title: "Key Bindings", iconName: icon.symbolic("input-keyboard") });
+  constructor({ shortcuts, parent, prefs }: KeyBindingsPageParams) {
+    super({
+      title: "Key Bindings",
+      iconName: icon.symbolic("input-keyboard"),
+      parent,
+      prefs,
+    });
     this.shortcuts = shortcuts;
-    this._parentWindow = parentWindow;
 
     const prefGroups: Partial<Record<ShortcutGroupType, Adw.PreferencesGroup>> =
       {};
@@ -45,10 +51,9 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
         title: shortcut.label,
         subtitle: shortcut.description,
       });
+      row.add_suffix(this.createSuffix(shortcut.type));
 
       prefsGroup.add(row);
-
-      row.add_suffix(this.createSuffix(shortcut.type));
     });
 
     Object.values(prefGroups).forEach((group) => this.add(group));
@@ -63,7 +68,7 @@ export default class KeyBindingsPage extends Adw.PreferencesPage {
         shortcut,
         shortcutKeys,
         shortcuts: this.shortcuts,
-        parentWindow: this._parentWindow,
+        parentWindow: this.parentWindow,
         onConfirm: ({ key, modifier }) => {
           this.shortcuts.set(shortcut, { key, modifier });
           shortcutLabel.set_accelerator(Gtk.accelerator_name(key, modifier));

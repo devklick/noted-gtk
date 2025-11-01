@@ -1,6 +1,6 @@
 import Gio from "@girs/gio-2.0";
 
-type TypeName = "boolean" | "int";
+type TypeName = "boolean" | "int" | "string";
 
 type GetterName = {
   [K in keyof Gio.Settings]: K extends `get_${infer S}`
@@ -20,16 +20,19 @@ type SetterName = {
 
 type Setters = { [K in SetterName]: InstanceType<typeof Gio.Settings>[K] };
 
-type ActualType<T extends TypeName> = T extends "boolean"
-  ? boolean
-  : T extends "int"
-  ? number
+// prettier-ignore
+type ActualType<T extends TypeName> 
+  = T extends "boolean" ? boolean
+  : T extends "int" ? number
+  : T extends "string" ? string
   : never;
 
 const PreferenceKeys = {
-  AutoSave: "auto-Save",
+  AutoSave: "auto-save",
   EnableCategories: "enable-categories",
   EnableCategoryDecorations: "enable-category-decorations",
+  DefaultAppNotesFolder: "default-app-notes-folder",
+  DefaultAppNotesMetaFile: "default-app-notes-meta-file",
 } as const;
 
 export type PreferenceKey =
@@ -42,7 +45,7 @@ export type BoolPreferenceKey = {
 }[PreferenceKey];
 
 const preferenceMetadata = {
-  "auto-Save": {
+  "auto-save": {
     getter: "get_boolean",
     type: "boolean",
     setter: "set_boolean",
@@ -56,6 +59,16 @@ const preferenceMetadata = {
     getter: "get_boolean",
     type: "boolean",
     setter: "set_boolean",
+  },
+  "default-app-notes-folder": {
+    getter: "get_string",
+    type: "string",
+    setter: "set_string",
+  },
+  "default-app-notes-meta-file": {
+    getter: "get_string",
+    type: "string",
+    setter: "set_string",
   },
 } as const satisfies Record<
   PreferenceKey,
@@ -87,6 +100,11 @@ interface PreferencesManagerParams {
  * A class to manage non-shortcut preferences.
  *
  * To manage shortcuts, the `ShortcutManager` should be used instead.
+ *
+ * @todo Consider refactoring this. It was meant to be a generic wrapper
+ * around `Gio.Settings` so that the caller doesnt need to worry about which
+ * type-specific getters and setters to call based on the settings in question.
+ * It works we'll, but at the cost of some initial metadata setup and complexity.
  */
 export default class PreferencesManager implements AppPrefs {
   private settings: Gio.Settings;
@@ -152,9 +170,10 @@ export default class PreferencesManager implements AppPrefs {
     key: K,
     value: ActualType<(typeof preferenceMetadata)[K]["type"]>
   ): void {
-    const setterName = preferenceMetadata[key]["setter"];
+    const setterName = preferenceMetadata[key].setter;
     const setter = this.setters[setterName];
-    setter(key, value);
+    // HACK: TS struggles to narrow the setters parameter types, so it becaomes `never`.
+    setter(key, value as never);
   }
 
   private listen() {

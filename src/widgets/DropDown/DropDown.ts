@@ -5,7 +5,6 @@ import { listModel } from "../../core/utils/widget";
 
 interface DropDownParams<T extends string | number> {
   items: T[];
-  getAttributes(item: T): Pango.AttrList;
   onChanged(item: T): void;
   defaultItem?: T;
 }
@@ -15,12 +14,7 @@ export default class DropDown<T extends string | number> extends Gtk.DropDown {
     GObject.registerClass({ GTypeName: "DropDown" }, this);
   }
 
-  constructor({
-    items,
-    getAttributes,
-    onChanged,
-    defaultItem,
-  }: DropDownParams<T>) {
+  constructor({ items, onChanged, defaultItem }: DropDownParams<T>) {
     super();
 
     const model = Gtk.StringList.new(items.map(String));
@@ -31,9 +25,7 @@ export default class DropDown<T extends string | number> extends Gtk.DropDown {
       (li as Gtk.ListItem).set_child(label);
     });
 
-    styledFactory.connect("bind", (_, li) =>
-      this.buildListItem(li, getAttributes)
-    );
+    styledFactory.connect("bind", (_, li) => this.buildListItem(li));
 
     const plainFactory = Gtk.SignalListItemFactory.new();
     plainFactory.connect("setup", (_, li) => {
@@ -64,17 +56,18 @@ export default class DropDown<T extends string | number> extends Gtk.DropDown {
     }
   }
 
-  private buildListItem(
-    li: GObject.Object,
-    getAttributes: (option: T) => Pango.AttrList
-  ): void {
+  protected getAttributes(option: T): Pango.AttrList {
+    return Pango.AttrList.new();
+  }
+
+  private buildListItem(li: GObject.Object): void {
     const listItem = li as Gtk.ListItem;
     const label = listItem.get_child() as Gtk.Label;
     const item = listItem.get_item() as Gtk.StringObject;
     const text = item.get_string();
 
     const option = text as T;
-    const attrs = getAttributes(option);
+    const attrs = this.getAttributes(option);
 
     label.set_attributes(attrs);
     label.set_text(text);

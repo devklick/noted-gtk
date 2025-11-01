@@ -130,7 +130,8 @@ export default class Application extends Adw.Application {
     action.handle(this, BurgerMenu.Actions.Open["Notes Folder"], null, () => {
       new AppChooserDialog({
         parent: this.window,
-        type: "inode/directory",
+        appPrefs: this.appPrefs,
+        target: "NotesDir",
         onChosen: (appInfo) =>
           appInfo.launch([this.appDir.notesDir.gioFile], null),
       });
@@ -144,7 +145,8 @@ export default class Application extends Adw.Application {
       () => {
         new AppChooserDialog({
           parent: this.window,
-          type: "application/json",
+          appPrefs: this.appPrefs,
+          target: "MetaFile",
           onChosen: (appInfo) =>
             appInfo.launch([this.appDir.notesDir.metaFile.gioFile], null),
         });

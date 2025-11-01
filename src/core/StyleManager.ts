@@ -60,7 +60,7 @@ interface StylePresetConfig {
   italic: boolean;
   underline: boolean;
 }
-export const StylePresets = Object.freeze({
+export const StylePresets = obj.freezeDeep({
   custom: undefined,
   normal: {
     size: 11,

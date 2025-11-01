@@ -75,6 +75,17 @@
         <key name="editor-shoctut-text-size-normal" type="s">
             <default>&quot;&lt;Control&gt;0&quot;</default>
             <summary>Set text size to normal</summary>
+        </key><!-- 
+        
+        Default Applications
+        -->
+        <key name="default-app-notes-folder" type="s">
+            <default>&quot;org.gnome.Nautilus.desktop&quot;</default>
+            <summary>The application that will be used to open the Notes folder</summary>
+        </key>
+        <key name="default-app-notes-meta-file" type="s">
+            <default>&quot;org.gnome.TextEditor.desktop&quot;</default>
+            <summary>The application that will be used to open the Notes meta file</summary>
         </key>
     </schema>
 </schemalist>

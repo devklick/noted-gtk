@@ -16,12 +16,15 @@ export class FontSizePicker extends DropDown<
   constructor({ onChanged }: FontSizePickerParams) {
     super({
       items: obj.keys(StyleManager.TextSizes),
-      getAttributes: (option) => {
-        const attrs = new Pango.AttrList();
-        attrs.insert(Pango.attr_size_new(option * Pango.SCALE));
-        return attrs;
-      },
       onChanged,
     });
+  }
+
+  protected getAttributes(
+    option: keyof typeof StyleManager.TextSizes
+  ): Pango.AttrList {
+    const attrs = new Pango.AttrList();
+    attrs.insert(Pango.attr_size_new(option * Pango.SCALE));
+    return attrs;
   }
 }

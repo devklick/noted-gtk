@@ -15,23 +15,24 @@ export class StylePresetPicker extends DropDown<StylePresetName> {
     super({
       items: obj.keys({ ...StyleManager.StylePresets }),
       defaultItem: "normal",
-      getAttributes: (option) => {
-        const attrs = new Pango.AttrList();
-        if (!StyleManager.StylePresets[option]) {
-          return attrs;
-        }
-
-        const { bold, italic, size, underline } =
-          StyleManager.StylePresets[option];
-
-        attrs.insert(Pango.attr_size_new(size * Pango.SCALE));
-        if (bold) attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD));
-        if (italic) attrs.insert(Pango.attr_style_new(Pango.Style.ITALIC));
-        if (underline)
-          attrs.insert(Pango.attr_underline_new(Pango.Underline.SINGLE));
-        return attrs;
-      },
       onChanged,
     });
+  }
+
+  protected getAttributes(option: StylePresetName): Pango.AttrList {
+    const attrs = new Pango.AttrList();
+    
+    if (!StyleManager.StylePresets[option]) {
+      return attrs;
+    }
+
+    const { bold, italic, size, underline } = StyleManager.StylePresets[option];
+
+    attrs.insert(Pango.attr_size_new(size * Pango.SCALE));
+    if (bold) attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD));
+    if (italic) attrs.insert(Pango.attr_style_new(Pango.Style.ITALIC));
+    if (underline)
+      attrs.insert(Pango.attr_underline_new(Pango.Underline.SINGLE));
+    return attrs;
   }
 }

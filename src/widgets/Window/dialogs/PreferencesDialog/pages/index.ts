@@ -1,8 +1,8 @@
 import KeyBindingsPage from "./KeyBindingsPage";
-import CategoriesPage from "./CategoriesPage";
-import EditorPage from "./EditorPage";
+import NoteListPage from "./NoteListPage";
+import DefaultAppsPage from "./DefaultAppsPage";
 export default {
   KeyBindingsPage,
-  CategoriesPage,
-  EditorPage,
+  NoteListPage,
+  DefaultAppsPage,
 };
