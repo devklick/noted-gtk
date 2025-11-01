@@ -1,10 +1,7 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
-import {
-  AppPrefs,
-  BoolPreferenceKey,
-} from "../../../../../core/PreferencesManager";
+import { AppPrefs } from "../../../../../core/PreferencesManager";
 import icon from "../../../../../core/utils/icon";
 import PreferencesPageBase from "./PreferencesPageBase";
 
@@ -21,7 +18,7 @@ export default class NoteListPage extends PreferencesPageBase {
   constructor({ prefs, parent }: NoteListPageParams) {
     super({
       title: "Note List",
-      iconName: icon.symbolic("user-bookmarks"),
+      iconName: icon.symbolic("view-list"),
       parent,
       prefs,
     });

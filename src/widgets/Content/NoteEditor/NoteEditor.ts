@@ -138,8 +138,9 @@ export default class NoteEditor extends Gtk.Box {
 
     this._textView.visible = true;
     this._editorStyles.visible = true;
-    this._textView.editable =
-      !this._notesDir.metaFile.getNoteMetadata(id).locked;
+    const locked = this._notesDir.metaFile.getNoteMetadata(id).locked;
+    this.setEditorLocked(locked);
+
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorOpened, id);
     GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
@@ -198,10 +199,10 @@ export default class NoteEditor extends Gtk.Box {
     action.handle(
       actionMap,
       NoteListItem.Actions.ToggleLocked,
-      (param) => param?.deepUnpack() as [string, string],
+      (param) => param?.deepUnpack() as [string, boolean],
       ([noteId, locked]) => {
         if (this._noteId === noteId) {
-          this._textView.editable = !locked;
+          this.setEditorLocked(locked);
         }
       }
     );
@@ -259,5 +260,11 @@ export default class NoteEditor extends Gtk.Box {
     const buffer = new Gtk.TextBuffer();
     buffer.connect("changed", () => this.handleTextChanged());
     return buffer;
+  }
+
+  private setEditorLocked(locked: boolean) {
+    this._textView.editable = !locked;
+    this._textView.set_cursor_from_name(locked ? "not-allowed" : "text");
+    this._textView.set_cursor_visible(!locked); // this is actually the caret
   }
 }
