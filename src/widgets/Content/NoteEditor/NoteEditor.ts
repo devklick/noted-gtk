@@ -138,7 +138,7 @@ export default class NoteEditor extends Gtk.Box {
 
     this._textView.visible = true;
     this._editorStyles.visible = true;
-    this._textView.sensitive =
+    this._textView.editable =
       !this._notesDir.metaFile.getNoteMetadata(id).locked;
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorOpened, id);
@@ -193,6 +193,17 @@ export default class NoteEditor extends Gtk.Box {
 
     action.handle(actionMap, NoteListItem.Actions.DoSave, null, () =>
       this.save()
+    );
+
+    action.handle(
+      actionMap,
+      NoteListItem.Actions.ToggleLocked,
+      (param) => param?.deepUnpack() as [string, string],
+      ([noteId, locked]) => {
+        if (this._noteId === noteId) {
+          this._textView.editable = !locked;
+        }
+      }
     );
 
     this._textViewKeyController.connect(
