@@ -6,7 +6,6 @@ import BindKeyDialog from "../BindKeyDialog";
 import {
   AppShortcuts,
   ShortcutGroupType,
-  Shortcuts,
   ShortcutType,
 } from "../../../../../core/ShortcutManager";
 import icon from "../../../../../core/utils/icon";

@@ -6,3 +6,11 @@
 .italic {
     font-style: italic;
 }
+
+.style-toggle {
+    font-weight: normal;
+}
+
+.editor-styles {
+    background-color: @sidebar_bg_color;
+}

@@ -75,7 +75,7 @@ export default class NoteList extends Gtk.ScrolledWindow {
     this.sync();
   }
 
-  public sync() {
+  private sync() {
     this._listBox.remove_all();
     this._listItems = {};
 
@@ -122,7 +122,6 @@ export default class NoteList extends Gtk.ScrolledWindow {
 
     if (selected) {
       this._listBox.select_row(this._listItems[selected]);
-      this._listItems[selected].grab_focus();
     } else {
       this._listBox.unselect_all();
     }
@@ -166,7 +165,10 @@ export default class NoteList extends Gtk.ScrolledWindow {
     );
 
     action.handle(this._actionMap, NoteEditor.Actions.EditorSaved, null, () =>
-      this.sync()
+      GLib.idle_add(GLib.PRIORITY_HIGH, () => {
+        this.sync();
+        return GLib.SOURCE_REMOVE;
+      })
     );
 
     action.handle(

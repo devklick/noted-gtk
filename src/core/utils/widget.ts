@@ -1,4 +1,5 @@
 import Adw from "@girs/adw-1";
+import Gio from "@girs/gio-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Pango from "@girs/pango-1.0";
 
@@ -305,11 +306,13 @@ type CustomButtonParams = Partial<{
   shape: ButtonShape;
   actionType: ButtonActionType;
   depth: ButtonDepth;
+  onClick(): void;
 }>;
 const _customButtonKeys: Record<keyof CustomButtonParams, 1> = {
   shape: 1,
   actionType: 1,
   depth: 1,
+  onClick: 1,
 } as const;
 
 const CustomButtonKeys = Object.keys(_customButtonKeys) as Array<
@@ -339,10 +342,26 @@ function createButton(params: ButtonParams = {}): Gtk.Button {
     ...applyCustomButtonParams(params),
   });
 
+  if (params.onClick) {
+    button.connect("clicked", () => params.onClick?.());
+  }
+
   return button;
 }
 
 export const button = { new: createButton };
+//#endregion
+
+//#region ======================= Button =======================
+function findListItemIndex(model: Gio.ListModel, label: string): number {
+  for (let i = 0; i < model.get_n_items(); i++) {
+    if ((model.get_item(i) as Gtk.StringObject)?.get_string() === label)
+      return i;
+  }
+  return -1;
+}
+
+export const listModel = { findIndex: findListItemIndex };
 //#endregion
 
 export default {
@@ -351,4 +370,5 @@ export default {
   toolbarView,
   header,
   button,
+  listModel,
 };

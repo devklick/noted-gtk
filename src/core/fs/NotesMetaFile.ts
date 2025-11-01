@@ -33,13 +33,13 @@ interface NotesMetaFileParams {
 export default class NotesMetaFile {
   private readonly _fileName = "notes.meta.json";
   private readonly _path: string;
-  private readonly _file: Gio.File;
+  public readonly gioFile: Gio.File;
   private readonly _decoder: TextDecoder;
   private readonly _encoder: TextEncoder;
 
   constructor({ dirPath }: NotesMetaFileParams) {
     this._path = fs.path.build(dirPath, this._fileName);
-    this._file = Gio.File.new_for_path(this._path);
+    this.gioFile = Gio.File.new_for_path(this._path);
     this._decoder = new TextDecoder("utf-8");
     this._encoder = new TextEncoder();
     this.ensureExists();
@@ -86,7 +86,7 @@ export default class NotesMetaFile {
   }
 
   public getNotesMetadata(): NotesMetadata {
-    const [success, contents] = this._file.load_contents(null);
+    const [success, contents] = this.gioFile.load_contents(null);
     if (!success) {
       throw new Error("Failed to read notes metadata file");
     }
@@ -132,7 +132,6 @@ export default class NotesMetaFile {
 
     for (const [key, value] of Object.entries(data)) {
       if (typeof key !== "string") {
-        console.log("Failed key");
         return false;
       }
       if (typeof value !== "object" || value === null) {
@@ -170,7 +169,7 @@ export default class NotesMetaFile {
 
   private save(data: NotesMetadata) {
     const bytes = this.getBytes(data);
-    this._file.replace_contents(
+    this.gioFile.replace_contents(
       bytes,
       null,
       false,
@@ -186,9 +185,9 @@ export default class NotesMetaFile {
   }
 
   private ensureExists() {
-    if (!this._file.query_exists(null)) {
+    if (!this.gioFile.query_exists(null)) {
       const content = this.getBytes({});
-      this._file.replace_contents(
+      this.gioFile.replace_contents(
         content,
         null,
         false,

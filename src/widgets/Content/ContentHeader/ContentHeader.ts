@@ -156,40 +156,43 @@ export default class ContentHeader extends Adw.Bin {
 
     const buttonContainer = widget.box.h({ spacing: 6 });
 
-    const noteButtonGroup = widget.box.h({ cssClasses: ["linked"] });
-    const addNoteButton = new Gtk.Button({
+    const addNoteButton = widget.button.new({
       iconName: icon.symbolic("list-add"),
       tooltip_text: "New Note",
+      onClick: () =>
+        action.invoke(this._actionMap, ContentHeader.Actions.NewNote),
     });
-    addNoteButton.connect("clicked", () => {
-      action.invoke(this._actionMap, ContentHeader.Actions.NewNote);
-    });
-    const saveNotButton = new Gtk.Button({
+
+    const saveNotButton = widget.button.new({
       iconName: icon.symbolic("media-floppy"),
       tooltip_text: "Save Note",
       sensitive: false,
+      onClick: () =>
+        action.invoke(this._actionMap, NoteListItem.Actions.DoSave),
     });
-    saveNotButton.connect("clicked", () => {
-      action.invoke(this._actionMap, NoteListItem.Actions.DoSave);
-    });
-    const deleteNoteButton = new Gtk.Button({
+
+    const deleteNoteButton = widget.button.new({
       iconName: icon.symbolic("edit-delete"),
       tooltip_text: "Delete Note",
       sensitive: false,
-    });
-    deleteNoteButton.connect("clicked", () => {
-      action.invoke(
-        this._actionMap,
-        NoteListItem.Actions.PromptDelete,
-        this._openNoteId
-      );
+      onClick: () =>
+        action.invoke(
+          this._actionMap,
+          NoteListItem.Actions.PromptDelete,
+          this._openNoteId
+        ),
     });
 
-    noteButtonGroup.append(addNoteButton);
-    noteButtonGroup.append(new Gtk.Separator());
-    noteButtonGroup.append(saveNotButton);
-    noteButtonGroup.append(new Gtk.Separator());
-    noteButtonGroup.append(deleteNoteButton);
+    const noteButtonGroup = widget.box.h({
+      cssClasses: ["linked"],
+      children: [
+        addNoteButton,
+        new Gtk.Separator(),
+        saveNotButton,
+        new Gtk.Separator(),
+        deleteNoteButton,
+      ],
+    });
 
     buttonContainer.append(toggleSidebar);
     buttonContainer.append(noteButtonGroup);

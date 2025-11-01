@@ -84,6 +84,11 @@ export const VariantParser = {
         throw new Error("Cannot determine VariantParser from VariantType");
     }
   },
+  int(param: GLib.Variant | null): number {
+    const v = param?.get_int32();
+    if (v === undefined) throw new Error("Parameter not found");
+    return v;
+  },
 } as const;
 
 type VariantParserType = Exclude<keyof typeof VariantParser, "fromVariantType">;
@@ -157,6 +162,8 @@ function getParamVariant<T>(param: T | null): null | GLib.Variant {
       return GLib.Variant.new_string(param);
     case "boolean":
       return GLib.Variant.new_boolean(param);
+    case "number":
+      return GLib.Variant.new_int32(param);
     default:
       throw new Error(`Cannot create GLib.Variant of type ${typeof param}`);
   }
