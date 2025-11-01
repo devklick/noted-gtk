@@ -5,7 +5,7 @@ import GObject from "@girs/gobject-2.0";
 
 import icon from "../../../core/utils/icon";
 import click from "../../../core/utils/click";
-import widget from "../../../core/utils/widget";
+import widget, { listModel } from "../../../core/utils/widget";
 import StyleManager from "../../../core/StyleManager";
 import action from "../../../core/utils/action";
 import { AppShortcuts } from "../../../core/ShortcutManager";
@@ -159,10 +159,10 @@ export default class EditorStyles extends Gtk.Box {
       "int",
       (size) => {
         this.fontSizePicker.set_selected(
-          this.findIndexInModel(this.fontSizePicker.model, size.toString())
+          listModel.findIndex(this.fontSizePicker.model, size.toString())
         );
         this.stylePresetPicker.set_selected(
-          this.findIndexInModel(
+          listModel.findIndex(
             this.stylePresetPicker.model,
             this.styleManager.currentStylePreset[0]
           )
@@ -181,7 +181,7 @@ export default class EditorStyles extends Gtk.Box {
             active
           );
         this.stylePresetPicker.set_selected(
-          this.findIndexInModel(
+          listModel.findIndex(
             this.stylePresetPicker.model,
             this.styleManager.currentStylePreset[0]
           )
@@ -200,7 +200,7 @@ export default class EditorStyles extends Gtk.Box {
           active
         );
         this.stylePresetPicker.set_selected(
-          this.findIndexInModel(
+          listModel.findIndex(
             this.stylePresetPicker.model,
             this.styleManager.currentStylePreset[0]
           )
@@ -219,7 +219,7 @@ export default class EditorStyles extends Gtk.Box {
           active
         );
         this.stylePresetPicker.set_selected(
-          this.findIndexInModel(
+          listModel.findIndex(
             this.stylePresetPicker.model,
             this.styleManager.currentStylePreset[0]
           )
@@ -243,18 +243,9 @@ export default class EditorStyles extends Gtk.Box {
     );
   }
 
-  private findIndexInModel(model: Gio.ListModel, target: string) {
-    for (let i = 0; i < model.get_n_items(); i++) {
-      if ((model.get_item(i) as Gtk.StringObject)?.get_string() === target)
-        return i;
-    }
-    return -1;
-  }
-
   private listenForShortcuts() {
     this.keyController.connect("key-pressed", (_, key, _keycode, modifier) => {
       const shortcut = this.shortcuts.check({ key, modifier });
-      console.log("found shortcut", shortcut);
       switch (shortcut) {
         case "editor-shoctut-toggle-bold-text":
           this.toggleButton(this.boldButton);
@@ -269,7 +260,6 @@ export default class EditorStyles extends Gtk.Box {
           this.styleManager.setStylePreset("normal");
           return Gdk.EVENT_STOP;
         case "editor-shoctut-text-size-h1":
-          console.log("shortcut editor-shoctut-text-size-h1");
           this.styleManager.setStylePreset("h1");
           return Gdk.EVENT_STOP;
         case "editor-shoctut-text-size-h2":

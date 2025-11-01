@@ -1,24 +1,29 @@
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Pango from "@girs/pango-1.0";
+import { listModel } from "../../core/utils/widget";
 
-interface DropDownParams<T extends Record<string, unknown>> {
-  options: T;
-  getAttributes(option: keyof T): Pango.AttrList;
-  onChanged(option: keyof T): void;
+interface DropDownParams<T extends string | number> {
+  items: T[];
+  getAttributes(item: T): Pango.AttrList;
+  onChanged(item: T): void;
+  defaultItem?: T;
 }
 
-export default class DropDown<
-  T extends Record<string, unknown>
-> extends Gtk.DropDown {
+export default class DropDown<T extends string | number> extends Gtk.DropDown {
   static {
     GObject.registerClass({ GTypeName: "DropDown" }, this);
   }
 
-  constructor({ options, getAttributes, onChanged }: DropDownParams<T>) {
+  constructor({
+    items,
+    getAttributes,
+    onChanged,
+    defaultItem,
+  }: DropDownParams<T>) {
     super();
 
-    const model = Gtk.StringList.new(Object.keys(options));
+    const model = Gtk.StringList.new(items.map(String));
 
     const styledFactory = Gtk.SignalListItemFactory.new();
     styledFactory.connect("setup", (_, li) => {
@@ -26,18 +31,9 @@ export default class DropDown<
       (li as Gtk.ListItem).set_child(label);
     });
 
-    styledFactory.connect("bind", (_, li) => {
-      const listItem = li as Gtk.ListItem;
-      const label = listItem.get_child() as Gtk.Label;
-      const item = listItem.get_item() as Gtk.StringObject;
-      const text = item.get_string();
-
-      const option = text as keyof T;
-      const attrs = getAttributes(option);
-
-      label.set_attributes(attrs);
-      label.set_text(text);
-    });
+    styledFactory.connect("bind", (_, li) =>
+      this.buildListItem(li, getAttributes)
+    );
 
     const plainFactory = Gtk.SignalListItemFactory.new();
     plainFactory.connect("setup", (_, li) => {
@@ -58,8 +54,29 @@ export default class DropDown<
     this.connect("notify::selected", () => {
       const selected = this.get_selected_item() as Gtk.StringObject;
       if (!selected) return;
-      const option = selected.get_string() as keyof T;
+      const option = selected.get_string() as T;
       onChanged(option);
     });
+    if (defaultItem) {
+      this.set_selected(
+        listModel.findIndex(this.model, defaultItem.toString())
+      );
+    }
+  }
+
+  private buildListItem(
+    li: GObject.Object,
+    getAttributes: (option: T) => Pango.AttrList
+  ): void {
+    const listItem = li as Gtk.ListItem;
+    const label = listItem.get_child() as Gtk.Label;
+    const item = listItem.get_item() as Gtk.StringObject;
+    const text = item.get_string();
+
+    const option = text as T;
+    const attrs = getAttributes(option);
+
+    label.set_attributes(attrs);
+    label.set_text(text);
   }
 }

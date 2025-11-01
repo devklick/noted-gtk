@@ -34,7 +34,7 @@ const TextSizesByTagName = Object.entries(TextSizes).reduce(
     [K in keyof typeof TextSizes as (typeof TextSizes)[K]]: K;
   }
 );
-type TextSizeTagName = (typeof TextSizes)[keyof typeof TextSizes];
+export type TextSizeTagName = (typeof TextSizes)[keyof typeof TextSizes];
 
 type TextDecorationTagName =
   (typeof TextDecorations)[keyof typeof TextDecorations];
@@ -60,7 +60,8 @@ interface StylePresetConfig {
   italic: boolean;
   underline: boolean;
 }
-export const StylePresets = {
+export const StylePresets = Object.freeze({
+  custom: undefined,
   normal: {
     size: 11,
     bold: false,
@@ -91,7 +92,9 @@ export const StylePresets = {
     italic: true,
     underline: false,
   },
-} as const satisfies Record<string, StylePresetConfig>;
+} as const satisfies Record<string, StylePresetConfig | undefined>);
+
+export type StylePresetName = keyof typeof StylePresets | "custom";
 
 interface StyleManagerParams {
   buffer: Gtk.TextBuffer;
@@ -119,31 +122,33 @@ export default class StyleManager {
   private _enabled: boolean = true;
 
   public get currentStylePreset(): [
-    keyof typeof StylePresets,
-    StylePresetConfig
+    StylePresetName,
+    StylePresetConfig | undefined
   ] {
-    console.log("currentStylePreset", [
-      ...this.currentDecorations.keys(),
-      this.currentSize,
-    ]);
-    for (const [presetName, presetConfig] of Object.entries(StylePresets)) {
-      for (const [configName, configValue] of Object.entries(presetConfig)) {
-        if (
-          isTextDecorationTagName(configName) &&
-          this.currentDecorations.has(configName) !== configValue
-        ) {
-          break;
+    const matchesCurrentState = (
+      config: StylePresetConfig | undefined
+    ): boolean => {
+      if (!config) return false;
+      for (const [name, value] of Object.entries(config)) {
+        if (isTextDecorationTagName(name)) {
+          const shouldHave = Boolean(value);
+          const hasDecoration = this.currentDecorations.has(name);
+          if (shouldHave !== hasDecoration) return false;
         } else if (
-          configName === "size" &&
-          TextSizes[configValue as keyof typeof TextSizes] !== this.currentSize
+          name === "size" &&
+          TextSizes[value as keyof typeof TextSizes] !== this.currentSize
         ) {
-          break;
+          return false;
         }
       }
-      return [presetName as keyof typeof StylePresets, presetConfig];
-    }
+      return true;
+    };
 
-    return ["normal", StylePresets.normal];
+    const entry = Object.entries(StylePresets).find(([, config]) =>
+      matchesCurrentState(config)
+    ) as [keyof typeof StylePresets, StylePresetConfig] | undefined;
+
+    return entry ? [...entry] : ["custom", undefined];
   }
 
   constructor({ buffer, actionMap }: StyleManagerParams) {
@@ -296,13 +301,10 @@ export default class StyleManager {
     }
 
     this.currentSize = TextSizes[size];
-    console.log("setStylePreset", [
-      ...this.currentDecorations.keys(),
-      this.currentSize,
-    ]);
   }
 
-  public setStylePreset(preset: keyof typeof StylePresets) {
+  public setStylePreset(preset: StylePresetName) {
+    if (preset === "custom") return;
     const [hasSelection, start, end] = this.buffer.get_selection_bounds();
     if (hasSelection) {
       this.replaceSelectionStylesWithPreset(start, end, preset);
@@ -316,10 +318,6 @@ export default class StyleManager {
     if (italic) this.currentDecorations.add("italic");
     if (underline) this.currentDecorations.add("underline");
     this.currentSize = TextSizes[size];
-    console.log("setStylePreset", [
-      ...this.currentDecorations.keys(),
-      this.currentSize,
-    ]);
   }
 
   private handleBufferInsert(start: Gtk.TextIter, length: number) {
@@ -351,6 +349,7 @@ export default class StyleManager {
     end: Gtk.TextIter,
     preset: keyof typeof StylePresets
   ) {
+    if (!StylePresets[preset]) return;
     const { bold, italic, size, underline } = StylePresets[preset];
 
     // Since we're replacing styles at the current selection, we need to
@@ -373,10 +372,6 @@ export default class StyleManager {
     if (italic) this.currentDecorations.add("italic");
     if (underline) this.currentDecorations.add("underline");
     this.currentSize = TextSizes[size];
-    console.log("replaceSelectionStylesWithPreset", [
-      ...this.currentDecorations.keys(),
-      this.currentSize,
-    ]);
 
     // Apply the font tag for the preset
     const tag = this.styleTags[`size-${size}`];
@@ -408,11 +403,6 @@ export default class StyleManager {
     // if (italic) this.currentDecorations.add("italic");
     // if (underline) this.currentDecorations.add("underline");
     this.currentSize = TextSizes[size];
-
-    console.log("replaceSelectionStylesWithPreset", [
-      ...this.currentDecorations.keys(),
-      this.currentSize,
-    ]);
 
     // Apply the font tag for the preset
     const tag = this.styleTags[`size-${size}`];

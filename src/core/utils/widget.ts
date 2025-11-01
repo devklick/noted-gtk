@@ -1,4 +1,5 @@
 import Adw from "@girs/adw-1";
+import Gio from "@girs/gio-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Pango from "@girs/pango-1.0";
 
@@ -351,10 +352,23 @@ function createButton(params: ButtonParams = {}): Gtk.Button {
 export const button = { new: createButton };
 //#endregion
 
+//#region ======================= Button =======================
+function findListItemIndex(model: Gio.ListModel, label: string): number {
+  for (let i = 0; i < model.get_n_items(); i++) {
+    if ((model.get_item(i) as Gtk.StringObject)?.get_string() === label)
+      return i;
+  }
+  return -1;
+}
+
+export const listModel = { findIndex: findListItemIndex };
+//#endregion
+
 export default {
   box,
   label,
   toolbarView,
   header,
   button,
+  listModel,
 };
