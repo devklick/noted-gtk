@@ -56,6 +56,10 @@
             <default>&quot;&lt;Control&gt;u&quot;</default>
             <summary>Enable/disable underline text</summary>
         </key>
+        <key name="editor-shoctut-toggle-mono-text" type="s">
+            <default>&quot;&lt;Control&gt;&lt;Shift&gt;m&quot;</default>
+            <summary>Enable/disable monospace text</summary>
+        </key>
         <key name="editor-shoctut-text-size-h1" type="s">
             <default>&quot;&lt;Control&gt;1&quot;</default>
             <summary>Set text size to header (1)</summary>

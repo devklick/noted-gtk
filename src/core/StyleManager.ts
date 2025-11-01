@@ -1,10 +1,8 @@
 import Gtk from "@girs/gtk-4.0";
 import Gio from "@girs/gio-2.0";
-import Gdk from "@girs/gdk-4.0";
 import Pango from "@girs/pango-1.0";
 import GLib from "@girs/glib-2.0";
 
-import { AppShortcuts } from "./ShortcutManager";
 import action from "./utils/action";
 import str from "./utils/str";
 import obj from "./utils/obj";
@@ -13,9 +11,10 @@ export const TextDecorations = {
   bold: "bold",
   italic: "italic",
   underline: "underline",
+  mono: "mono",
 } as const;
 
-export const TextSizes = {
+export const TextSizes = obj.freezeDeep({
   [10]: `size-10`,
   [11]: `size-11`,
   [12]: `size-12`,
@@ -26,7 +25,7 @@ export const TextSizes = {
   [22]: `size-22`,
   [26]: `size-26`,
   [32]: `size-32`,
-} as const;
+} as const);
 
 const TextSizesByTagName = Object.entries(TextSizes).reduce(
   (acc, [textSize, tagName]) => ({ ...acc, [tagName]: Number(textSize) }),
@@ -59,6 +58,7 @@ interface StylePresetConfig {
   bold: boolean;
   italic: boolean;
   underline: boolean;
+  mono: boolean;
 }
 export const StylePresets = obj.freezeDeep({
   custom: undefined,
@@ -67,30 +67,42 @@ export const StylePresets = obj.freezeDeep({
     bold: false,
     italic: false,
     underline: false,
+    mono: false,
+  },
+  code: {
+    size: 11,
+    bold: false,
+    italic: false,
+    underline: false,
+    mono: true,
   },
   h1: {
     size: 26,
     bold: true,
     italic: false,
     underline: false,
+    mono: false,
   },
   h2: {
     size: 22,
     bold: true,
     italic: false,
     underline: false,
+    mono: false,
   },
   h3: {
     size: 18,
     bold: true,
     italic: false,
     underline: false,
+    mono: false,
   },
   h4: {
     size: 14,
     bold: true,
     italic: true,
     underline: false,
+    mono: false,
   },
 } as const satisfies Record<string, StylePresetConfig | undefined>);
 
@@ -99,15 +111,19 @@ export type StylePresetName = keyof typeof StylePresets | "custom";
 interface StyleManagerParams {
   buffer: Gtk.TextBuffer;
   actionMap: Gio.ActionMap;
+  styleContext: Gtk.StyleContext;
 }
 
+const Actions = obj.freezeDeep({
+  BoldChanged: "bold-changed",
+  ItalicChanged: "italic-changed",
+  UnderlineChanged: "underline-changed",
+  MonoChanged: "mono-changed",
+  SizeChanged: "size-changed",
+} as const);
+
 export default class StyleManager {
-  static Actions = {
-    BoldChanged: "bold-changed",
-    ItalicChanged: "italic-changed",
-    UnderlineChanged: "underline-changed",
-    SizeChanged: "size-changed",
-  } as const;
+  static Actions = Actions;
 
   static TextSizes = TextSizes;
   static StylePresets = StylePresets;
@@ -120,6 +136,25 @@ export default class StyleManager {
   private readonly currentDecorations: Set<TextDecorationTagName> = new Set([]);
   private currentSize: TextSizeTagName = TextSizes[StylePresets.normal.size];
   private _enabled: boolean = true;
+  private styleContext: Gtk.StyleContext;
+
+  constructor({ buffer, actionMap, styleContext }: StyleManagerParams) {
+    this.buffer = buffer;
+    this.actionMap = actionMap;
+    this.styleContext = styleContext;
+
+    this.styleTags = this.buildStyleTags();
+
+    this.buffer.connect("insert-text", (_buffer, start, _text, length) => {
+      this._enabled && this.handleBufferInsert(start, length);
+    });
+
+    this.buffer.connect("mark-set", (_, iter, mark) => {
+      this._enabled && this.handleMarkSet(mark, iter);
+    });
+
+    this.registerActions();
+  }
 
   public get currentStylePreset(): [
     StylePresetName,
@@ -149,23 +184,6 @@ export default class StyleManager {
     ) as [keyof typeof StylePresets, StylePresetConfig] | undefined;
 
     return entry ? [...entry] : ["custom", undefined];
-  }
-
-  constructor({ buffer, actionMap }: StyleManagerParams) {
-    this.buffer = buffer;
-    this.actionMap = actionMap;
-
-    this.styleTags = this.buildStyleTags();
-
-    this.buffer.connect("insert-text", (_buffer, start, _text, length) => {
-      this._enabled && this.handleBufferInsert(start, length);
-    });
-
-    this.buffer.connect("mark-set", (_, iter, mark) => {
-      this._enabled && this.handleMarkSet(mark, iter);
-    });
-
-    this.registerActions();
   }
 
   public reset() {
@@ -212,6 +230,14 @@ export default class StyleManager {
         name: TextDecorations.underline,
         underline: Pango.Underline.SINGLE,
       }),
+      mono: new Gtk.TextTag({
+        name: TextDecorations.mono,
+        family: "monospace",
+        background: this.styleContext
+          .lookup_color("theme_unfocused_bg_color")?.[1]
+          .to_string(),
+        letterSpacing: Pango.units_from_double(1.5),
+      }),
       "size-10": new Gtk.TextTag({ name: TextSizes[10], sizePoints: 10 }),
       "size-11": new Gtk.TextTag({ name: TextSizes[11], sizePoints: 11 }),
       "size-12": new Gtk.TextTag({ name: TextSizes[12], sizePoints: 12 }),
@@ -247,12 +273,12 @@ export default class StyleManager {
       if (isTextSizeTagName(tag.name)) {
         const size = TextSizesByTagName[tag.name];
         this.currentSize = tag.name;
-        action.invoke(this.actionMap, StyleManager.Actions.SizeChanged, size);
+        action.invoke(this.actionMap, Actions.SizeChanged, size);
       } else if (isTextDecorationTagName(tag.name)) {
         this.currentDecorations.add(tag.name);
         action.invoke(
           this.actionMap,
-          StyleManager.Actions[`${str.pascal(tag.name)}Changed`],
+          Actions[`${str.pascal(tag.name)}Changed`],
           true
         );
       }
@@ -264,7 +290,7 @@ export default class StyleManager {
       if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
-      const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];
+      const actionName = Actions[`${str.pascal(key)}Changed`];
       action.invoke(this.actionMap, actionName, false);
     }
   }
@@ -288,7 +314,7 @@ export default class StyleManager {
     // Removing it has not caused any obvious issues, but leaving it for later reference
     // action.invoke(
     //   this.actionMap,
-    //   StyleManager.Actions[`${str.pascal(tagName)}Changed`],
+    //   Actions[`${str.pascal(tagName)}Changed`],
     //   enabled
     // );
   }
@@ -311,12 +337,13 @@ export default class StyleManager {
       return;
     }
 
-    const { bold, italic, size, underline } = StylePresets[preset];
+    const { bold, italic, size, underline, mono } = StylePresets[preset];
 
     this.currentDecorations.clear();
     if (bold) this.currentDecorations.add("bold");
     if (italic) this.currentDecorations.add("italic");
     if (underline) this.currentDecorations.add("underline");
+    if (mono) this.currentDecorations.add("mono");
     this.currentSize = TextSizes[size];
   }
 
@@ -350,7 +377,9 @@ export default class StyleManager {
     preset: keyof typeof StylePresets
   ) {
     if (!StylePresets[preset]) return;
-    const { bold, italic, size, underline } = StylePresets[preset];
+    const { bold, italic, size, underline, mono } = StylePresets[preset];
+
+    this.currentDecorations.clear();
 
     // Since we're replacing styles at the current selection, we need to
     // remove all existing style tags first
@@ -363,14 +392,23 @@ export default class StyleManager {
       const tag = this.styleTags[tagName];
       this.buffer.apply_tag(tag, start, end);
     };
-    bold && applyDecoration("bold");
-    italic && applyDecoration("italic");
-    underline && applyDecoration("underline");
+    if (bold) {
+      applyDecoration("bold");
+      this.currentDecorations.add("bold");
+    }
+    if (italic) {
+      applyDecoration("italic");
+      this.currentDecorations.add("italic");
+    }
+    if (underline) {
+      applyDecoration("underline");
+      this.currentDecorations.add("underline");
+    }
+    if (mono) {
+      applyDecoration("mono");
+      this.currentDecorations.add("mono");
+    }
 
-    this.currentDecorations.clear();
-    if (bold) this.currentDecorations.add("bold");
-    if (italic) this.currentDecorations.add("italic");
-    if (underline) this.currentDecorations.add("underline");
     this.currentSize = TextSizes[size];
 
     // Apply the font tag for the preset
@@ -429,8 +467,7 @@ export default class StyleManager {
       if (
         this.isTagFullyAppliedAtSelection(this.styleTags[tagName], start, end)
       ) {
-        const actionName =
-          StyleManager.Actions[`${str.pascal(tagName)}Changed`];
+        const actionName = Actions[`${str.pascal(tagName)}Changed`];
         action.invoke(this.actionMap, actionName, true);
         this.currentDecorations.add(tagName);
       }
@@ -442,7 +479,7 @@ export default class StyleManager {
       if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
-      const actionName = StyleManager.Actions[`${str.pascal(key)}Changed`];
+      const actionName = Actions[`${str.pascal(key)}Changed`];
       action.invoke(this.actionMap, actionName, false);
     }
   }
@@ -469,13 +506,10 @@ export default class StyleManager {
   }
 
   private registerActions() {
-    action.create(this.actionMap, StyleManager.Actions.SizeChanged, "int");
-    action.create(this.actionMap, StyleManager.Actions.BoldChanged, "bool");
-    action.create(this.actionMap, StyleManager.Actions.ItalicChanged, "bool");
-    action.create(
-      this.actionMap,
-      StyleManager.Actions.UnderlineChanged,
-      "bool"
-    );
+    action.create(this.actionMap, Actions.SizeChanged, "int");
+    action.create(this.actionMap, Actions.BoldChanged, "bool");
+    action.create(this.actionMap, Actions.ItalicChanged, "bool");
+    action.create(this.actionMap, Actions.UnderlineChanged, "bool");
+    action.create(this.actionMap, Actions.MonoChanged, "bool");
   }
 }

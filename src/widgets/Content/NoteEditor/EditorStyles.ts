@@ -45,7 +45,9 @@ export default class EditorStyles extends Gtk.Box {
   private italicButton: Gtk.ToggleButton;
   private italicToggledHandlerId?: number;
   private underlineButton: Gtk.ToggleButton;
+  private monoButton: Gtk.ToggleButton;
   private underlineToggledHandlerId?: number;
+  private monoToggledHandlerId?: number;
   private keyController: Gtk.EventControllerKey;
   private readonly shortcuts: AppShortcuts;
 
@@ -80,6 +82,10 @@ export default class EditorStyles extends Gtk.Box {
     this.boldButton = toggler("<b>B</b>", "Bold");
     this.italicButton = toggler("<i>I</i>", "Italic");
     this.underlineButton = toggler("<u>U</u>", "Underline");
+    this.monoButton = toggler(
+      '<span font_family="Monospace" font_size="12000">Code</span>',
+      "Monospace / code"
+    );
 
     this.fontSizePicker = new FontSizePicker({
       onChanged: (size) => this.styleManager.setSize(size),
@@ -99,6 +105,7 @@ export default class EditorStyles extends Gtk.Box {
         this.boldButton,
         this.italicButton,
         this.underlineButton,
+        this.monoButton,
         this.fontSizePicker,
         this.stylePresetPicker,
       ],
@@ -227,6 +234,25 @@ export default class EditorStyles extends Gtk.Box {
       }
     );
 
+    action.handle(
+      this.actionMap,
+      StyleManager.Actions.MonoChanged,
+      "bool",
+      (active) => {
+        this.silentlyUpdateToggle(
+          this.monoButton,
+          this.monoToggledHandlerId,
+          active
+        );
+        this.stylePresetPicker.set_selected(
+          listModel.findIndex(
+            this.stylePresetPicker.model,
+            this.styleManager.currentStylePreset[0]
+          )
+        );
+      }
+    );
+
     this.boldToggledHandlerId = this.boldButton.connect("toggled", () =>
       this.styleManager.toggleDecoration("bold", this.boldButton.active)
     );
@@ -240,6 +266,9 @@ export default class EditorStyles extends Gtk.Box {
           "underline",
           this.underlineButton.active
         )
+    );
+    this.monoToggledHandlerId = this.monoButton.connect("toggled", () =>
+      this.styleManager.toggleDecoration("mono", this.monoButton.active)
     );
   }
 
@@ -255,6 +284,9 @@ export default class EditorStyles extends Gtk.Box {
           return Gdk.EVENT_STOP;
         case "editor-shoctut-toggle-underline-text":
           this.toggleButton(this.underlineButton);
+          return Gdk.EVENT_STOP;
+        case "editor-shoctut-toggle-mono-text":
+          this.toggleButton(this.monoButton);
           return Gdk.EVENT_STOP;
         case "editor-shoctut-text-size-normal":
           this.styleManager.setStylePreset("normal");

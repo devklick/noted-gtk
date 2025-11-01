@@ -104,6 +104,17 @@ const Shortcuts = {
     group: ShortcutGroups.Editor,
     default: Gtk.accelerator_name(Gdk.KEY_u, Gdk.ModifierType.CONTROL_MASK),
   },
+  ToggleMonoText: {
+    type: "editor-shoctut-toggle-mono-text",
+    description: "Toggle monospace text in the note editor",
+    label: "Toggle Mono",
+    caseSensitive: false,
+    group: ShortcutGroups.Editor,
+    default: Gtk.accelerator_name(
+      Gdk.KEY_m,
+      Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+    ),
+  },
   SetTextSizeH1: {
     type: "editor-shoctut-text-size-h1",
     description: "Set text size to header (1) in the note editor",
