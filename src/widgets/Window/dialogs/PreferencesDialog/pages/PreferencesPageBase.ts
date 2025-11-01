@@ -79,6 +79,9 @@ export default class PreferencesPageBase extends Adw.PreferencesPage {
     current: string,
     onChanged: (app: Gio.AppInfo) => void
   ) {
+    // TODO: Not a fan of this approach, but it's fine for now.
+    // Build a custom app choser button which launches a custom app choser dialog
+    // See notes onAppChooserDialog.
     const row = new Adw.ActionRow({
       title,
       subtitle: description,

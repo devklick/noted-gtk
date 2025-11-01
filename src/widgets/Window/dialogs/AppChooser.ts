@@ -29,6 +29,8 @@ interface AppChooserDialogParams {
 /**
  * @deprecated in Gtk 4.10 as per docs.
  * https://docs.gtk.org/gtk4/class.AppChooserDialog.html
+ * 
+ * @todo Build a custom app choser dialog
  */
 export default class AppChooserDialog extends Gtk.AppChooserDialog {
   static {
