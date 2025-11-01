@@ -6,7 +6,7 @@ import {
   BoolPreferenceKey,
 } from "../../../../../core/PreferencesManager";
 import Gio from "@girs/gio-2.0";
-import { listModel } from "../../../../../core/utils/widget";
+import widget, { listModel } from "../../../../../core/utils/widget";
 
 interface PreferencesPageBaseParams {
   title: string;
@@ -107,7 +107,10 @@ export default class PreferencesPageBase extends Adw.PreferencesPage {
       (listItem.child as Gtk.Label).set_text(app.get_display_name());
     });
 
-    const picker = new Gtk.DropDown({ model: store, factory });
+    const picker = new Gtk.DropDown({
+      model: store,
+      factory,
+    });
 
     picker.connect("notify::selected", () => {
       const app = picker.get_selected_item() as Gio.AppInfo;
@@ -118,7 +121,13 @@ export default class PreferencesPageBase extends Adw.PreferencesPage {
       picker.set_selected(currentIndex);
     }
 
-    row.add_suffix(picker);
+    const suffix = widget.box.h({
+      vexpand: false,
+      vAlign: "CENTER",
+      children: [picker],
+    });
+    row.add_suffix(suffix);
+    
     return [row, picker] as const;
   }
 
