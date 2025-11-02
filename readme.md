@@ -1,11 +1,19 @@
-# Noted
+<h1 align="center">
+    Noted
+</h1>
 
-Basic notes application written in [GJS](https://gjs.guide/) (GNOME JavaScript), utilising a [Gtk](https://www.gtk.org/) 
-user interface styled with [libadwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.3/index.html).
+<p align="center">
+    Basic notes application written in [GJS](https://gjs.guide/)(GNOME JavaScript),
+    <br>
+    utilising a [Gtk](https://www.gtk.org/) user interface styled with 
+    [libadwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.3/index.html).
+</p>
 
-![snapshot](./doc/images/Screenshot%20from%202025-11-01%2023-43-25.png)
+<p align='center'>
+<img src='./doc/images/Screenshot from 2025-11-01 23-43-25.png'>
+<br/>
 <sup>Using [WhiteSure Nord theme](https://github.com/vinceliuice/WhiteSur-gtk-theme) in this screenshot</sup>
-
+</p>
 
 ## Features
 
