@@ -18,9 +18,9 @@
 ## Features
 
 - Totally offline - notes only saved to local file system
-- Pre-defined not categories (Favourite, Locked, Hidden)
+- Pre-defined note categories (Favourite, Locked, Hidden)
 - Toggleable styles (bold, italic, underline, monospace, font size)
-- Style presets
+- Style presets (Headers 1-4, normal)
 - Customisable keyboard shortcuts
 
 ## To do
