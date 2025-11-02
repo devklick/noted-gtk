@@ -3,16 +3,16 @@
 </h1>
 
 <p align="center">
-    Basic notes application written in [GJS](https://gjs.guide/)(GNOME JavaScript),
+    Basic notes application written in <a href='https://gjs.guide/'>GJS</a> (GNOME JavaScript),
     <br>
-    utilising a [Gtk](https://www.gtk.org/) user interface styled with 
-    [libadwaita](https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.3/index.html).
+    utilising a <a href='https://www.gtk.org/'>Gtk</a> user interface styled with 
+    <a href='https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.3/index.html'>libadwaita</a>.
 </p>
 
 <p align='center'>
 <img src='./doc/images/Screenshot from 2025-11-01 23-43-25.png'>
 <br/>
-<sup>Using [WhiteSure Nord theme](https://github.com/vinceliuice/WhiteSur-gtk-theme) in this screenshot</sup>
+<sup>Using <a href='https://github.com/vinceliuice/WhiteSur-gtk-theme'>WhiteSure Nord theme</a> in this screenshot</sup>
 </p>
 
 ## Features
