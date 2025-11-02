@@ -14,8 +14,8 @@ import NoteListItem from "../SideBar/NoteList/NoteListItem";
 import action from "../../core/utils/action";
 import NotesDir from "../../core/fs/NotesDir";
 import { AppShortcuts } from "../../core/ShortcutManager";
-import SideBarHeader from "../SideBar/SideBarHeader";
 import { AppPrefs } from "../../core/PreferencesManager";
+import SideBarHeader from "../SideBar/SideBarHeader";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;

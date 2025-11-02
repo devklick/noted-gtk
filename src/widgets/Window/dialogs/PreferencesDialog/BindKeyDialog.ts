@@ -1,6 +1,7 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
+
 import widget from "../../../../core/utils/widget";
 import {
   AppShortcuts,

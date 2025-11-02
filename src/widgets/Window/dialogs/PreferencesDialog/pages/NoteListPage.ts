@@ -1,9 +1,10 @@
 import Adw from "@girs/adw-1";
 import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
+
+import PreferencesPageBase from "./PreferencesPageBase";
 import { AppPrefs } from "../../../../../core/PreferencesManager";
 import icon from "../../../../../core/utils/icon";
-import PreferencesPageBase from "./PreferencesPageBase";
 
 interface NoteListPageParams {
   prefs: AppPrefs;

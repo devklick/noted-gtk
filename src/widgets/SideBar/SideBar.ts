@@ -7,7 +7,6 @@ import NoteList from "./NoteList";
 import NotesDir from "../../core/fs/NotesDir";
 
 import widget from "../../core/utils/widget";
-import action from "../../core/utils/action";
 import SideBarContent from "./SideBarContent/SideBarContent";
 import { AppPrefs } from "../../core/PreferencesManager";
 

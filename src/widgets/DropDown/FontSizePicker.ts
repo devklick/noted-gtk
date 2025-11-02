@@ -1,5 +1,6 @@
 import GObject from "@girs/gobject-2.0";
 import Pango from "@girs/pango-1.0";
+
 import StyleManager from "../../core/StyleManager";
 import DropDown from "./DropDown";
 import obj from "../../core/utils/obj";

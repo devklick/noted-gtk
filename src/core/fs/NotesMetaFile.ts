@@ -45,6 +45,10 @@ export default class NotesMetaFile {
     this.ensureExists();
   }
 
+  public get uri(): string {
+    return this.gioFile.get_uri();
+  }
+
   public addNote(id: string, name: string, path: string) {
     const data = this.getNotesMetadata();
     data[id] = { name, path, locked: false, starred: false, hidden: false };

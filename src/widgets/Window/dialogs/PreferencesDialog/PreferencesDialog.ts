@@ -3,8 +3,8 @@ import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
 
 import { AppShortcuts } from "../../../../core/ShortcutManager";
-import pages from "./pages";
 import { AppPrefs } from "../../../../core/PreferencesManager";
+import pages from "./pages";
 
 interface PreferencesDialogParams {
   parent: Gtk.Window;
@@ -31,7 +31,6 @@ export default class PreferencesDialog extends Adw.PreferencesDialog {
 
     this.add(new pages.KeyBindingsPage({ parent, prefs, shortcuts }));
     this.add(new pages.NoteListPage({ parent, prefs }));
-    this.add(new pages.DefaultAppsPage({ parent, prefs }));
 
     if (autoPresent) {
       this.present(parent);

@@ -3,7 +3,6 @@ import GObject from "@girs/gobject-2.0";
 import Gtk from "@girs/gtk-4.0";
 import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
-import { DeepReadonly } from "../../core/utils/mutability";
 
 export type ContextMenuActions = Array<{
   label: string;
