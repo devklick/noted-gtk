@@ -1,0 +1,31 @@
+name: Build Flatpak
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Flatpak and dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y flatpak flatpak-builder meson ninja-build python3-gi gir1.2-gtk-4.0
+
+      - name: Build Flatpak
+        run: |
+          flatpak-builder --force-clean build-dir io.github.devklick.noted.flatpak.yml
+
+      - name: Export Flatpak Bundle
+        run: |
+          flatpak build-bundle build-dir noted.flatpak io.github.devklick.noted
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: noted-flatpak
+          path: noted.flatpak
