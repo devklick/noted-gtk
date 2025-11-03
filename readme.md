@@ -23,6 +23,18 @@
 - Style presets (Headers 1-4, normal)
 - Customisable keyboard shortcuts
 
+## Installation
+
+You can download the flatpak file from the [latest release page](https://github.com/devklick/noted-gtk/releases/latest). 
+To install, first make sure you have the flatpak relevant runtime installed:
+```
+flatpak install --user flathub org.gnome.Platform//47
+```
+Then you can installed Noted via the flatpak file you downloaded:
+```
+flatpak install --user ./io.github.devklick.noted.flatpak
+```
+
 ## Issues and Workarounds
 
 ### Open Notes Meta File

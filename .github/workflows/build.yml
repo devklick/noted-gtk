@@ -35,16 +35,16 @@ jobs:
 
       - name: Export Flatpak Bundle
         run: |
-          flatpak build-bundle repo noted.flatpak io.github.devklick.noted
+          flatpak build-bundle repo io.github.devklick.noted.flatpak io.github.devklick.noted
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: noted-flatpak
-          path: noted.flatpak
+          name: io.github.devklick.noted.flatpak
+          path: io.github.devklick.noted.flatpak
 
       - name: Release
         uses: softprops/action-gh-release@v2
         if: github.ref_type == 'tag'
         with:
-          files: noted.flatpak
+          files: io.github.devklick.noted.flatpak
