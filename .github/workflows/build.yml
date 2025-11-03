@@ -30,11 +30,11 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean --user --install-deps-from=flathub build-dir io.github.devklick.noted.flatpak.yml
+          flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo build-dir io.github.devklick.noted.flatpak.yml
 
       - name: Export Flatpak Bundle
         run: |
-          flatpak build-bundle build-dir noted.flatpak io.github.devklick.noted
+          flatpak build-bundle repo noted.flatpak io.github.devklick.noted
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
