@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Flatpak and dependencies
         run: |
@@ -25,7 +25,7 @@ jobs:
           flatpak build-bundle build-dir noted.flatpak io.github.devklick.noted
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: noted-flatpak
           path: noted.flatpak
