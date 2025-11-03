@@ -2,10 +2,8 @@ name: Build Flatpak
 
 on:
   push:
-    branches:
-      - "*"
-    # tags:
-    #   - "v*"
+    tags:
+      - "v*"
 
 jobs:
   build:
