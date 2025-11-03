@@ -35,7 +35,7 @@ jobs:
 
       - name: Export Flatpak Bundle
         run: |
-          flatpak build-bundle --runtime build-dir noted.flatpak io.github.devklick.noted
+          flatpak build-bundle --runtime repo noted.flatpak io.github.devklick.noted
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
