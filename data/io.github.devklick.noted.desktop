@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Noted
+Comment=Simple note-taking app
+Exec=io.github.devklick.noted
+Icon=io.github.devklick.noted.svg
+Terminal=false
+Categories=Utility;GNOME;GTK;
+StartupNotify=true

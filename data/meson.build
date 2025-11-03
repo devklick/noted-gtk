@@ -12,4 +12,14 @@ install_data(
     install_dir: get_option('datadir') / 'glib-2.0/schemas',
 )
 
+install_data(
+  'io.github.devklick.noted.desktop',
+  install_dir: get_option('datadir') / 'applications',
+)
+
+install_data(
+  'io.github.devklick.noted.svg',
+  install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps',
+)
+
 gnome.compile_schemas()
