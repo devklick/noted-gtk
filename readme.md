@@ -23,6 +23,78 @@
 - Style presets (Headers 1-4, normal)
 - Customisable keyboard shortcuts
 
+## Issues and Workarounds
+
+### Open Notes Meta File
+
+There's an option in the Burger Meny > Open, called Notes Meta File, which opens 
+a JSON file that contains various metadata about each note in the Noted application. 
+Depending on the apps available on your system, it may try to open the file in an 
+application that struggles to display the contents, sor example, Firefox.
+
+One way to get around this is to manually tell gio which application to use when opening 
+files that use this mime type.
+
+List possible applications:
+```
+gio mime application/json
+```
+Example output:
+```
+Registered applications:
+	org.gnome.TextEditor.desktop
+	firefox_firefox.desktop
+	libreoffice-writer.desktop
+Recommended applications:
+	org.gnome.TextEditor.desktop
+	firefox_firefox.desktop
+```
+
+Set the application you want to use for this mime type:
+```
+gio mime application/json org.gnome.TextEditor.desktop
+```
+This means that the Notes Meta File will now be opened in the Gnome Text Editor.
+
+> [!NOTE]  
+> This change will affect all JSON files you try to open.
+> <br/>To revert this change, run:
+> ```
+> gio mime --reset application/json
+> ```
+
+### Open Notes Directory
+
+Similar to the Notes Meta File, there's an option to open the Notes Directory, 
+and it's possible that your system will try to open this in the wrong application. 
+
+If you want to change the application that opens, first list the possible apps:
+```
+gio mime inode/directory
+```
+Example output:
+```
+Registered applications:
+	org.gnome.Nautilus.desktop
+	org.gnome.baobab.desktop
+Recommended applications:
+	org.gnome.Nautilus.desktop
+	org.gnome.baobab.desktop
+```
+Set the application you want to use for this mime type:
+```
+gio mime inode/directory org.gnome.Nautilus.desktop
+```
+This means that the Notes Directory will now be opened in the Nautilus (Aka Files).
+
+> [!NOTE]  
+> This change will affect all Directory links you try to open.
+> <br/>To revert this change, run:
+> ```
+> gio mime --reset inode/directory
+> ```
+
+
 ## To do
 - Bundle with flatpak (notes to help me remember)
   - build with npm: `npm run build`
