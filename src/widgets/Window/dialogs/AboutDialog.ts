@@ -23,7 +23,7 @@ export default class AboutDialog extends Adw.Bin {
       copyright: "© 2022-2025 devklick",
       issueUrl: "https://github.com/devklick/noted-gtk/issues",
       licenseType: Gtk.License.MIT_X11,
-      applicationIcon: "emblem-documents", // TODO: Replace with custom icon
+      applicationIcon: "io.github.devklick.noted",
       transient_for: parent,
       resizable: false,
     });
