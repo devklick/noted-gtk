@@ -30,7 +30,7 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean --install-deps-from=flathub build-dir io.github.devklick.noted.flatpak.yml
+          flatpak-builder --force-clean --user --install-deps-from=flathub build-dir io.github.devklick.noted.flatpak.yml
 
       - name: Export Flatpak Bundle
         run: |
