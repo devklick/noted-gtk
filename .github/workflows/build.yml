@@ -26,7 +26,6 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y flatpak flatpak-builder meson ninja-build python3-gi gir1.2-gtk-4.0
-          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Build Flatpak
         run: |
