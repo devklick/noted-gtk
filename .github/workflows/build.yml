@@ -27,12 +27,10 @@ jobs:
           sudo apt update
           sudo apt install -y flatpak flatpak-builder meson ninja-build python3-gi gir1.2-gtk-4.0
           flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --noninteractive --user flathub org.gnome.Platform//47
-          flatpak install --noninteractive --user flathub org.gnome.Sdk//47
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean build-dir io.github.devklick.noted.flatpak.yml
+          flatpak-builder --force-clean --install-deps-from=flathub build-dir io.github.devklick.noted.flatpak.yml
 
       - name: Export Flatpak Bundle
         run: |
