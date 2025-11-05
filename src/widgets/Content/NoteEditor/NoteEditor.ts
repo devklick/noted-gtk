@@ -131,6 +131,10 @@ export default class NoteEditor extends Gtk.Box {
     this.unload();
     this._noteId = id;
 
+    // Disable undo to prevent being able to undo the load,
+    // which essentially deletes everything from the open note.
+    this._buffer.set_enable_undo(false);
+
     this._styleManager.tempDisable(() => {
       this._savedText = this._notesDir.loadNote(id);
       NoteSerializer.deserialize(this._savedText, this._buffer);
@@ -148,6 +152,7 @@ export default class NoteEditor extends Gtk.Box {
       return GLib.SOURCE_REMOVE;
     });
     this._styleManager.reset();
+    this._buffer.set_enable_undo(true);
   }
 
   public save() {
