@@ -119,7 +119,7 @@ export default class NoteEditor extends Gtk.Box {
       bottomMargin: 12,
       visible: false,
       buffer,
-      wrapMode: Gtk.WrapMode.WORD
+      wrapMode: Gtk.WrapMode.WORD,
     });
     textView.add_controller(textViewKeyController);
     return textView;
@@ -170,7 +170,6 @@ export default class NoteEditor extends Gtk.Box {
     this._noteId = null;
     this.bufferText = null;
     this._textView.visible = false;
-    this._editorStyles.collapse();
     this._editorStyles.visible = false;
 
     action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed, oldNoteId);
@@ -244,9 +243,12 @@ export default class NoteEditor extends Gtk.Box {
     }
   }
 
-  private handleNonShortcutKeyPressed(key: number, modifier: Gdk.ModifierType): boolean {
+  private handleNonShortcutKeyPressed(
+    key: number,
+    modifier: Gdk.ModifierType
+  ): boolean {
     if (key === Gdk.KEY_Return || key === Gdk.KEY_KP_Enter) {
-      this._styleManager.setStylePreset('normal');
+      this._styleManager.setStylePreset("normal");
       return Gdk.EVENT_PROPAGATE;
     }
     return Gdk.EVENT_PROPAGATE;
