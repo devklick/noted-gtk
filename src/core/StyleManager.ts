@@ -345,6 +345,12 @@ export default class StyleManager {
     if (underline) this.currentDecorations.add("underline");
     if (mono) this.currentDecorations.add("mono");
     this.currentSize = TextSizes[size];
+
+    this.invoke('BoldChanged', bold);
+    this.invoke('ItalicChanged', italic);
+    this.invoke('MonoChanged', mono), 
+    this.invoke('UnderlineChanged', underline);
+    this.invoke('SizeChanged', size);
   }
 
   private handleBufferInsert(start: Gtk.TextIter, length: number) {
