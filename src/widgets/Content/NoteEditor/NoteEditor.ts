@@ -7,7 +7,7 @@ import GLib from "@girs/glib-2.0";
 import NotesDir from "../../../core/fs/NotesDir";
 import EditorStyles from "./EditorStyles";
 import NoteListItem from "../../SideBar/NoteList/NoteListItem";
-import { AppShortcuts } from "../../../core/ShortcutManager";
+import { AppShortcuts, ShortcutType } from "../../../core/ShortcutManager";
 import StyleManager from "../../../core/StyleManager";
 import NoteSerializer from "../../../core/utils/NoteSerializer";
 import action from "../../../core/utils/action";
@@ -119,6 +119,7 @@ export default class NoteEditor extends Gtk.Box {
       bottomMargin: 12,
       visible: false,
       buffer,
+      wrapMode: Gtk.WrapMode.WORD
     });
     textView.add_controller(textViewKeyController);
     return textView;
@@ -210,29 +211,45 @@ export default class NoteEditor extends Gtk.Box {
 
     this._textViewKeyController.connect(
       "key-pressed",
-      (_, key, _keycode, modifier) => {
-        switch (this._shortcuts.check({ key, modifier })) {
-          case "delete-note":
-            action.invoke(
-              this._actionMap,
-              NoteListItem.Actions.PromptDelete,
-              this._noteId
-            );
-            return Gdk.EVENT_STOP;
-          case "save-note":
-            this.save();
-            return Gdk.EVENT_STOP;
-          case "rename-note":
-            action.invoke(
-              this._actionMap,
-              NoteListItem.Actions.PromptRenameCurrent
-            );
-            return Gdk.EVENT_STOP;
-          default:
-            return Gdk.EVENT_PROPAGATE;
-        }
-      }
+      (_, key, _keycode, modifier) => this.handleKeyPressd(key, modifier)
     );
+  }
+
+  private handleKeyPressd(key: number, modifier: Gdk.ModifierType) {
+    const shortcut = this._shortcuts.check({ key, modifier });
+    if (shortcut) return this.handleShortcut(shortcut);
+    return this.handleNonShortcutKeyPressed(key, modifier);
+  }
+
+  private handleShortcut(shortcut: ShortcutType): boolean {
+    switch (shortcut) {
+      case "delete-note":
+        action.invoke(
+          this._actionMap,
+          NoteListItem.Actions.PromptDelete,
+          this._noteId
+        );
+        return Gdk.EVENT_STOP;
+      case "save-note":
+        this.save();
+        return Gdk.EVENT_STOP;
+      case "rename-note":
+        action.invoke(
+          this._actionMap,
+          NoteListItem.Actions.PromptRenameCurrent
+        );
+        return Gdk.EVENT_STOP;
+      default:
+        return Gdk.EVENT_PROPAGATE;
+    }
+  }
+
+  private handleNonShortcutKeyPressed(key: number, modifier: Gdk.ModifierType): boolean {
+    if (key === Gdk.KEY_Return || key === Gdk.KEY_KP_Enter) {
+      this._styleManager.setStylePreset('normal');
+      return Gdk.EVENT_PROPAGATE;
+    }
+    return Gdk.EVENT_PROPAGATE;
   }
 
   private handleNotDeleted(id: string): void {
