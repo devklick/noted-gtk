@@ -2,94 +2,83 @@
 <schemalist>
     <schema id="io.github.devklick.noted.settings" path="/io/github/devklick/noted/">
         <key name="save-note" type="s">
-            <default>&quot;&lt;Control&gt;s&quot;</default>
             <summary>Save Note</summary>
+            <default>&quot;&lt;Control&gt;s&quot;</default>
         </key>
         <key name="delete-note" type="s">
-            <default>&quot;&lt;Shift&gt;Delete&quot;</default>
             <summary>Delete Note</summary>
+            <default>&quot;&lt;Shift&gt;Delete&quot;</default>
         </key>
         <key name="new-note" type="s">
-            <default>&quot;&lt;Control&gt;n&quot;</default>
             <summary>New Note</summary>
+            <default>&quot;&lt;Control&gt;n&quot;</default>
         </key>
         <key name="rename-note" type="s">
-            <default>&quot;F2&quot;</default>
             <summary>Rename Note</summary>
+            <default>&quot;F2&quot;</default>
         </key>
         <key name="toggle-sidebar" type="s">
-            <default>&quot;&lt;Control&gt;h&quot;</default>
             <summary>Rename Note</summary>
+            <default>&quot;&lt;Control&gt;h&quot;</default>
         </key>
         <key name="search-notes" type="s">
-            <default>&quot;&lt;Control&gt;&lt;Shift&gt;f&quot;</default>
             <summary>Search Note</summary>
+            <default>&quot;&lt;Control&gt;&lt;Shift&gt;f&quot;</default>
         </key>
         <key name="open-prefs" type="s">
-            <default>&quot;&lt;Control&gt;,&quot;</default>
             <summary>Open Preferences</summary>
+            <default>&quot;&lt;Control&gt;,&quot;</default>
         </key>
         <key name="auto-save" type="b">
-            <default>true</default>
             <summary>Autosave</summary>
+            <default>true</default>
         </key>
         <key name="enable-categories" type="b">
-            <default>true</default>
             <summary>Enable Categories</summary>
+            <default>true</default>
         </key>
         <key name="enable-category-decorations" type="b">
-            <default>true</default>
             <summary>Enable Category Decorations</summary>
+            <default>true</default>
         </key><!-- 
 
         Editor Shortcuts 
         -->
         <key name="editor-shoctut-toggle-bold-text" type="s">
-            <default>&quot;&lt;Control&gt;b&quot;</default>
             <summary>Enable/disable bold text</summary>
+            <default>&quot;&lt;Control&gt;b&quot;</default>
         </key>
         <key name="editor-shoctut-toggle-italic-text" type="s">
-            <default>&quot;&lt;Control&gt;i&quot;</default>
             <summary>Enable/disable italic text</summary>
+            <default>&quot;&lt;Control&gt;i&quot;</default>
         </key>
         <key name="editor-shoctut-toggle-underline-text" type="s">
-            <default>&quot;&lt;Control&gt;u&quot;</default>
             <summary>Enable/disable underline text</summary>
+            <default>&quot;&lt;Control&gt;u&quot;</default>
         </key>
         <key name="editor-shoctut-toggle-mono-text" type="s">
-            <default>&quot;&lt;Control&gt;&lt;Shift&gt;m&quot;</default>
             <summary>Enable/disable monospace text</summary>
+            <default>&quot;&lt;Control&gt;&lt;Shift&gt;m&quot;</default>
         </key>
         <key name="editor-shoctut-text-size-h1" type="s">
-            <default>&quot;&lt;Control&gt;1&quot;</default>
             <summary>Set text size to header (1)</summary>
+            <default>&quot;&lt;Control&gt;1&quot;</default>
         </key>
         <key name="editor-shoctut-text-size-h2" type="s">
-            <default>&quot;&lt;Control&gt;2&quot;</default>
             <summary>Set text size to header (2)</summary>
+            <default>&quot;&lt;Control&gt;2&quot;</default>
         </key>
         <key name="editor-shoctut-text-size-h3" type="s">
-            <default>&quot;&lt;Control&gt;3&quot;</default>
             <summary>Set text size to header (3)</summary>
+            <default>&quot;&lt;Control&gt;3&quot;</default>
         </key>
         <key name="editor-shoctut-text-size-h4" type="s">
-            <default>&quot;&lt;Control&gt;4&quot;</default>
             <summary>Set text size to header (4)</summary>
+            <default>&quot;&lt;Control&gt;4&quot;</default>
         </key>
         <key name="editor-shoctut-text-size-normal" type="s">
-            <default>&quot;&lt;Control&gt;0&quot;</default>
             <summary>Set text size to normal</summary>
-        </key><!-- 
-        
-        Default Applications
-        -->
-        <key name="default-app-notes-folder" type="s">
-            <default>&quot;org.gnome.Nautilus.desktop&quot;</default>
-            <summary>The application that will be used to open the Notes folder</summary>
-        </key>
-        <key name="default-app-notes-meta-file" type="s">
-            <default>&quot;org.gnome.TextEditor.desktop&quot;</default>
-            <summary>The application that will be used to open the Notes meta file</summary>
+            <default>&quot;&lt;Control&gt;0&quot;</default>
         </key>
     </schema>
 </schemalist>

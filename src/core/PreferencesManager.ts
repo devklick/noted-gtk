@@ -28,11 +28,10 @@ type ActualType<T extends TypeName>
   : never;
 
 const PreferenceKeys = {
+  // Implement logic around auto-save setting
   AutoSave: "auto-save",
   EnableCategories: "enable-categories",
   EnableCategoryDecorations: "enable-category-decorations",
-  DefaultAppNotesFolder: "default-app-notes-folder",
-  DefaultAppNotesMetaFile: "default-app-notes-meta-file",
 } as const;
 
 export type PreferenceKey =
@@ -59,16 +58,6 @@ const preferenceMetadata = {
     getter: "get_boolean",
     type: "boolean",
     setter: "set_boolean",
-  },
-  "default-app-notes-folder": {
-    getter: "get_string",
-    type: "string",
-    setter: "set_string",
-  },
-  "default-app-notes-meta-file": {
-    getter: "get_string",
-    type: "string",
-    setter: "set_string",
   },
 } as const satisfies Record<
   PreferenceKey,
