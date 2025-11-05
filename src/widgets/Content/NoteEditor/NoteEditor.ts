@@ -5,7 +5,7 @@ import Gdk from "@girs/gdk-4.0";
 import GLib from "@girs/glib-2.0";
 
 import NotesDir from "../../../core/fs/NotesDir";
-import EditorStyles from "./EditorStyles";
+import StylesToolbar from "./StylesToolbar";
 import NoteListItem from "../../SideBar/NoteList/NoteListItem";
 import { AppShortcuts, ShortcutType } from "../../../core/ShortcutManager";
 import StyleManager from "../../../core/StyleManager";
@@ -46,7 +46,7 @@ export default class NoteEditor extends Gtk.Box {
   private readonly _textViewKeyController: Gtk.EventControllerKey;
   private readonly _shortcuts: AppShortcuts;
   private readonly _styleManager: StyleManager;
-  private readonly _editorStyles: EditorStyles;
+  private readonly _stylesToolbar: StylesToolbar;
 
   private get bufferStart() {
     return this._buffer.get_start_iter();
@@ -88,7 +88,7 @@ export default class NoteEditor extends Gtk.Box {
       styleContext: this._textView.get_style_context(),
     });
 
-    this._editorStyles = new EditorStyles({
+    this._stylesToolbar = new StylesToolbar({
       styleManager: this._styleManager,
       visible: false,
       actionMap: this._actionMap,
@@ -96,7 +96,7 @@ export default class NoteEditor extends Gtk.Box {
       shortcuts,
     });
 
-    this.append(this._editorStyles);
+    this.append(this._stylesToolbar);
 
     this.append(
       new Gtk.ScrolledWindow({
@@ -131,15 +131,13 @@ export default class NoteEditor extends Gtk.Box {
     this.unload();
     this._noteId = id;
 
-    this._styleManager.reset();
-
     this._styleManager.tempDisable(() => {
       this._savedText = this._notesDir.loadNote(id);
       NoteSerializer.deserialize(this._savedText, this._buffer);
     });
 
     this._textView.visible = true;
-    this._editorStyles.visible = true;
+    this._stylesToolbar.visible = true;
     const locked = this._notesDir.metaFile.getNoteMetadata(id).locked;
     this.setEditorLocked(locked);
 
@@ -149,6 +147,7 @@ export default class NoteEditor extends Gtk.Box {
       this._textView.grab_focus();
       return GLib.SOURCE_REMOVE;
     });
+    this._styleManager.reset();
   }
 
   public save() {
@@ -170,7 +169,7 @@ export default class NoteEditor extends Gtk.Box {
     this._noteId = null;
     this.bufferText = null;
     this._textView.visible = false;
-    this._editorStyles.visible = false;
+    this._stylesToolbar.visible = false;
 
     action.invoke(this._actionMap, NoteEditor.Actions.EditorClosed, oldNoteId);
     action.invoke(this._actionMap, NoteEditor.Actions.EditorDirty, false);
@@ -286,5 +285,6 @@ export default class NoteEditor extends Gtk.Box {
     this._textView.editable = !locked;
     this._textView.set_cursor_from_name(locked ? "not-allowed" : "text");
     this._textView.set_cursor_visible(!locked); // this is actually the caret
+    this._stylesToolbar.setEnabled(!locked);
   }
 }

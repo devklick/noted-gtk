@@ -189,6 +189,11 @@ export default class StyleManager {
   public reset() {
     this.currentDecorations.clear();
     this.currentSize = TextSizes[StylePresets.normal.size];
+    this.invoke("BoldChanged", false);
+    this.invoke("ItalicChanged", false);
+    this.invoke("MonoChanged", false);
+    this.invoke("UnderlineChanged", false);
+    this.invoke("SizeChanged", StylePresets.normal.size);
   }
 
   public get enabled() {
@@ -273,14 +278,10 @@ export default class StyleManager {
       if (isTextSizeTagName(tag.name)) {
         const size = TextSizesByTagName[tag.name];
         this.currentSize = tag.name;
-        action.invoke(this.actionMap, Actions.SizeChanged, size);
+        this.invoke("SizeChanged", size);
       } else if (isTextDecorationTagName(tag.name)) {
         this.currentDecorations.add(tag.name);
-        action.invoke(
-          this.actionMap,
-          Actions[`${str.pascal(tag.name)}Changed`],
-          true
-        );
+        this.invoke(`${str.pascal(tag.name)}Changed`, true);
       }
     }
 
@@ -290,8 +291,7 @@ export default class StyleManager {
       if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
-      const actionName = Actions[`${str.pascal(key)}Changed`];
-      action.invoke(this.actionMap, actionName, false);
+      this.invoke(`${str.pascal(key)}Changed`, false);
     }
   }
 
@@ -467,8 +467,7 @@ export default class StyleManager {
       if (
         this.isTagFullyAppliedAtSelection(this.styleTags[tagName], start, end)
       ) {
-        const actionName = Actions[`${str.pascal(tagName)}Changed`];
-        action.invoke(this.actionMap, actionName, true);
+        this.invoke(`${str.pascal(tagName)}Changed`, true);
         this.currentDecorations.add(tagName);
       }
     }
@@ -479,8 +478,7 @@ export default class StyleManager {
       if (this.currentDecorations.has(key)) continue;
 
       // we know this style tag is not enabled, so fire action to tell the rest of the app
-      const actionName = Actions[`${str.pascal(key)}Changed`];
-      action.invoke(this.actionMap, actionName, false);
+      this.invoke(`${str.pascal(key)}Changed`, false);
     }
   }
 
@@ -511,5 +509,9 @@ export default class StyleManager {
     action.create(this.actionMap, Actions.ItalicChanged, "bool");
     action.create(this.actionMap, Actions.UnderlineChanged, "bool");
     action.create(this.actionMap, Actions.MonoChanged, "bool");
+  }
+
+  private invoke(actionName: keyof typeof Actions, param?: unknown) {
+    action.invoke(this.actionMap, Actions[actionName], param);
   }
 }

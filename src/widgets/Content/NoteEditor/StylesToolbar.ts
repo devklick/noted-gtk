@@ -11,7 +11,7 @@ import action from "../../../core/utils/action";
 import { AppShortcuts } from "../../../core/ShortcutManager";
 import { FontSizePicker, StylePresetPicker } from "../../DropDown";
 
-interface EditorStylesParams {
+interface StylesToolbarParams {
   styleManager: StyleManager;
   visible: boolean;
   actionMap: Gio.ActionMap;
@@ -27,9 +27,9 @@ interface EditorStylesParams {
  * When either scenarios occur, the EditorStyles widget is responsible for
  * informing the StleManager about the changes to the styles.
  */
-export default class EditorStyles extends Gtk.Box {
+export default class StylesToolbar extends Gtk.Box {
   static {
-    GObject.registerClass({ GTypeName: "EditorSyles" }, this);
+    GObject.registerClass({ GTypeName: "StylesToolbar" }, this);
   }
 
   private styleManager: StyleManager;
@@ -57,7 +57,7 @@ export default class EditorStyles extends Gtk.Box {
     actionMap,
     keyController,
     shortcuts,
-  }: EditorStylesParams) {
+  }: StylesToolbarParams) {
     super({
       orientation: Gtk.Orientation.HORIZONTAL,
       halign: Gtk.Align.FILL,
@@ -131,7 +131,16 @@ export default class EditorStyles extends Gtk.Box {
     this.listenForShortcuts();
   }
 
-  public expand() {
+  public setEnabled(enabled: boolean) {
+    for (const widget of this.content) {
+      // Collapse/espand toggler should always remain enabled
+      if (widget === this.dropDownClickerBox) continue;
+      // All other children can be updated
+      widget.set_sensitive(enabled);
+    }
+  }
+
+  private expand() {
     if (this.expanded) return;
     this.remove(this.dropDownClickerBox);
     this.content.append(this.dropDownClickerBox);
@@ -140,18 +149,13 @@ export default class EditorStyles extends Gtk.Box {
     this.expanded = true;
   }
 
-  public collapse() {
+  private collapse() {
     if (!this.expanded) return;
     this.content.remove(this.dropDownClickerBox);
     this.append(this.dropDownClickerBox);
     this.dropDownClicker.set_from_icon_name(icon.symbolic("pan-down"));
     this.content.visible = false;
     this.expanded = false;
-  }
-
-  public setExpanded(expanded: boolean) {
-    if (expanded) this.expand();
-    else this.collapse();
   }
 
   private toggleExpanded() {
