@@ -9,7 +9,7 @@ import { exit } from "@girs/gjs/system";
 import Window from "../Window";
 
 import styles from "../../styles.css?inline";
-import AppDir from "../../core/fs/AppDir";
+import AppDataDir from "../../core/fs/AppDataDir";
 import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 import ShortcutManager from "../../core/ShortcutManager";
 import PreferencesManager, { AppPrefs } from "../../core/PreferencesManager";
@@ -54,9 +54,9 @@ export default class Application extends Adw.Application {
     return this._appPrefs;
   }
 
-  private _appDir: AppDir | null = null;
-  public get appDir(): AppDir {
-    this._appDir ??= new AppDir({ appName: this.name });
+  private _appDir: AppDataDir | null = null;
+  public get appDir(): AppDataDir {
+    this._appDir ??= new AppDataDir({ appName: this.name });
     return this._appDir;
   }
 

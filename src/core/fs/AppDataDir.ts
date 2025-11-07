@@ -1,4 +1,3 @@
-import Gio from "@girs/gio-2.0";
 import GLib from "@girs/glib-2.0";
 
 import NotesDir from "./NotesDir";
@@ -12,18 +11,15 @@ interface AppDirParams {
  *
  * @example ~/.config/Noted
  */
-export default class AppDir {
+export default class AppDataDir {
   /**
    * The notes directory is a subdirectory of the app directory.
    * This is where the notes are stored.
    */
   public readonly notesDir: Readonly<NotesDir>;
 
-  private _appDir: Gio.File;
-
   constructor({ appName }: AppDirParams) {
-    const path = GLib.build_filenamev([GLib.get_user_config_dir(), appName]);
-    this._appDir = Gio.File.new_for_path(path);
+    const path = GLib.build_filenamev([GLib.get_user_data_dir(), appName]);
     GLib.mkdir_with_parents(path, 0o755);
     this.notesDir = new NotesDir({ appDirPath: path });
   }
