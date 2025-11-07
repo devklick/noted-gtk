@@ -18,7 +18,7 @@ export default class AboutDialog extends Adw.Bin {
     // TODO: Load from package.json
     const dialog = new Adw.AboutWindow({
       applicationName: appName,
-      version: "v0.0.5",
+      version: "v0.0.4",
       developerName: "devklick",
       copyright: "© 2025 devklick",
       issueUrl: "https://github.com/devklick/noted-gtk/issues",

@@ -1,6 +1,6 @@
 {
     "name": "noted",
-    "version": "0.0.5",
+    "version": "0.0.4",
     "description": "A simple notes application built with GTK4 and Adwaita",
     "main": "index.js",
     "author": "devklick",
