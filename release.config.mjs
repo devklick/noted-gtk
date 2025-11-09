@@ -5,7 +5,7 @@ export default {
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",
         "@semantic-release/changelog",
-        ["./scripts/update-meson-version.mjs", {}], // ✅ correct custom plugin syntax
+        "./scripts/update-meson-version.mjs",
         [
             "@semantic-release/git",
             {
