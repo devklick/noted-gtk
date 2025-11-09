@@ -24,7 +24,7 @@ export default {
     ],
     prepare: [
         {
-            path: "./scripts/prepare/update-meson-version.mjs",
+            path: "./scripts/update-meson-version.mjs",
         },
     ],
 };

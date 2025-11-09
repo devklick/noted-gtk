@@ -1,10 +1,16 @@
+import path from 'node:path'
 import { readFile, writeFile } from "fs/promises";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 /**
  * @param {string} version
  */
 export default async function updateMesonProjectVersion(version) {
-    const mesonPath = "../meson.build";
+    const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
         const content = await readFile(mesonPath, "utf8");
 
