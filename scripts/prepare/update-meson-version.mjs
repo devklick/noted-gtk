@@ -1,19 +1,9 @@
 import { readFile, writeFile } from "fs/promises";
 
 /**
- *
- * @param {import('semantic-release').GlobalConfig} config
- */
-export async function prepare(config) {
-    const version = config.nextRelease.version;
-
-    await updateMesonProjectVersion(version);
-}
-
-/**
  * @param {string} version
  */
-async function updateMesonProjectVersion(version) {
+export default async function updateMesonProjectVersion(version) {
     const mesonPath = "../meson.build";
     try {
         const content = await readFile(mesonPath, "utf8");
