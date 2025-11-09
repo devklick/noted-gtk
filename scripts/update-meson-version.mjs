@@ -1,17 +1,39 @@
-import path from 'node:path'
+import path from "node:path";
 import { readFile, writeFile } from "fs/promises";
-import { fileURLToPath } from "url";
+import { fileURLToPath } from "node:url";
+
+import semanticRelease from "semantic-release";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * 
- * @param {import('semantic-release').GlobalConfig} _config 
- * @param {import('semantic-release').PrepareContext} context 
+ *
+ * @param  {...unknown} error
+ * @returns {never}
  */
-export async function prepare(_config, context) {
-    const version = context.nextRelease.version;
+function fail(...error) {
+    console.error(...["❌", ...error]);
+    process.exit(1);
+}
+
+async function run() {
+    // do a semantic release dry run to capture the next version
+    const result = await semanticRelease({
+        dryRun: true,
+        branches: ["master"],
+        plugins: [
+            "@semantic-release/commit-analyzer",
+            "@semantic-release/release-notes-generator",
+        ],
+    });
+
+    if (!result) {
+        fail(`Error updating meson version. Semnatic Release failed`);
+    }
+
+    const version = result.nextRelease.version;
+
     const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
         const content = await readFile(mesonPath, "utf8");
@@ -30,7 +52,8 @@ export async function prepare(_config, context) {
             console.log(`✅ Updated meson.build version to ${version}`);
         }
     } catch (error) {
-        console.error("❌ Failed to update meson.build:", error);
-        process.exit(1);
+        fail("Failed to update meson.build:", error);
     }
 }
+
+run();
