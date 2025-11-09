@@ -7,11 +7,11 @@ const __dirname = path.dirname(__filename);
 
 /**
  * 
- * @param {import('semantic-release').GlobalConfig} config 
- * @param {import('semantic-release').PrepareContext} _context 
+ * @param {import('semantic-release').GlobalConfig} _config 
+ * @param {import('semantic-release').PrepareContext} context 
  */
-export async function prepare(config, _context) {
-    const version = config.nextRelease.version;
+export async function prepare(_config, context) {
+    const version = context.nextRelease.version;
     const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
         const content = await readFile(mesonPath, "utf8");
