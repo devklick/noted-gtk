@@ -14,7 +14,7 @@ export async function prepare(config) {
  * @param {string} version
  */
 async function updateMesonProjectVersion(version) {
-    const mesonPath = "meson.build";
+    const mesonPath = "../meson.build";
     try {
         const content = await readFile(mesonPath, "utf8");
 
