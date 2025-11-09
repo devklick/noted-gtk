@@ -1,3 +1,10 @@
+## [0.0.7](https://github.com/devklick/noted-gtk/compare/v0.0.6...v0.0.7) (2025-11-09)
+
+
+### Bug Fixes
+
+* update meson version before build ([5c549ec](https://github.com/devklick/noted-gtk/commit/5c549ec597ab6fb30d31a362b714262902cd0731))
+
 ## [0.0.6](https://github.com/devklick/noted-gtk/compare/v0.0.5...v0.0.6) (2025-11-09)
 
 
