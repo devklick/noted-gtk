@@ -5,11 +5,12 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
 /**
- * @param {import('semantic-release').GlobalConfig} config
+ * 
+ * @param {import('semantic-release').GlobalConfig} config 
+ * @param {import('semantic-release').PrepareContext} _context 
  */
-export default async function updateMesonProjectVersion(config) {
+export async function prepare(config, _context) {
     const version = config.nextRelease.version;
     const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
