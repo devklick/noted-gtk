@@ -7,9 +7,10 @@ const __dirname = path.dirname(__filename);
 
 
 /**
- * @param {string} version
+ * @param {import('semantic-release').GlobalConfig} config
  */
-export default async function updateMesonProjectVersion(version) {
+export default async function updateMesonProjectVersion(config) {
+    const version = config.nextRelease.version;
     const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
         const content = await readFile(mesonPath, "utf8");
