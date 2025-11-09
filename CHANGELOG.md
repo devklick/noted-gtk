@@ -1,0 +1,13 @@
+## [0.0.6](https://github.com/devklick/noted-gtk/compare/v0.0.5...v0.0.6) (2025-11-09)
+
+
+### Bug Fixes
+
+* meson plugin ([904c003](https://github.com/devklick/noted-gtk/commit/904c00387b8e5f4086cb4407a1e2df8be9507045))
+* meson version ([2e783ad](https://github.com/devklick/noted-gtk/commit/2e783ad63adc3217f546827431ce2ef5ab0dc9ad))
+* meson version ([8a7730d](https://github.com/devklick/noted-gtk/commit/8a7730df4c4bf4cdd6d7790158d09528dce23cb2))
+* path ([1bfb15b](https://github.com/devklick/noted-gtk/commit/1bfb15b50e137075cc22d635fbffbb949c39f024))
+* plugin path ([3dc469c](https://github.com/devklick/noted-gtk/commit/3dc469cf474a79e9eba709df7aae2aab18ab3173))
+* plugin path ([28ff2ec](https://github.com/devklick/noted-gtk/commit/28ff2ecfde743764ad481ca19e52c5ce3e06e8eb))
+* semver branch ([2c9b46e](https://github.com/devklick/noted-gtk/commit/2c9b46e229dcccb958c190dfa7a1552a49db5a23))
+* semver plugin ([ff6dc1e](https://github.com/devklick/noted-gtk/commit/ff6dc1e97749123bf8424211a00e6dd66ef26ac5))
