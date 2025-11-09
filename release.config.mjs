@@ -1,16 +1,15 @@
-/**
- * @type {Partial<import('semantic-release').GlobalConfig>}
- */
+/** @type {Partial<import('semantic-release').GlobalConfig>} */
 export default {
-    branches: ["master"],
+    branches: ["main"],
     plugins: [
         "@semantic-release/commit-analyzer",
         "@semantic-release/release-notes-generator",
         "@semantic-release/changelog",
+        ["./scripts/update-meson-version.js", null], // ✅ correct custom plugin syntax
         [
             "@semantic-release/git",
             {
-                assets: ["CHANGELOG.md", "package.json", "meson.build"],
+                assets: ["package.json", "CHANGELOG.md", "meson.build"],
                 message:
                     "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
             },
@@ -21,10 +20,5 @@ export default {
                 assets: ["io.github.devklick.noted.flatpak"],
             },
         ],
-    ],
-    prepare: [
-        {
-            path: "./scripts/update-meson-version.mjs",
-        },
     ],
 };
