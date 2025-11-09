@@ -5,11 +5,11 @@
     "author": "devklick",
     "license": "MIT",
     "repository": {
-        "type": "git", 
-        "url": "https://github.com/github/noted-gtk"
+        "type": "git",
+        "url": "https://github.com/devklick/noted-gtk"
     },
     "bugs": {
-        "url": "https://github.com/github/noted-gtk/issues"
+        "url": "https://github.com/devklick/noted-gtk/issues"
     },
     "devDependencies": {
         "@girs/adw-1": "^1.8.0-4.0.0-beta.23",
