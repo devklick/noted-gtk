@@ -2,9 +2,12 @@
     "name": "noted",
     "version": "0.0.4",
     "description": "A simple notes application built with GTK4 and Adwaita",
-    "main": "index.js",
     "author": "devklick",
     "license": "MIT",
+    "repository": {
+        "type": "git", 
+        "url": "https://github.com/github/noted-gtk"
+    },
     "bugs": {
         "url": "https://github.com/github/noted-gtk/issues"
     },
@@ -16,7 +19,11 @@
         "@girs/gst-1.0": "^1.24.12-4.0.0-beta.23",
         "@girs/gtk-4.0": "^4.18.3-4.0.0-beta.23",
         "@girs/pango-1.0": "^1.56.4-4.0.0-beta.23",
+        "@semantic-release/changelog": "^6.0.3",
+        "@semantic-release/git": "^10.0.1",
+        "@semantic-release/github": "^11.0.6",
         "cross-env": "^7.0.3",
+        "semantic-release": "^24.2.9",
         "typescript": "^5.8.3",
         "vite": "^6.3.3"
     },
@@ -33,7 +40,7 @@
         "validate:types": "tsc --noEmit",
         "clear": "rm -rf dist",
         "compile-schemas": "mkdir -p .compiled-schemas/glib-2.0/schemas && glib-compile-schemas data/gschemas --targetdir .compiled-schemas/glib-2.0/schemas",
-        "post-build": "node post-build.mjs"
+        "post-build": "node scripts/post-build.mjs"
     },
     "keywords": []
 }

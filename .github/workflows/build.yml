@@ -1,28 +1,33 @@
-name: Build Flatpak
+name: Build & Release (Flatpak + Semantic Release)
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - master
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: npm ci
 
-      - name: Build project
-        run: npm run build
-
+      # ------------------------------------------------------------
+      # Build the project
+      # ------------------------------------------------------------
       - name: Install Flatpak and dependencies
         run: |
           sudo apt update
@@ -31,20 +36,14 @@ jobs:
 
       - name: Build Flatpak
         run: |
+          npm run build
           flatpak-builder --force-clean --user --install-deps-from=flathub --repo=repo build-dir io.github.devklick.noted.flatpak.yml
-
-      - name: Export Flatpak Bundle
-        run: |
           flatpak build-bundle repo io.github.devklick.noted.flatpak io.github.devklick.noted
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: io.github.devklick.noted.flatpak
-          path: io.github.devklick.noted.flatpak
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: github.ref_type == 'tag'
-        with:
-          files: io.github.devklick.noted.flatpak
+      # ------------------------------------------------------------
+      # Run Semantic Release
+      # ------------------------------------------------------------
+      - name: Run Semantic Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
