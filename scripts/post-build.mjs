@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path'
 
-const buildAssetsDir = '../build-assets';
-const distDir = '../dist';
+const buildAssetsDir = path.resolve('../build-assets');
+const distDir = path.resolve('../dist');
 
 
 // Copy files from build-assets/ to dist/
