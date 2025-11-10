@@ -1,3 +1,11 @@
+## [0.0.8](https://github.com/devklick/noted-gtk/compare/v0.0.7...v0.0.8) (2025-11-10)
+
+
+### Bug Fixes
+
+* auto bump package.json version ([658448a](https://github.com/devklick/noted-gtk/commit/658448aec5255cb3034a4dc8df0191c4953a8f8f))
+* detect app version when running locally ([e68b04e](https://github.com/devklick/noted-gtk/commit/e68b04e81b71c8cc1904ff6393af986e1471ce39))
+
 ## [0.0.7](https://github.com/devklick/noted-gtk/compare/v0.0.6...v0.0.7) (2025-11-09)
 
 
