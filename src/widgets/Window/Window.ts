@@ -16,6 +16,7 @@ import NotesDir from "../../core/fs/NotesDir";
 import { AppShortcuts } from "../../core/ShortcutManager";
 import { AppPrefs } from "../../core/PreferencesManager";
 import SideBarHeader from "../SideBar/SideBarHeader";
+import DeleteNoteDialog from "./dialogs/DeleteNoteDialog";
 
 interface WindowParams {
   notesDir: Readonly<NotesDir>;
@@ -107,22 +108,17 @@ export default class Window extends Adw.ApplicationWindow {
       }
     });
   }
+
   private buildDeleteDialog(noteId: string) {
-    const name = this._notesDir.metaFile.getNoteMetadata(noteId).name;
-    const dialog = new Adw.AlertDialog({});
-    dialog.set_heading(`Delete note ${name}`);
-    dialog.add_response("cancel", "Cancel");
-    dialog.add_response("delete", "Delete");
-    dialog.set_response_appearance(
-      "delete",
-      Adw.ResponseAppearance.DESTRUCTIVE
-    );
-    dialog.set_default_response("delete");
-    dialog.connect("response", (_, response) => {
-      if (response === "delete") {
-        action.invoke(this, NoteListItem.Actions.DoDelete, noteId);
-      }
+    const noteName = this._notesDir.metaFile.getNoteMetadata(noteId).name;
+
+    const onConfirm = () =>
+      action.invoke(this, NoteListItem.Actions.DoDelete, noteId);
+
+    new DeleteNoteDialog({
+      noteName,
+      parent: this,
+      onConfirm,
     });
-    dialog.present(this);
   }
 }
