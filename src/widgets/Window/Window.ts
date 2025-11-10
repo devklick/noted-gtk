@@ -61,7 +61,11 @@ export default class Window extends Adw.ApplicationWindow {
   }
 
   public presentAboutDialog() {
-    new AboutDialog({ appName: this._appName, parent: this });
+    new AboutDialog({
+      appName: this._appName,
+      appVersion: this.application.version,
+      parent: this,
+    });
   }
 
   public presentPreferencesDialog() {

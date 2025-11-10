@@ -14,8 +14,13 @@ import BurgerMenu from "../Content/ContentHeader/BurgerMenu";
 import ShortcutManager from "../../core/ShortcutManager";
 import PreferencesManager, { AppPrefs } from "../../core/PreferencesManager";
 import action from "../../core/utils/action";
+import GLib from "@girs/glib-2.0";
 
 const APPLICATION_ID = "io.github.devklick.noted";
+
+interface ApplicationParams {
+  isDev: boolean;
+}
 
 export default class Application extends Adw.Application {
   public readonly name = "Noted";
@@ -72,17 +77,17 @@ export default class Application extends Adw.Application {
     return APPLICATION_ID;
   }
 
-  constructor() {
+  constructor(params: ApplicationParams) {
     super({
       applicationId: APPLICATION_ID,
       flags: Gio.ApplicationFlags.FLAGS_NONE,
     });
-
+    this.version = this.getVersion(params.isDev);
     this.defineActions();
   }
 
-  static run(...args: Array<string>): number {
-    return new Application().run(args);
+  static run(params: ApplicationParams, ...args: Array<string>): number {
+    return new Application(params).run(args);
   }
 
   override vfunc_activate(): void {
@@ -150,5 +155,34 @@ export default class Application extends Adw.Application {
   override quit() {
     this.appPrefs.dispose();
     super.quit();
+  }
+
+  private getVersion(isDev: boolean) {
+    // When running in prod (under flatpak), the imports.package.version is set.
+    // This gets set at build time in meson.build, then is
+    if (!isDev) return imports.package.version;
+
+    // When running in dev, grab the version from package.json.
+    // dev is run by executing `gjs -m dist/main.js`.
+    // package.json is not copied to dist, so we need to go up one level to reach package.json
+
+    // import.meta.url is e.g. file:///home/user/repos/devklick/noted-gtk/dist/main.js
+    // We need to convert this to an absolute system path, e.g. /home/user/repos/devklick/noted-gtk/dist/main.js
+    const currentFile = import.meta.url.replace("file://", "");
+
+    // Go one level up to reach package.json and get it's absolute path
+    const currentDir = GLib.path_get_dirname(currentFile);
+    const pkgPath = GLib.build_filenamev([currentDir, "..", "package.json"]);
+
+    try {
+      const file = Gio.File.new_for_path(pkgPath);
+      const [ok, bytes] = file.load_contents(null);
+      const text = new TextDecoder().decode(bytes);
+      const pkg = JSON.parse(text);
+      return `${pkg.version}-local`;
+    } catch (e) {
+      logError(e);
+      return "local";
+    }
   }
 }
