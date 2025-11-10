@@ -3,7 +3,7 @@
     "version": "0.0.9",
     "description": "A simple notes application built with GTK4 and Adwaita",
     "author": "devklick",
-    "license": "MIT",
+    "license": "GPL-3.0-only",
     "repository": {
         "type": "git",
         "url": "https://github.com/devklick/noted-gtk"
