@@ -10,9 +10,8 @@
 </p>
 
 <p align='center'>
-<img src='./doc/images/Screenshot from 2025-11-01 23-43-25.png'>
-<br/>
-<sup>Using <a href='https://github.com/vinceliuice/WhiteSur-gtk-theme'>WhiteSure Nord theme</a> in this screenshot</sup>
+<img src='./doc/images/example-note-light.png'>
+<img src='./doc/images/example-note-dark.png'>
 </p>
 
 ## Features
@@ -32,14 +31,22 @@ flatpak install --user flathub org.gnome.Platform//47
 ```
 Then you can installed Noted via the flatpak file you downloaded:
 ```
-flatpak install --user ./io.github.devklick.noted.flatpak
+flatpak install --user io.github.devklick.noted.flatpak
 ```
+
+> [!NOTE]  
+> Gnome 47 is no longer supported, but there are issues rendering some icons
+> on later versions of Gnome. Noted will stay on 47 until these issues are fixed.
+
+## Keyboard Shortcuts
+
+There are a lot of keyboard shortcuts for common actions, such as starting a new note, changing text styles etc. You can view and edit these shortcuts in Preferences > Key Bindings.
 
 ## Issues and Workarounds
 
 ### Open Notes Meta File
 
-There's an option in the Burger Meny > Open, called Notes Meta File, which opens 
+There's an option in the Burger Menu > Open, called Notes Meta File, which opens 
 a JSON file that contains various metadata about each note in the Noted application. 
 Depending on the apps available on your system, it may try to open the file in an 
 application that struggles to display the contents, sor example, Firefox.
@@ -108,12 +115,6 @@ This means that the Notes Directory will now be opened in the Nautilus (Aka File
 
 
 ## To do
-- Bundle with flatpak (notes to help me remember)
-  - build with npm: `npm run build`
-  - Setup meson build directory: `meson setup builddir`
-  - Build flatpak: `flatpak-builder --user --install --force-clean build-dir io.github.devklick.noted.flatpak.yml`
-  - Run flatpak: `flatpak run io.github.devklick.noted`
-  - TODO: Fix theme issue in flatpak - follow system theme.
-- ...
 - Refactor / Re-write
-  - Since this was my first real attempt at building a Gtk app (other than [Simon Says](https://github.com/devklick/simon-says)), it's far from perfect. If it's going to be something that's used and maintained, it's probably going to benefit from some refactoring, applying some of the lessons I learned along the way,
+<br/>
+  Since this was my first real attempt at building a Gtk app (other than [Simon Says](https://github.com/devklick/simon-says)), it's far from perfect. If it's going to be something that's used and maintained, it's probably going to benefit from some refactoring, applying some of the lessons I learned along the way,
