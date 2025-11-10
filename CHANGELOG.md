@@ -1,3 +1,10 @@
+## [0.0.9](https://github.com/devklick/noted-gtk/compare/v0.0.8...v0.0.9) (2025-11-10)
+
+
+### Bug Fixes
+
+* prevent error when nothing to release ([fef7529](https://github.com/devklick/noted-gtk/commit/fef752923a1b6ac459bca00d7bef78f9fbe54e1d))
+
 ## [0.0.8](https://github.com/devklick/noted-gtk/compare/v0.0.7...v0.0.8) (2025-11-10)
 
 

@@ -1,4 +1,4 @@
-project('noted', version: '0.0.8')
+project('noted', version: '0.0.9')
 APP_ID = 'io.github.devklick.noted'
 
 # Import the modules
