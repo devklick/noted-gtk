@@ -3,6 +3,7 @@ import { readFile, writeFile } from "fs/promises";
 import { fileURLToPath } from "node:url";
 
 import semanticRelease from "semantic-release";
+import { appendFile } from "node:fs/promises";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,17 @@ function fail(...error) {
     process.exit(1);
 }
 
+/**
+ *
+ * @param {string} key
+ * @param {unknown} value
+ */
+async function appendGithubOutput(key, value) {
+    if (process.env.GITHUB_OUTPUT) {
+        await appendFile(process.env.GITHUB_OUTPUT, `${key}=${value}\n`);
+    }
+}
+
 async function run() {
     // do a semantic release dry run to capture the next version
     const result = await semanticRelease({
@@ -28,11 +40,17 @@ async function run() {
         ],
     });
 
+    // No release required based on conventional commit history
     if (!result) {
-        fail(`Error updating meson version. Semnatic Release failed`);
+        console.log("ℹ️ Nothing to release.");
+        await appendGithubOutput("release_required", false);
+        process.exit(0);
     }
 
     const version = result.nextRelease.version;
+
+    await appendGithubOutput("release_required", true);
+    await appendGithubOutput("next_version", version);
 
     const mesonPath = path.resolve(__dirname, "../meson.build");
     try {
@@ -44,13 +62,11 @@ async function run() {
         );
 
         if (updated === content) {
-            console.warn(
-                "⚠️ Could not find a version: field in meson.build to update."
-            );
-        } else {
-            await writeFile(mesonPath, updated, "utf8");
-            console.log(`✅ Updated meson.build version to ${version}`);
+            fail("Could not find a version field in meson.build to update.");
         }
+        
+        await writeFile(mesonPath, updated, "utf8");
+        console.log(`✅ Updated meson.build version to ${version}`);
     } catch (error) {
         fail("Failed to update meson.build:", error);
     }
