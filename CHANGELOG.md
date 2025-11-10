@@ -1,3 +1,10 @@
+## [0.0.10](https://github.com/devklick/noted-gtk/compare/v0.0.9...v0.0.10) (2025-11-10)
+
+
+### Bug Fixes
+
+* Update LICENSE ([3a1bc81](https://github.com/devklick/noted-gtk/commit/3a1bc81a45c1de7d784353bc244f7fb35063c7d7))
+
 ## [0.0.9](https://github.com/devklick/noted-gtk/compare/v0.0.8...v0.0.9) (2025-11-10)
 
 
