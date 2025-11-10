@@ -112,9 +112,3 @@ This means that the Notes Directory will now be opened in the Nautilus (Aka File
 > ```
 > gio mime --reset inode/directory
 > ```
-
-
-## To do
-- Refactor / Re-write
-<br/>
-  Since this was my first real attempt at building a Gtk app (other than [Simon Says](https://github.com/devklick/simon-says)), it's far from perfect. If it's going to be something that's used and maintained, it's probably going to benefit from some refactoring, applying some of the lessons I learned along the way,
